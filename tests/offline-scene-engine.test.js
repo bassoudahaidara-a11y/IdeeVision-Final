@@ -18,7 +18,8 @@ test('comprend couleur, taille et position',()=>{const o=Engine.create('Un grand
 test('reconnaît une animation de chute',()=>{const s=Engine.create('Une balle tombe avec la gravité');if(!s.actions.some(a=>a.kind==='fall'))throw Error('action de chute absente')});
 test('choisit le mode 2D',()=>{if(Engine.create('Un dessin 2D de cube').mode!=='2D')throw Error('mode incorrect')});
 test('choisit le mode 3D',()=>{if(Engine.create('Une maison en 3D').mode!=='3D')throw Error('mode incorrect')});
-test('construit des maillages 3D valides',()=>{for(const type of ['cube','house','tree','car','robot','dragon','ball']){const g=Engine.geometryInfo(type,'#58A6FF');if(!g.valid||g.vertices<8||g.faces<6)throw Error('maillage invalide: '+type)}});
+test('reconnaît les objets scientifiques et quotidiens supplémentaires',()=>{for(const [idea,type] of [['Une planète','planet'],['Une fusée','rocket'],['Un avion','airplane'],['Un bateau','boat'],['Une fleur','flower'],['Une personne','person'],['Un pont','bridge']]){if(!Engine.create(idea).objects.some(o=>o.type===type))throw Error(type+' non reconnu')}});
+test('construit des maillages 3D valides',()=>{for(const type of ['cube','house','tree','car','robot','dragon','ball','planet','rocket','airplane','boat','flower','person','bridge']){const g=Engine.geometryInfo(type,'#58A6FF');if(!g.valid||g.vertices<8||g.faces<6)throw Error('maillage invalide: '+type)}});
 test('dessine et termine une scène 2D et une scène 3D',()=>{
  const drawing={setTransform(){},clearRect(){},fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},fillText(){},save(){},translate(){},rotate(){},restore(){},closePath(){},fill(){},roundRect(){},arc(){},ellipse(){},createRadialGradient(){return {addColorStop(){}}}};
  function render(idea){
