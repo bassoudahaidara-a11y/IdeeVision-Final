@@ -90,7 +90,7 @@ function play(canvas,scene,onCaption,onDone){
   raf=requestAnimationFrame(frame);
  };
  raf=requestAnimationFrame(frame);
- return ()=>{stopped=true;cancelAnimationFrame(raf);window.removeEventListener('resize',resize);onDone&&onDone()};
+ return ()=>{stopped=true;cancelAnimationFrame(raf);window.removeEventListener('resize',resize)};
 }
 window.IdeeVisionOffline=Object.freeze({version:1,create,play});
 })();
