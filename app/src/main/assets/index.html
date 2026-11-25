@@ -92,8 +92,6 @@ textarea::placeholder{color:#7C7EA3}
   <div id="pbar"></div>
 </section>
 
-</div></div>
-
 <script>
 /*ENGINE*/
 function makeS(scene,dry,cam,hooks){
@@ -408,11 +406,10 @@ async function play(){
  stopLive();if(stopOffline)stopOffline();show('play');$('cap').textContent='';setBar('stop');
  stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>$('cap').textContent=t,()=>setBar('end'));
 }
-function closePlay(){stopLive();renderScene=null;show('home')}
+function closePlay(){stopLive();if(stopOffline){stopOffline();stopOffline=null}renderScene=null;show('home')}
 $('close').onclick=closePlay;
 
 window.onBack=()=>{
-  if($('sheet').classList.contains('on')){$('sheet').classList.remove('on');return true}
   if($('play').classList.contains('on')){closePlay();return true}
   if($('work').classList.contains('on')){run++;show('home');return true}
   return false;
