@@ -23,7 +23,7 @@ function detect(idea){
   const amount=match?(quantityWords[match[1].toLowerCase()]||1):1;
   for(let i=0;i<amount;i++){
    const copy={type:o.type,label:o.label,color:o.color,props:Object.assign({},o.props)};
-   if(amount>1)copy.props.x=(copy.props.x||0)+(i-(amount-1)/2)*1.65;
+   if(amount>1)copy.props.x=copy.props.x||0;
    expanded.push(copy);
   }
  });
