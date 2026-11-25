@@ -28,6 +28,28 @@ function detect(idea){
   }
  });
  objects.length=0;expanded.forEach(o=>objects.push(o));
+ const colorMap={bleu:'#58A6FF',bleue:'#58A6FF',rouge:'#FF6B6B',rouge:'#FF6B6B',vert:'#58D68D',verte:'#58D68D',jaune:'#FFD166',violet:'#B892FF',orange:'#FF9F43',blanc:'#F4F7FF',blanche:'#F4F7FF',noir:'#30384D',noire:'#30384D',rose:'#FF8FC7',marron:'#A66A43'};
+ objects.forEach(o=>{
+  const pattern=nouns[o.type];
+  const at=pattern?t.search(new RegExp('(?:'+pattern+')','i')):-1;
+  if(at>=0){
+   const around=t.slice(Math.max(0,at-24),Math.min(t.length,at+55));
+   let best=null,bestDistance=Infinity;
+   Object.keys(colorMap).forEach(word=>{
+    const re=new RegExp(word,'g');let m;
+    while((m=re.exec(around))!==null){const pos=Math.max(0,at-24)+m.index;const distance=Math.abs(pos-at);if(distance<bestDistance){bestDistance=distance;best=word}}
+   });
+   if(best)o.color=colorMap[best];
+   if(/à gauche|a gauche|sur la gauche|à gauche de/.test(around))o.props.x=-2.0;
+   if(/à droite|a droite|sur la droite|à droite de/.test(around))o.props.x=2.0;
+   if(/au-dessus|au dessus|au-dessus de|au dessus de/.test(around))o.props.y=1.35;
+   if(/en dessous|sous la|sous le|sous les/.test(around))o.props.y=-1.0;
+   if(/devant/.test(around))o.props.z=1.0;
+   if(/derrière|derriere/.test(around))o.props.z=-1.0;
+   if(/immense|géant|geant|très grand|tres grand|grand|grande/.test(around))o.props.scale=1.25;
+   if(/petit|petite|minuscule/.test(around))o.props.scale=.75;
+  }
+ });
  const actions=[];
  if(/tombe|chute|gravité|gravite|rebond/.test(t))actions.push({kind:'fall',text:'L’objet descend sous l’effet de la gravité puis rebondit.'});
  if(/tourne|rotation|pivote/.test(t))actions.push({kind:'rotate',text:'L’objet effectue une rotation.'});
@@ -88,7 +110,7 @@ function drawModel3D(ctx,o,s,time){
  faces.forEach(face=>{ctx.beginPath();ctx.moveTo(face.pts[0].x,face.pts[0].y);for(let i=1;i<face.pts.length;i++)ctx.lineTo(face.pts[i].x,face.pts[i].y);ctx.closePath();ctx.fillStyle=face.color;ctx.fill();ctx.strokeStyle='rgba(8,12,30,.55)';ctx.lineWidth=1;ctx.stroke()});
 }
 function drawObject(ctx,o,cx,cy,s,time,mode){
- const x=cx+(o.props.x||0)*s,y=cy+(o.props.y||0)*s;
+ s*=o.props.scale||1;const x=cx+((o.props.x||0)-(o.props.z||0)*.55)*s,y=cy-(o.props.y||0)*s;
  ctx.save();ctx.translate(x,y);ctx.fillStyle=o.color;ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;
  if(mode==='3D'){drawModel3D(ctx,o,s,time)}else{
  const depth=0;
