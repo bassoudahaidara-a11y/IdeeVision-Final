@@ -29,7 +29,7 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
-        s.setAllowUniversalAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(false);
         s.setMediaPlaybackRequiresUserGesture(false);
         web.setWebViewClient(new WebViewClient());
         web.addJavascriptInterface(new Bridge(), "Android");
