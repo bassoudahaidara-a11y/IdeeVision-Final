@@ -165,7 +165,7 @@ function play(canvas,scene,onCaption,onDone){
   ctx.clearRect(0,0,w,h);ctx.fillStyle='#0A0D1F';ctx.fillRect(0,0,w,h);
   const horizon=h*.72;ctx.strokeStyle='rgba(255,184,77,.22)';ctx.lineWidth=1;
   for(let i=0;i<12;i++){ctx.beginPath();ctx.moveTo(0,horizon+i*i*2);ctx.lineTo(w,horizon+i*i*2);ctx.stroke();}
-  const size=Math.min(w*.2,h*.22), spacing=Math.min(w*.29,size*1.5);
+  const size=Math.min(w*.2,h*.22,w/Math.max(2,scene.objects.length*1.35)), spacing=Math.min(w*.29,size*1.5,w/Math.max(2,scene.objects.length+1));
   scene.objects.forEach((o,i)=>{
    const bob=scene.actions.some(a=>a.kind==='fall')?Math.abs(Math.sin(sec*2.5))*size*.35:Math.sin(sec*1.1+i)*size*.025;
    const angle=scene.actions.some(a=>a.kind==='rotate')?sec:0;
