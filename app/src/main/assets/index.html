@@ -3,7 +3,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Idée Vision</title>
 
-<script src="engine/json-engine-v2-1.js"></script>
 <script src="engine/offline-scene-engine.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
@@ -49,8 +48,6 @@ textarea::placeholder{color:#7C7EA3}
 .cap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);padding:0 22px;z-index:3;text-align:center}
 .cap p{margin:0;font-family:Georgia,serif;font-size:20px;line-height:1.45;text-shadow:0 2px 14px rgba(0,0,0,.95)}
 #pbar{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:3;display:flex;justify-content:center;gap:12px}
-#sheet{position:fixed;inset:0;z-index:20;display:none;background:rgba(5,6,16,.7);align-items:flex-end}
-#sheet.on{display:flex}
 .panel{width:100%;max-height:92vh;overflow-y:auto;background:var(--ink2);border-radius:32px 32px 0 0;border-top:1px solid var(--line);padding:24px 22px calc(env(safe-area-inset-bottom,0px) + 22px);animation:up .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{transform:translateY(60px);opacity:0}}
 .panel h3{font-family:Georgia,serif;font-size:24px;margin:0 0 6px}
@@ -93,216 +90,7 @@ textarea::placeholder{color:#7C7EA3}
 </section>
 
 <script>
-/*ENGINE*/
-function makeS(scene,dry,cam,hooks){
-  const S={aborted:false,tweens:[],levels:[]};
-  const solids=[],issues=new Set();
-  const mat=o=>{const p={color:new THREE.Color(o.color||'#cccccc'),roughness:o.rough!==undefined?o.rough:.55,metalness:o.metal!==undefined?o.metal:.05,transparent:true,opacity:o.opacity!==undefined?o.opacity:1,side:THREE.DoubleSide};if(o.emissive){p.emissive=new THREE.Color(o.emissive);p.emissiveIntensity=o.glow||.6}return new THREE.MeshStandardMaterial(p)};
-  const put=(m,o)=>{o=o||{};m.position.set(o.x||0,o.y||0,o.z||0);if(o.rx)m.rotation.x=o.rx;if(o.ry)m.rotation.y=o.ry;if(o.rz)m.rotation.z=o.rz;if(o.name)m.name=o.name;scene.add(m);return m};
-  const mesh=(g,o,kind,size,off)=>{o=o||{};const m=put(new THREE.Mesh(g,mat(o)),o);m.castShadow=true;m.receiveShadow=true;if(kind&&!o.ghost){m.userData.kind=kind;m.userData.size=size;m.userData.off=off||0;solids.push(m)}return m};
-  scene.add(new THREE.AmbientLight(0xffffff,.7));
-  const sun=new THREE.DirectionalLight(0xffffff,.95);sun.position.set(6,14,10);sun.castShadow=true;
-  if(sun.shadow){sun.shadow.mapSize.set(1024,1024);const c=sun.shadow.camera;c.left=-16;c.right=16;c.top=20;c.bottom=-8;c.near=1;c.far=70}
-  scene.add(sun);
-  scene.background=new THREE.Color('#0A0D1F');
-  const ground=new THREE.Group();ground.visible=true;
-  const gp=new THREE.Mesh(new THREE.CircleGeometry(40,48),new THREE.MeshStandardMaterial({color:'#141838',roughness:1}));gp.rotation.x=-Math.PI/2;gp.position.y=-.02;gp.receiveShadow=true;ground.add(gp);
-  ground.add(new THREE.GridHelper(60,60,0x2a2f5c,0x1b2048));scene.add(ground);
-
-  S.world=o=>{o=o||{};if(o.ground!==undefined)ground.visible=!!o.ground;if(o.bg)scene.background=new THREE.Color(o.bg)};
-  S.box=o=>{o=o||{};const w=o.w||1,h=o.h||1,d=o.d||1;return mesh(new THREE.BoxGeometry(w,h,d),o,'box',[w,h,d])};
-  S.sphere=o=>{o=o||{};const r=o.r||.5;return mesh(new THREE.SphereGeometry(r,28,18),o,'sphere',[2*r,2*r,2*r])};
-  S.cylinder=o=>{o=o||{};const r=o.r||.5,r2=o.r2!==undefined?o.r2:r,h=o.h||1,m=Math.max(r,r2);return mesh(new THREE.CylinderGeometry(r,r2,h,32),o,'cylinder',[2*m,h,2*m])};
-  S.cone=o=>{o=o||{};const r=o.r||.5,h=o.h||1;return mesh(new THREE.ConeGeometry(r,h,32),o,'cone',[2*r,h,2*r])};
-  S.plane=o=>{o=o||{};return mesh(new THREE.PlaneGeometry(o.w||1,o.h||1),o)};
-  S.circle=o=>{o=o||{};return mesh(new THREE.CircleGeometry(o.r||.5,32),o)};
-  S.torus=o=>{o=o||{};return mesh(new THREE.TorusGeometry(o.r||1,o.tube||.2,16,48),o)};
-  S.roof=o=>{o=o||{};const w=o.w||2,h=o.h||1,d=o.d||2;const sh=new THREE.Shape();sh.moveTo(-w/2,0);sh.lineTo(w/2,0);sh.lineTo(0,h);sh.lineTo(-w/2,0);const g=new THREE.ExtrudeGeometry(sh,{depth:d,bevelEnabled:false});g.translate(0,0,-d/2);return mesh(g,o,'roof',[w,h,d],h/2)};
-  S.lathe=(pts,o)=>{o=o||{};return mesh(new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p.r,p.y)),40),o)};
-  S.extrude=(pts,o)=>{o=o||{};const d=o.d||1;const sh=new THREE.Shape();pts.forEach((p,i)=>i?sh.lineTo(p.x,p.y):sh.moveTo(p.x,p.y));const g=new THREE.ExtrudeGeometry(sh,{depth:d,bevelEnabled:false});g.translate(0,0,-d/2);return mesh(g,o)};
-  S.tube=(pts,o)=>{o=o||{};const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x||0,p.y||0,p.z||0)));return mesh(new THREE.TubeGeometry(c,64,o.r||.1,10,false),o)};
-  S.group=o=>put(new THREE.Group(),o);
-  S.rod=(a,b,o)=>{o=o||{};const A=new THREE.Vector3(a.x||0,a.y||0,a.z||0),B=new THREE.Vector3(b.x||0,b.y||0,b.z||0);const L=A.distanceTo(B)||.001;const t=o.t||.06;const m=new THREE.Mesh(new THREE.CylinderGeometry(t,t,L,8),mat(o));m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());m.castShadow=true;scene.add(m);return m};
-  S.arrow=(a,b,o)=>{o=o||{};const A=new THREE.Vector3(a.x||0,a.y||0,a.z||0),B=new THREE.Vector3(b.x||0,b.y||0,b.z||0);const dir=B.clone().sub(A);const L=dir.length()||.001;dir.normalize();const hl=Math.min(.5,L*.4);const g=new THREE.Group();const sh=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,L-hl,8),mat(o));sh.position.copy(A).add(dir.clone().multiplyScalar((L-hl)/2));sh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);const hd=new THREE.Mesh(new THREE.ConeGeometry(.2,hl,12),mat(o));hd.position.copy(B).sub(dir.clone().multiplyScalar(hl/2));hd.quaternion.copy(sh.quaternion);g.add(sh);g.add(hd);scene.add(g);return g};
-  S.text=(str,o)=>{o=o||{};str=String(str);const c=document.createElement('canvas'),x=c.getContext('2d');const fs=96,f='bold '+fs+'px system-ui,sans-serif';x.font=f;const w=Math.ceil(x.measureText(str).width)+40;c.width=w;c.height=fs+40;x.font=f;x.textAlign='center';x.textBaseline='middle';if(o.bg){x.fillStyle=o.bg;x.beginPath();if(x.roundRect)x.roundRect(0,0,w,c.height,30);else x.rect(0,0,w,c.height);x.fill()}x.fillStyle=o.color||'#ffffff';x.fillText(str,w/2,c.height/2+4);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));const h=o.size||.8;sp.scale.set(h*c.width/c.height,h,1);sp.renderOrder=10;return put(sp,o)};
-
-  /* éléments prêts, posés sur le sol (y = base) */
-  S.floor=o=>{o=o||{};return S.box({w:o.w||10,h:.2,d:o.d||10,color:o.color||'#6c757d',x:o.x,y:(o.y||0)-.1,z:o.z,name:o.name||'floor'})};
-  S.wall=(a,b,o)=>{o=o||{};const h=o.h||2.5,t=o.t||.2,az=a.z||0,bz=b.z||0;const dx=Math.abs(b.x-a.x),dz=Math.abs(bz-az),hor=dx>=dz;return S.box({w:hor?dx+t:t,h:h,d:hor?t:dz+t,color:o.color||'#d9d4c7',x:(a.x+b.x)/2,y:(o.y||0)+h/2,z:(az+bz)/2,name:o.name||'wall',opacity:o.opacity})};
-  S.tree=o=>{o=o||{};const g=S.group({x:o.x,y:o.y,z:o.z,name:'tree'});const s=o.s||1;g.scale.set(s,s,s);g.add(S.cylinder({r:.2,h:1.2,color:'#7b4a2b',y:.6}));g.add(S.sphere({r:1,color:o.color||'#2d9c4a',y:2.1}));g.add(S.sphere({r:.7,color:o.color||'#34b055',y:3}));return g};
-  S.person=o=>{o=o||{};const g=S.group({x:o.x,y:o.y,z:o.z,name:o.name||'person'});const s=o.s||1;g.scale.set(s,s,s);const sk='#e0ac69',sh=o.color||'#4361ee';g.add(S.box({w:.18,h:.8,d:.2,color:'#22223b',x:-.12,y:.4}));g.add(S.box({w:.18,h:.8,d:.2,color:'#22223b',x:.12,y:.4}));g.add(S.box({w:.5,h:.65,d:.28,color:sh,y:1.12}));g.add(S.box({w:.12,h:.6,d:.15,color:sk,x:-.33,y:1.1}));g.add(S.box({w:.12,h:.6,d:.15,color:sk,x:.33,y:1.1}));g.add(S.sphere({r:.17,color:sk,y:1.62}));return g};
-  S.car=o=>{o=o||{};const g=S.group({x:o.x,y:o.y,z:o.z,name:o.name||'car'});const s=o.s||1;g.scale.set(s,s,s);g.add(S.box({w:4,h:.8,d:1.8,color:o.color||'#e63946',y:.7}));g.add(S.box({w:2,h:.7,d:1.6,color:'#a8dadc',x:-.2,y:1.45}));[[-1.3,-.9],[-1.3,.9],[1.3,-.9],[1.3,.9]].forEach(p=>g.add(S.cylinder({r:.4,h:.3,color:'#222',x:p[0],y:.4,z:p[1],rx:Math.PI/2})));return g};
-
-  /* animation */
-  const tween=(fn,t,lin)=>{
-    if(S.aborted)return Promise.reject(new Error('abort'));
-    if(dry||!t||t<=0){fn(1);return Promise.resolve()}
-    return new Promise((res,rej)=>S.tweens.push({fn:fn,t:t,e:0,res:res,rej:rej,lin:lin}));
-  };
-  S.tick=dt=>{
-    const keep=[];
-    S.tweens.forEach(w=>{w.e+=dt;const k=Math.min(1,w.e/w.t);w.fn(w.lin?k:(k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2));if(k>=1)w.res();else keep.push(w)});
-    S.tweens=keep;
-    S.levels.forEach(c=>{if(c.parent&&c.parent!==scene)c.rotation.z=-c.parent.rotation.z});
-  };
-  const axes=['x','y','z'];
-  S.move=(o,p,t)=>{const a=o.position.clone();return tween(k=>{axes.forEach(q=>{if(p[q]!==undefined)o.position[q]=a[q]+(p[q]-a[q])*k})},t)};
-  S.rotate=(o,p,t)=>{const a={x:o.rotation.x,y:o.rotation.y,z:o.rotation.z};return tween(k=>{axes.forEach(q=>{if(p[q]!==undefined)o.rotation[q]=a[q]+(p[q]-a[q])*k})},t)};
-  S.scaleTo=(o,p,t)=>{if(typeof p==='number')p={x:p,y:p,z:p};const a=o.scale.clone();return tween(k=>{axes.forEach(q=>{if(p[q]!==undefined)o.scale[q]=a[q]+(p[q]-a[q])*k})},t)};
-  const mats=o=>{const l=[];o.traverse(n=>{if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>l.push(m))});return l};
-  S.fade=(o,v,t)=>{const l=mats(o).map(m=>{m.transparent=true;return [m,m.opacity]});return tween(k=>{l.forEach(p=>{p[0].opacity=p[1]+(v-p[1])*k})},t)};
-  S.recolor=(o,c,t)=>{const to=new THREE.Color(c);const l=mats(o).filter(m=>m.color).map(m=>[m,m.color.clone()]);return tween(k=>{l.forEach(p=>{p[0].color.copy(p[1]).lerp(to,k)})},t)};
-  S.wait=t=>tween(()=>{},t);
-  S.all=l=>Promise.all(l);
-  S.keepLevel=c=>{S.levels.push(c)};
-  S.focus=(p,zoom,t,o)=>{p=p||{};o=o||{};const a=Object.assign({},cam);const b={tx:p.x!==undefined?p.x:cam.tx,ty:p.y!==undefined?p.y:cam.ty,tz:p.z!==undefined?p.z:cam.tz,zoom:zoom||cam.zoom,az:o.az!==undefined?o.az:cam.az,el:o.el!==undefined?o.el:cam.el};return tween(k=>{for(const q in b)cam[q]=a[q]+(b[q]-a[q])*k},t)};
-  /* vraie chute: gravité, arrêt sur la surface, rebonds */
-  S.drop=(o,p,speed)=>{
-    p=p||{};const g=p.g||9.8,e=p.bounce!==undefined?p.bounce:.45,n=p.bounces!==undefined?p.bounces:3,yr=p.y;
-    const y0=o.position.y,h=Math.max(0,y0-yr),x0=o.position.x,z0=o.position.z;
-    const tf=Math.sqrt(2*h/g);const segs=[{t0:0,t1:tf,fall:true}];let T=tf,v=Math.sqrt(2*g*h)*e;
-    for(let i=0;i<n&&v>.3;i++){const tb=2*v/g;segs.push({t0:T,t1:T+tb,v:v});T+=tb;v*=e}
-    const yAt=tm=>{for(const s of segs){if(tm<=s.t1){if(s.fall)return yr+h-.5*g*tm*tm;const u=tm-s.t0;return yr+s.v*u-.5*g*u*u}}return yr};
-    return tween(k=>{o.position.y=Math.max(yr,yAt(k*T));if(p.x!==undefined)o.position.x=x0+(p.x-x0)*k;if(p.z!==undefined)o.position.z=z0+(p.z-z0)*k},T/(speed||p.speed||1),true);
-  };
-
-  /* vérification du réalisme (collisions, limites) */
-  const rotated=n=>Math.abs(n.rotation.x)+Math.abs(n.rotation.y)+Math.abs(n.rotation.z)>.001;
-  const aabb=o=>{
-    if(rotated(o))return null;const sz=o.userData.size;
-    let c=[o.position.x,o.position.y+(o.userData.off||0)*o.scale.y,o.position.z],s=[Math.abs(sz[0]*o.scale.x),Math.abs(sz[1]*o.scale.y),Math.abs(sz[2]*o.scale.z)];
-    for(let a=o.parent;a&&a!==scene;a=a.parent){
-      if(rotated(a))return null;
-      c=[a.position.x+a.scale.x*c[0],a.position.y+a.scale.y*c[1],a.position.z+a.scale.z*c[2]];
-      s=[s[0]*Math.abs(a.scale.x),s[1]*Math.abs(a.scale.y),s[2]*Math.abs(a.scale.z)];
-    }
-    return {c:c,mn:[c[0]-s[0]/2,c[1]-s[1]/2,c[2]-s[2]/2],mx:[c[0]+s[0]/2,c[1]+s[1]/2,c[2]+s[2]/2],v:s[0]*s[1]*s[2]};
-  };
-  const rootOf=o=>{while(o.parent&&o.parent!==scene)o=o.parent;return o};
-  const nm=(o,b)=>(o.name||o.userData.kind)+' at ('+b.c.map(x=>x.toFixed(1)).join(',')+')';
-  const checkNow=label=>{
-    const L=[];
-    solids.forEach(o=>{if(o.material&&o.material.opacity<.3)return;const b=aabb(o);if(b)L.push({o:o,b:b,r:rootOf(o)})});
-    L.forEach(e=>{
-      if(ground.visible&&e.b.mn[1]<-.5)issues.add(nm(e.o,e.b)+' sinks below the ground ('+label+')');
-      if(Math.abs(e.b.c[0])>5.5||e.b.c[1]>15.5)issues.add(nm(e.o,e.b)+' is outside the screen ('+label+')');
-    });
-    for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){
-      const A=L[i],B=L[j];if(A.r===B.r)continue;
-      const d=[0,1,2].map(k=>Math.min(A.b.mx[k],B.b.mx[k])-Math.max(A.b.mn[k],B.b.mn[k]));
-      if(d.every(x=>x>.05)&&(d[0]*d[1]*d[2])/Math.min(A.b.v,B.b.v)>.08)issues.add(nm(A.o,A.b)+' goes through '+nm(B.o,B.b)+' ('+label+')');
-    }
-  };
-  S.finish=()=>checkNow('at the end');
-  S.report=()=>Array.from(issues).slice(0,6);
-
-  S.say=text=>{if(S.aborted)return Promise.reject(new Error('abort'));if(dry){checkNow('after: '+String(text).slice(0,35));return Promise.resolve()}hooks.caption(String(text));return hooks.say(String(text),S)};
-  return S;
-}
-const EXAMPLE=`const pivotY=5;
-S.cylinder({r:1.3,h:.3,color:"#5c677d",y:.15});
-S.cylinder({r:.22,h:pivotY-.35,color:"#8d99ae",y:(pivotY-.35)/2});
-const beam=S.group({y:pivotY});
-beam.add(S.box({w:7,h:.25,d:.5,color:"#edf2f4"}));
-beam.add(S.sphere({r:.33,color:"#ffb84d"}));
-const L=S.group({x:-3.2}), R=S.group({x:3.2});
-beam.add(L); beam.add(R); S.keepLevel(L); S.keepLevel(R);
-for(const g of [L,R]){
-  g.add(S.rod({x:0,y:0},{x:0,y:-1.6},{color:"#adb5bd",t:.04}));
-  g.add(S.cylinder({r:1.1,h:.15,color:"#ffb84d",y:-1.65}));
-}
-function weight(n,pan,color){
-  const w=S.group({y:-1.2});
-  w.add(S.box({w:.9,h:.7,d:.9,color:color}));
-  w.add(S.text(String(n),{size:.55,color:"#0a0d1f",z:.5}));
-  pan.add(w); return w;
-}
-await S.say("Voici une balance. Elle penche du côté le plus lourd.");
-const w10=weight(10,L,"#4cc9f0"); S.fade(w10,0,0); await S.fade(w10,1,.8);
-await S.rotate(beam,{z:.3},1.5);
-await S.say("À gauche, je pose un poids de dix. Ce côté descend.");
-const w5=weight(5,R,"#f72585"); S.fade(w5,0,0); await S.fade(w5,1,.8);
-await S.rotate(beam,{z:.15},1.2);
-await S.say("À droite, je pose un poids de cinq. Dix contre cinq : la balance penche encore. Donc dix n'est pas égal à cinq.");
-const w5b=weight(5,R,"#f72585"); w5b.position.y=-.5; S.fade(w5b,0,0);
-await S.fade(w5b,1,.6);
-await S.rotate(beam,{z:0},1.5);
-await S.say("Mais si je pose un deuxième cinq à droite, la balance est à plat. Dix est égal à cinq plus cinq.");`;
-const EXAMPLE2=`S.floor({w:9,d:6,color:"#6c757d"});
-S.wall({x:-4.5,z:-3},{x:-4.5,z:3},{h:5,color:"#adb5bd",name:"left wall"});
-S.wall({x:4.5,z:-3},{x:4.5,z:3},{h:5,color:"#adb5bd",name:"right wall"});
-const ball=S.sphere({r:.6,color:"#f72585",x:-2,y:8,z:0,name:"ball"});
-S.focus({x:0,y:4,z:0},1,0,{az:0.3,el:0.2});
-await S.say("Voici un ballon, très haut dans une pièce entre deux murs.");
-await S.drop(ball,{y:.6,bounce:.55,bounces:3,x:2});
-await S.say("Il tombe, touche le sol, puis rebondit moins haut à chaque fois. Il reste dans la pièce.");`;
-/*END*/
-
-const CODE_SYS=`You write the BODY of an async JavaScript function (parameters: S, THREE) that animates a user's idea as an explanatory film in a 3D scene. Use await for every animation. No imports, no DOM, no fetch, no setTimeout, no infinite loops. You can draw ANYTHING the user describes by combining the shapes below. Follow the BLUEPRINT you are given (sizes, positions, events).
-
-VIEW: a PORTRAIT phone screen. Visible area is about x from -5 to 5 and y from -5 to 15 (ground at y=0, camera looks at (0,5,0)). Keep everything inside x -4.5..4.5 and y 0..13 (scale big things down, keep proportions). z is depth (0 = front).
-
-CREATE (every creator accepts {x,y,z,color,opacity,rx,ry,rz,name,metal,rough,emissive,ghost} and returns a THREE.Object3D already in the scene):
-Basic: S.box({w,h,d}) S.sphere({r}) S.cylinder({r,h,r2}) (r2 = other end radius) S.cone({r,h}) S.torus({r,tube}) S.roof({w,h,d}) (triangular prism, base on y=0) S.plane({w,h}) S.circle({r}).
-Custom shapes: S.lathe([{r,y},...]) (revolve a profile: bottles, vases, cups, bowls, wheels, lamps) S.extrude([{x,y},...],{d}) (any 2D outline made thick: letters, arrows, L-shapes, stars) S.tube([{x,y,z},...],{r}) (pipes, cables, rails, smooth curves through points).
-Lines and labels: S.rod(a,b,{color,t}) (thin bar between points {x,y,z}) S.arrow(a,b,{color}) S.text('5',{size:0.8,color:'#fff',bg:'#00000099'}) (label that always faces the camera).
-Ready parts (base on y): S.floor({w,d,color}) (top surface at y=0) S.wall({x,z},{x,z},{h,color,t}) (axis-aligned wall between two points) S.tree({x,z,s}) S.person({x,z,color,s}) (1.7 tall) S.car({x,z,color,s}).
-S.group({x,y,z}) = empty container for hierarchies. parent.add(child) keeps the child's LOCAL position; parent.attach(child) keeps its WORLD position. Children move and rotate with the parent. Colors are hex strings. Shapes are centred on their position. name:'door' helps the checker. ghost:true marks a part that may overlap others on purpose.
-
-ANIMATE (all return promises, t in seconds, t=0 is instant):
-S.move(obj,{x,y,z},t) S.rotate(obj,{x,y,z},t) (absolute radians; rotation.z > 0 turns counterclockwise as the viewer sees it, so the LEFT end of a horizontal bar goes DOWN) S.scaleTo(obj,n or {x,y,z},t) S.fade(obj,opacity,t) S.recolor(obj,'#hex',t) S.wait(t) S.all([p1,p2]) S.focus({x,y,z},zoom,t,{az,el}) (camera: zoom 1 = default, az/el in radians for a 3D angle) S.keepLevel(child) (after parent.add(child): stays upright when the parent rotates) S.world({ground:true|false,bg:'#hex'}).
-S.drop(obj,{y,bounce,bounces,x,z}) = REAL gravity: the object falls to centre height y (its resting height on the surface below), bounces lower each time, and can drift to x,z. Use it for anything that falls.
-S.say('sentence in French') shows a caption and a voice reads it; it waits until the voice finishes.
-
-RULES:
-1. Draw exactly what the user says, with the right numbers and proportions. Show numbers as S.text labels. Never invent a different idea.
-2. Build the scene step by step and explain every step with S.say in simple French (one or two short sentences, everyday words, no symbols such as * / = + : write 'égal à', 'plus'). 8 to 14 S.say calls, about 40 to 90 seconds.
-3. If the idea is a claim (equal or not equal, true or false, possible or impossible), TEST it: show the case that confirms it AND the case that contradicts it, say clearly what the result is and why. Finish with a short conclusion.
-4. Show real behaviour with movement (weights landing, things rotating, doors opening, liquid rising, objects falling). Make objects appear with S.fade from 0 (call S.fade(obj,0,0) first) or S.move them in. Use S.focus to zoom on important parts and, for 3D things, turn the camera a little (az 0.4).
-5. Bright readable colors on the dark ground. Label important objects. Make objects at least 0.5 units big.
-6. REALISM: everything is solid. Nothing passes through a wall, floor, ceiling or another object. An object resting on a surface has centre y = surface top + half its own height. Falling objects use S.drop. Walls are thick boxes (0.2); everything inside a room stays between its walls. Real-world sizes (door 2.1, wall 2.5, table 0.75, person 1.7). A door turns around its hinge edge (put it in a group placed on the hinge). Movements are gradual, never teleporting. Leave the front wall out or transparent so the inside is visible. A checker will test your code and report any overlap or object leaving the screen: avoid them.
-7. The user text may contain a MODE 2D or MODE 3D block with extra rules: follow them strictly. For MODE 2D: start with S.focus({x:0,y:5,z:0},1,0,{az:0,el:0}), draw flat thin shapes seen from the front, layer overlapping objects with slightly different z, add arrows, numbers and labels. For MODE 3D: use real depth, tilt the camera and turn it around the scene to show everything.
-8. Output ONLY the JavaScript code in one js code block, no explanation.
-
-EXAMPLE 1, idea 'a balance: 10 on one side, 5 on the other, is that equal?':
-` + '```js\n' + EXAMPLE + '\n```\n\nEXAMPLE 2, idea \'a ball falls in a room and bounces\':\n```js\n' + EXAMPLE2 + '\n```';
-
-const BLUEPRINT_SYS='You are the planner of a 3D explanatory animation. Write a compact BLUEPRINT in English (max 450 words, no code) with: 1. SCENE: coordinate frame (x right, y up, z toward the viewer, ground at y=0, visible area x -5..5, y 0..13); scale big things down to fit, keeping proportions. 2. OBJECTS: one line per object: name, shape (box, sphere, cylinder, cone, roof, lathe, extrude, torus, tube, wall, floor, tree, person, car), size, exact centre position x,y,z, color. Every solid object rests on something (centre y = surface top + half its height). No two solid objects overlap, except thin walls touching. Everything inside a room stays between its walls. 3. EVENTS: numbered list. For each: what the narrator says (one idea, in French), what moves from where to where with exact end positions computed so that nothing passes through a wall or the floor and falling objects stop on the first surface below, and which case is tested (works or does not work). 4. CAMERA: 2D front view or 3D tilted and orbiting, and the zoom moments. Be faithful to the user idea, numbers and drawing rules.';
-
-const UNDERSTAND_SYS='Tu es un réalisateur. IMPORTANT: tu ne dessines rien toi-même et tu ne produis aucune image. Un programme de l application va créer l animation 2D ou 3D à partir de ton plan, donc tu ne refuses JAMAIS à cause d un manque d outil de dessin. Le texte de la personne contient son idée et parfois des règles de dessin collées (MODE 2D ou MODE 3D, collisions, murs, réalisme): ce sont des consignes à respecter, pas l idée elle-même. Réponds UNIQUEMENT avec un JSON valide: {"comprehension":"2 à 3 phrases en français, à la deuxième personne, qui disent ce que tu as compris de son idée","idee_claire":true ou false,"raison":"seulement si idee_claire est false: explique simplement en français ce qu il faut préciser","mode":"2D ou 3D","plan":"en français: les étapes de l animation, y compris ce que tu vas tester ou démontrer et les règles de réalité à respecter"}. idee_claire est false seulement si le texte ne contient aucune idée à montrer. Reste fidèle à ce que la personne a dit.';
-
-
-const JSON_SYS=`Tu es un générateur de scènes animées pour Idée Vision.
-Réponds uniquement avec un objet JSON valide, sans Markdown.
-Respecte l'idée et le BLUEPRINT. Format :
-{"version":2,"objects":[{"id":"objet1","type":"box","props":{"x":0,"y":1,"z":0,"w":2,"h":2,"d":1,"color":"#ff0000","name":"objet"}}],"steps":[{"say":"Voici la scène.","actions":[{"type":"move","target":"objet1","to":{"x":1,"y":1,"z":0},"duration":2}]}]}
-Types : box, sphere, cylinder, cone, torus, roof, plane, circle, floor, tree, person, car, group, wall, rod, arrow, text, lathe, extrude, tube.
-Propriétés communes : x,y,z,rx,ry,rz,color,opacity,name,ghost,metal,rough,emissive,glow.
-Dimensions : box(w,h,d), sphere(r), cylinder(r,h,r2), cone(r,h), torus(r,tube), roof(w,h,d), plane(w,h), circle(r), floor(w,d), tree(s), person(s), car(s), wall(h,t), rod(t), text(size,bg), extrude(d), tube(r).
-Pour wall, rod et arrow, data contient from et to. Pour text, data contient value. Pour lathe, extrude et tube, data contient points.
-Les groupes utilisent parent pour rattacher un enfant.
-Actions : move, rotate, scale, fade, recolor, drop, wait, say, focus, world, keepLevel, parallel.
-move, rotate et scale utilisent to et duration. fade utilise opacity et duration. recolor utilise color et duration. drop utilise options avec y et éventuellement x,z,bounce,bounces,g,speed. wait utilise duration. say utilise text. focus utilise at, zoom, duration et éventuellement camera. world utilise ground et bg. keepLevel utilise target. parallel utilise actions.
-Chaque target doit correspondre à un identifiant existant.
-Utilise des couleurs hexadécimales. Les durées sont en secondes.
-Construis une scène réaliste, animée, pédagogique et expliquée en français.
-Ne crée aucun type, propriété ou action non autorisé.`;
-
-const $=id=>document.getElementById(id);
-const LS={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-let run=0,und='',lastCode='',lastScene=null,lastMode='js',CUR=null,cancelSay=null,MODELS=null,renderer=null,camera=null,renderScene=null,lastT=0;
-const CAM={tx:0,ty:5,tz:0,zoom:1,az:0,el:.1},FOV=50;
-
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
-function msg(t){$('msg').textContent=t||''}
-function setW(t,s,p){$('wt').textContent=t;$('ws').textContent=s||'';$('wb').style.width=p+'%'}
-
-['Une balance : 10 d\'un côté, 5 de l\'autre. Est-ce égal ?','Une maison avec un toit, deux fenêtres et une porte qui s\'ouvre','Un ballon qui tombe et rebondit trois fois'].forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('idea').value=t;cnt();$('idea').focus()};$('chips').appendChild(b)});
-function cnt(){const n=$('idea').value.length;$('cnt').textContent=n+(n>1?' caractères':' caractère')}
-$('idea').addEventListener('input',cnt);
-
-$('gear').onclick=()=>msg('Idée Vision utilise maintenant son moteur local, sans clé API.');
-
+/* Moteur local 2D/3D : aucun moteur distant. */
 /* voix */
 function stopSpeech(){try{if(window.Android)Android.stop();else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}}
 function sayNow(text){
@@ -314,66 +102,7 @@ function sayNow(text){
   });
 }
 
-/* moteur 3D */
-function initGL(){
-  if(renderer)return true;if(!window.THREE)return false;
-  renderer=new THREE.WebGLRenderer({canvas:$('cv'),antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));renderer.shadowMap.enabled=true;
-  camera=new THREE.PerspectiveCamera(FOV,1,.1,300);
-  window.addEventListener('resize',resize);resize();
-  requestAnimationFrame(loop);return true;
-}
-function resize(){if(!renderer)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
-function loop(t){
-  requestAnimationFrame(loop);
-  const dt=Math.min(.05,(t-lastT)/1000||0);lastT=t;
-  if(!$('play').classList.contains('on')||!renderScene)return;
-  if(CUR)CUR.tick(dt);
-  const tn=Math.tan(FOV/2*Math.PI/180),D=Math.max(5/(tn*camera.aspect),10/tn)/CAM.zoom;
-  camera.position.set(CAM.tx+D*Math.sin(CAM.az)*Math.cos(CAM.el),CAM.ty+D*Math.sin(CAM.el),CAM.tz+D*Math.cos(CAM.az)*Math.cos(CAM.el));
-  camera.lookAt(CAM.tx,CAM.ty,CAM.tz);
-  renderer.render(renderScene,camera);
-}
-const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
-async function execute(code,live){
-  const scene=new THREE.Scene();
-  const cam=live?CAM:{tx:0,ty:5,tz:0,zoom:1,az:0,el:.1};
-  if(live)Object.assign(CAM,{tx:0,ty:5,tz:0,zoom:1,az:0,el:.1});
-  const S=makeS(scene,!live,cam,{caption:t=>{$('cap').textContent=t},say:(t)=>sayNow(t)});
-  if(live){CUR=S;renderScene=scene}
-  await new AsyncFunction('S','THREE',code)(S,THREE);
-  if(!live)S.finish();
-  return S;
-}
-function dry(code){
-  return Promise.race([execute(code,false),new Promise((_,rej)=>setTimeout(()=>rej(new Error('The code takes too long or loops forever.')),6000))]);
-}
-
-async function executeJSON(spec,live){
- if(!window.IdeeVisionJSONV21)throw new Error('Moteur JSON V2.1 introuvable.');
- const scene=new THREE.Scene();
- const cam=live?CAM:{tx:0,ty:5,tz:0,zoom:1,az:0,el:.1};
- if(live)Object.assign(CAM,{tx:0,ty:5,tz:0,zoom:1,az:0,el:.1});
- const S=makeS(scene,!live,cam,{caption:t=>{$('cap').textContent=t},say:t=>sayNow(t)});
- if(live){CUR=S;renderScene=scene}
- await window.IdeeVisionJSONV21.run(S,spec);
- if(!live)S.finish();
- return S;
-}
-function parseScene(t){
- return JSON.parse(t.replace(/```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim());
-}
-function dryJSON(spec){
- return Promise.race([
-  executeJSON(spec,false),
-  new Promise((_,rej)=>setTimeout(()=>rej(new Error('Simulation JSON trop longue.')),6000))
- ]);
-}
-
-function stopLive(){
-  if(CUR){CUR.aborted=true;CUR.tweens.forEach(w=>w.rej(new Error('abort')));CUR.tweens=[];CUR=null}
-  if(cancelSay)cancelSay();stopSpeech();
-}
+function stopLive(){if(cancelSay)cancelSay();stopSpeech()}
 
 /* Pipeline local : aucune requête réseau ni clé API. */
 let offlineScene=null,stopOffline=null;
@@ -406,7 +135,7 @@ async function play(){
  stopLive();if(stopOffline)stopOffline();show('play');$('cap').textContent='';setBar('stop');
  stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>$('cap').textContent=t,()=>setBar('end'));
 }
-function closePlay(){stopLive();if(stopOffline){stopOffline();stopOffline=null}renderScene=null;show('home')}
+function closePlay(){stopLive();if(stopOffline){stopOffline();stopOffline=null}show('home')}
 $('close').onclick=closePlay;
 
 window.onBack=()=>{
