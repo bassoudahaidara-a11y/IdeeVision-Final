@@ -14,7 +14,20 @@ function detect(idea){
  if(/table/.test(t))add('table','Table',COLORS.orange);
  if(/soleil/.test(t))add('sun','Soleil',COLORS.jaune);
  if(!objects.length)add('cube','Objet',COLORS.bleu);
- const count=(t.match(/\b(deux|2|trois|3|quatre|4|cinq|5)\b/g)||[]).length;
+ const quantityWords={'deux':2,'2':2,'trois':3,'3':3,'quatre':4,'4':4,'cinq':5,'5':5};
+ const nouns={house:'maison|villa|bâtiment|batiment',tree:'arbre',car:'voiture|véhicule|vehicule|auto',robot:'robot',dragon:'dragon',ball:'ballon|balle|sphère|sphere',cube:'cube|boîte|boite',table:'table',sun:'soleil'};
+ const expanded=[];
+ objects.forEach(o=>{
+  const pattern=nouns[o.type];
+  const match=pattern?t.match(new RegExp('\\b(deux|2|trois|3|quatre|4|cinq|5)\\s+(?:[a-zà-ÿ-]+\\s+){0,2}(?:'+pattern+')s?\\b','i')):null;
+  const amount=match?(quantityWords[match[1].toLowerCase()]||1):1;
+  for(let i=0;i<amount;i++){
+   const copy={type:o.type,label:o.label,color:o.color,props:Object.assign({},o.props)};
+   if(amount>1)copy.props.x=(copy.props.x||0)+(i-(amount-1)/2)*1.65;
+   expanded.push(copy);
+  }
+ });
+ objects.length=0;expanded.forEach(o=>objects.push(o));
  const actions=[];
  if(/tombe|chute|gravité|gravite|rebond/.test(t))actions.push({kind:'fall',text:'L’objet descend sous l’effet de la gravité puis rebondit.'});
  if(/tourne|rotation|pivote/.test(t))actions.push({kind:'rotate',text:'L’objet effectue une rotation.'});
