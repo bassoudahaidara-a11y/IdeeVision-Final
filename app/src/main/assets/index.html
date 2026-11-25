@@ -91,6 +91,16 @@ textarea::placeholder{color:#7C7EA3}
 
 <script>
 /* Moteur local 2D/3D : aucun moteur distant. */
+const $=id=>document.getElementById(id);
+let run=0,cancelSay=null;
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id))}
+function msg(t){$('msg').textContent=t||''}
+function setW(t,sub,p){$('wt').textContent=t;$('ws').textContent=sub||'';$('wb').style.width=p+'%'}
+function cnt(){const n=$('idea').value.length;$('cnt').textContent=n+(n>1?' caractères':' caractère')}
+$('idea').addEventListener('input',cnt);
+['Une maison avec deux fenêtres et une porte','Un dragon en 3D','Un ballon qui tombe et rebondit','Un robot qui tourne'].forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('idea').value=t;cnt()};$('chips').appendChild(b)});
+$('gear').onclick=()=>msg('Mode hors ligne : aucune clé API et aucune connexion Internet.');
+
 /* voix */
 function stopSpeech(){try{if(window.Android)Android.stop();else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}}
 function sayNow(text){
