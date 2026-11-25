@@ -81,6 +81,7 @@ function play(canvas,scene,onCaption,onDone){
   });
   ctx.fillStyle='#FFB84D';ctx.font='700 12px system-ui';ctx.textAlign='center';ctx.fillText('IDÉE VISION • MODE '+scene.mode,w/2,38);
   if(sec<1.5){onCaption(scene.caption)}else if(sec<5){onCaption(scene.actions[0]?.text||scene.caption)}else{onCaption('Construction locale terminée.')}
+  if(sec>=8){stopped=true;window.removeEventListener('resize',resize);if(onDone)onDone();return}
   raf=requestAnimationFrame(frame);
  };
  raf=requestAnimationFrame(frame);
