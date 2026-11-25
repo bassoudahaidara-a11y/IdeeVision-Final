@@ -35,7 +35,7 @@ function sphereMesh(r,color,x=0,y=0,z=0,sx=1,sy=1,sz=1){
 }
 function cylinderMesh(r,h,color,x=0,y=0,z=0,topR=r){
  const v=[],f=[],n=12;
- for(let ring=0;ring<2;ring++){const rr=ring?topR:r,yy=y+(ring?.5:-.5)*h;for(let i=0;i<n;i++){const a=2*Math.PI*i/n;v.push([x+Math.cos(a)*rr,yy,z+Math.sin(a)*rr])}}
+ for(let ring=0;ring<2;ring++){const rr=ring?topR:r,yy=y+(ring ? 0.5 : -0.5)*h;for(let i=0;i<n;i++){const a=2*Math.PI*i/n;v.push([x+Math.cos(a)*rr,yy,z+Math.sin(a)*rr])}}
  for(let i=0;i<n;i++)f.push([i,(i+1)%n,(i+1)%n+n,i+n]);
  f.push(Array.from({length:n},(_,i)=>i).reverse(),Array.from({length:n},(_,i)=>i+n));
  return {color,vertices:v,faces:f};
