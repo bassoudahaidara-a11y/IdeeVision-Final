@@ -14,6 +14,7 @@ test('reconnaît une maison',()=>{const s=Engine.create('Dessine une maison avec
 test('respecte une quantité en français',()=>{const s=Engine.create('Dessine trois arbres');if(s.objects.filter(o=>o.type==='tree').length!==3)throw Error('trois arbres attendus')});
 test('reconnaît un robot',()=>{const s=Engine.create('Un robot bleu');if(!s.objects.some(o=>o.type==='robot'))throw Error('robot absent')});
 test('reconnaît un dragon',()=>{const s=Engine.create('Un dragon');if(!s.objects.some(o=>o.type==='dragon'))throw Error('dragon absent')});
+test('comprend couleur, taille et position',()=>{const o=Engine.create('Un grand robot rouge à gauche').objects[0];if(o.color!=='#FF6B6B'||o.props.scale!==1.25||o.props.x!==-2)throw Error('attributs non reconnus')});
 test('reconnaît une animation de chute',()=>{const s=Engine.create('Une balle tombe avec la gravité');if(!s.actions.some(a=>a.kind==='fall'))throw Error('action de chute absente')});
 test('choisit le mode 2D',()=>{if(Engine.create('Un dessin 2D de cube').mode!=='2D')throw Error('mode incorrect')});
 test('choisit le mode 3D',()=>{if(Engine.create('Une maison en 3D').mode!=='3D')throw Error('mode incorrect')});
