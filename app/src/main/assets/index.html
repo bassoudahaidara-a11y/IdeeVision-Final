@@ -143,7 +143,11 @@ function setBar(mode){
 async function play(){
  if(!offlineScene){show('home');msg('Décris une idée avant de lancer la scène.');return}
  stopLive();if(stopOffline)stopOffline();show('play');$('cap').textContent='';setBar('stop');
- stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>$('cap').textContent=t,()=>setBar('end'));
+ let spokenCaption='';
+ stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>{
+  $('cap').textContent=t;
+  if(t&&t!==spokenCaption){spokenCaption=t;sayNow(t)}
+ },()=>setBar('end'));
 }
 function closePlay(){stopLive();if(stopOffline){stopOffline();stopOffline=null}show('home')}
 $('close').onclick=closePlay;
