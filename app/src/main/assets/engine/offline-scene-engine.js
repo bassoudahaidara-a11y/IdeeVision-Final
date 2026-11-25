@@ -133,6 +133,7 @@ function drawObject(ctx,o,cx,cy,s,time,mode){
  ctx.fillStyle='#F4F7FF';ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillText(o.label,x,y+s*.82);
 }
 function create(idea){return detect(idea)}
+function geometryInfo(type,color){const parts=modelParts(type,color||'#58A6FF');return {parts:parts.length,vertices:parts.reduce((n,p)=>n+p.vertices.length,0),faces:parts.reduce((n,p)=>n+p.faces.length,0),valid:parts.every(p=>p.faces.every(f=>f.length>=3&&f.every(i=>Number.isInteger(i)&&i>=0&&i<p.vertices.length)))}}
 function play(canvas,scene,onCaption,onDone){
  const ctx=canvas.getContext('2d');let raf=0,start=0,stopped=false;
  const resize=()=>{const dpr=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*dpr;canvas.height=innerHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)};
@@ -158,5 +159,5 @@ function play(canvas,scene,onCaption,onDone){
  raf=requestAnimationFrame(frame);
  return ()=>{stopped=true;cancelAnimationFrame(raf);window.removeEventListener('resize',resize)};
 }
-window.IdeeVisionOffline=Object.freeze({version:1,create,play});
+window.IdeeVisionOffline=Object.freeze({version:1,create,play,geometryInfo});
 })();
