@@ -28,7 +28,7 @@ function detect(idea){
   }
  });
  objects.length=0;expanded.forEach(o=>objects.push(o));
- const colorMap={bleu:'#58A6FF',bleue:'#58A6FF',rouge:'#FF6B6B',rouge:'#FF6B6B',vert:'#58D68D',verte:'#58D68D',jaune:'#FFD166',violet:'#B892FF',orange:'#FF9F43',blanc:'#F4F7FF',blanche:'#F4F7FF',noir:'#30384D',noire:'#30384D',rose:'#FF8FC7',marron:'#A66A43'};
+ const colorMap={bleu:'#58A6FF',bleue:'#58A6FF',rouge:'#FF6B6B',vert:'#58D68D',verte:'#58D68D',jaune:'#FFD166',violet:'#B892FF',orange:'#FF9F43',blanc:'#F4F7FF',blanche:'#F4F7FF',noir:'#30384D',noire:'#30384D',rose:'#FF8FC7',marron:'#A66A43'};
  objects.forEach(o=>{
   const pattern=nouns[o.type];
   const at=pattern?t.search(new RegExp('(?:'+pattern+')','i')):-1;
