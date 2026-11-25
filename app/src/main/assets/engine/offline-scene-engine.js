@@ -23,10 +23,62 @@ function detect(idea){
  return {version:1,mode,objects,actions,caption:'Voici une première construction locale de ton idée.',source:idea};
 }
 function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+function cubeMesh(w,h,d,color,x=0,y=0,z=0){
+ const a=w/2,b=h/2,c=d/2;
+ return {color,vertices:[[-a+x,-b+y,-c+z],[a+x,-b+y,-c+z],[a+x,b+y,-c+z],[-a+x,b+y,-c+z],[-a+x,-b+y,c+z],[a+x,-b+y,c+z],[a+x,b+y,c+z],[-a+x,b+y,c+z]],faces:[[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[3,2,6,7],[4,5,1,0]]};
+}
+function sphereMesh(r,color,x=0,y=0,z=0,sx=1,sy=1,sz=1){
+ const v=[],f=[],rings=8,segments=12;
+ for(let j=0;j<=rings;j++){const a=Math.PI*j/rings;for(let i=0;i<segments;i++){const b=2*Math.PI*i/segments;v.push([x+Math.sin(a)*Math.cos(b)*r*sx,y+Math.cos(a)*r*sy,z+Math.sin(a)*Math.sin(b)*r*sz])}}
+ for(let j=0;j<rings;j++)for(let i=0;i<segments;i++){const n=j*segments+i,m=j*segments+(i+1)%segments;f.push([n,m,m+segments,n+segments])}
+ return {color,vertices:v,faces:f};
+}
+function cylinderMesh(r,h,color,x=0,y=0,z=0,topR=r){
+ const v=[],f=[],n=12;
+ for(let ring=0;ring<2;ring++){const rr=ring?topR:r,yy=y+(ring?.5:-.5)*h;for(let i=0;i<n;i++){const a=2*Math.PI*i/n;v.push([x+Math.cos(a)*rr,yy,z+Math.sin(a)*rr])}}
+ for(let i=0;i<n;i++)f.push([i,(i+1)%n,(i+1)%n+n,i+n]);
+ f.push(Array.from({length:n},(_,i)=>i).reverse(),Array.from({length:n},(_,i)=>i+n));
+ return {color,vertices:v,faces:f};
+}
+function roofMesh(color){
+ return {color,vertices:[[-.9,.48,-.68],[.9,.48,-.68],[0,1.2,-.68],[-.9,.48,.68],[.9,.48,.68],[0,1.2,.68]],faces:[[0,1,2],[5,4,3],[0,3,4,1],[0,2,5,3],[1,4,5,2]]};
+}
+function modelParts(type,color){
+ if(type==='house')return [cubeMesh(1.5,.95,1.2,'#E8B66A',0,-.1,0),roofMesh('#C65A45'),cubeMesh(.28,.48,.05,'#71452F',0,-.32,.63),cubeMesh(.25,.22,.05,'#9BE0FF',-.48,-.05,.63),cubeMesh(.25,.22,.05,'#9BE0FF',.48,-.05,.63)];
+ if(type==='tree')return [cylinderMesh(.13,.85,'#95613D',0,-.3,0),sphereMesh(.53,'#58D68D',0,.42,0,.95,1.05,.95),sphereMesh(.38,'#70E09A',-.22,.68,.05)];
+ if(type==='car')return [cubeMesh(1.5,.38,.72,color,0,-.1,0),cubeMesh(.78,.42,.62,'#9BE0FF',-.08,.27,0),sphereMesh(.2,'#20283B',-.48,-.31,.38,1,1,.55),sphereMesh(.2,'#20283B',.48,-.31,.38,1,1,.55),sphereMesh(.2,'#20283B',-.48,-.31,-.38,1,1,.55),sphereMesh(.2,'#20283B',.48,-.31,-.38,1,1,.55)];
+ if(type==='robot')return [cubeMesh(.62,.62,.48,color,0,-.08,0),cubeMesh(.72,.72,.56,'#A8C8E8',0,.66,0),sphereMesh(.09,'#FFFFFF',-.17,.72,.29),sphereMesh(.09,'#FFFFFF',.17,.72,.29),cylinderMesh(.09,.5,'#A8C8E8',-.48,-.25,0),cylinderMesh(.09,.5,'#A8C8E8',.48,-.25,0)];
+ if(type==='dragon')return [sphereMesh(.52,color,-.05,0,0,1.45,.72,.72),sphereMesh(.25,color,.62,.22,.02),sphereMesh(.18,'#FFD166',.78,.17,.18),roofMesh('#B892FF'),cylinderMesh(.09,.8,color,-.66,-.05,0,.025),sphereMesh(.16,color,-.5,-.28,.32),sphereMesh(.16,color,.28,-.28,.32)];
+ if(type==='table')return [cubeMesh(1.5,.16,.85,color,0,.22,0),cubeMesh(.13,.75,.13,'#95613D',-.58,-.2,-.28),cubeMesh(.13,.75,.13,'#95613D',.58,-.2,-.28),cubeMesh(.13,.75,.13,'#95613D',-.58,-.2,.28),cubeMesh(.13,.75,.13,'#95613D',.58,-.2,.28)];
+ if(type==='ball'||type==='sun')return [sphereMesh(.55,color)];
+ return [cubeMesh(.9,.9,.9,color)];
+}
+function project3D(p,s,rot){
+ const c=Math.cos(rot),q=Math.sin(rot),x=p[0]*c-p[2]*q,z=p[0]*q+p[2]*c;
+ return {x:(x-z)*.67*s,y:(-p[1]*.9+(x+z)*.28)*s,depth:x+z-p[1]*.2};
+}
+function shadeColor(hex,k){
+ const n=parseInt(hex.slice(1),16),r=Math.min(255,Math.round(((n>>16)&255)*k)),g=Math.min(255,Math.round(((n>>8)&255)*k)),b=Math.min(255,Math.round((n&255)*k));
+ return 'rgb('+r+','+g+','+b+')';
+}
+function drawModel3D(ctx,o,s,time){
+ const parts=modelParts(o.type,o.color),rot=time*.22;
+ const faces=[];
+ parts.forEach(part=>part.faces.forEach(face=>{
+  const pts=face.map(i=>project3D(part.vertices[i],s,rot));
+  const depth=pts.reduce((a,p)=>a+p.depth,0)/pts.length;
+  let light=.78;
+  if(pts.length>=3){const a=pts[0],b=pts[1],c=pts[2],ux=b.x-a.x,uy=b.y-a.y,vx=c.x-a.x,vy=c.y-a.y;light=Math.max(.48,Math.min(1.12,.78+Math.abs(ux*vy-uy*vx)/(s*s)*.12))}
+  faces.push({pts,depth,color:shadeColor(part.color,light)});
+ }));
+ faces.sort((a,b)=>a.depth-b.depth);
+ faces.forEach(face=>{ctx.beginPath();ctx.moveTo(face.pts[0].x,face.pts[0].y);for(let i=1;i<face.pts.length;i++)ctx.lineTo(face.pts[i].x,face.pts[i].y);ctx.closePath();ctx.fillStyle=face.color;ctx.fill();ctx.strokeStyle='rgba(8,12,30,.55)';ctx.lineWidth=1;ctx.stroke()});
+}
 function drawObject(ctx,o,cx,cy,s,time,mode){
  const x=cx+(o.props.x||0)*s,y=cy+(o.props.y||0)*s;
  ctx.save();ctx.translate(x,y);ctx.fillStyle=o.color;ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;
- const depth=mode==='3D'?s*.22:0;
+ if(mode==='3D'){drawModel3D(ctx,o,s,time)}else{
+ const depth=0;
  if(o.type==='house'){
   ctx.fillStyle='#E8B66A';rounded(ctx,-s*.75,-s*.2,s*1.5,s*.95,5);
   ctx.fillStyle='#C65A45';ctx.beginPath();ctx.moveTo(-s*.9,-s*.2);ctx.lineTo(0,-s*.95);ctx.lineTo(s*.9,-s*.2);ctx.closePath();ctx.fill();
@@ -62,6 +114,7 @@ function drawObject(ctx,o,cx,cy,s,time,mode){
  }else{
   ctx.fillRect(-s*.42,-s*.42,s*.84,s*.84);
   if(depth){ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.moveTo(s*.42,-s*.42);ctx.lineTo(s*.42+depth,-s*.42-depth*.5);ctx.lineTo(s*.42+depth,s*.42-depth*.5);ctx.lineTo(s*.42,s*.42);ctx.fill();}
+ }
  }
  ctx.restore();
  ctx.fillStyle='#F4F7FF';ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillText(o.label,x,y+s*.82);
