@@ -41,8 +41,9 @@ function drawObject(ctx,o,cx,cy,s,time,mode){
   ctx.fillStyle='#BDEBFF';rounded(ctx,-s*.4,-s*.48,s*.8,s*.36,8);
   ctx.fillStyle='#182033';for(const wx of [-.48,.48]){ctx.beginPath();ctx.arc(wx*s,s*.3,s*.16,0,Math.PI*2);ctx.fill();}
  }else if(o.type==='ball'||o.type==='sun'){
-  ctx.beginPath();ctx.arc(0,0,s*.48,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=.35;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-s*.15,-s*.16,s*.13,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(0,0,s*.48,0,Math.PI*2);
+  if(mode==='3D'){const g=ctx.createRadialGradient(-s*.18,-s*.2,s*.04,0,0,s*.5);g.addColorStop(0,'#FFFFFF');g.addColorStop(.22,o.color);g.addColorStop(1,'#26304A');ctx.fillStyle=g}else ctx.fillStyle=o.color;
+  ctx.fill();ctx.globalAlpha=.35;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-s*.15,-s*.16,s*.13,0,Math.PI*2);ctx.fill();
  }else if(o.type==='robot'){
   rounded(ctx,-s*.42,-s*.75,s*.84,s*.65,12);rounded(ctx,-s*.32,-s*.03,s*.64,s*.7,9);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-s*.17,-s*.48,s*.07,0,Math.PI*2);ctx.arc(s*.17,-s*.48,s*.07,0,Math.PI*2);ctx.fill();
@@ -54,6 +55,10 @@ function drawObject(ctx,o,cx,cy,s,time,mode){
   ctx.strokeStyle=o.color;ctx.lineWidth=s*.08;ctx.beginPath();ctx.moveTo(-s*.25,s*.2);ctx.lineTo(-s*.55,s*.55);ctx.moveTo(s*.2,s*.2);ctx.lineTo(s*.45,s*.5);ctx.stroke();
  }else if(o.type==='table'){
   ctx.fillRect(-s*.65,-s*.12,s*1.3,s*.18);ctx.fillRect(-s*.52,s*.05,s*.12,s*.55);ctx.fillRect(s*.4,s*.05,s*.12,s*.55);
+ }else if(o.type==='cube'&&mode==='3D'){
+  ctx.fillStyle=o.color;ctx.fillRect(-s*.42,-s*.32,s*.84,s*.84);
+  ctx.fillStyle='rgba(255,255,255,.24)';ctx.beginPath();ctx.moveTo(-s*.42,-s*.32);ctx.lineTo(-s*.12,-s*.55);ctx.lineTo(s*.72,-s*.55);ctx.lineTo(s*.42,-s*.32);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.moveTo(s*.42,-s*.32);ctx.lineTo(s*.72,-s*.55);ctx.lineTo(s*.72,s*.29);ctx.lineTo(s*.42,s*.52);ctx.closePath();ctx.fill();
  }else{
   ctx.fillRect(-s*.42,-s*.42,s*.84,s*.84);
   if(depth){ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.moveTo(s*.42,-s*.42);ctx.lineTo(s*.42+depth,-s*.42-depth*.5);ctx.lineTo(s*.42+depth,s*.42-depth*.5);ctx.lineTo(s*.42,s*.42);ctx.fill();}
