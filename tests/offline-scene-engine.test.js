@@ -14,6 +14,7 @@ test('reconnaît un dragon',()=>{const s=Engine.create('Un dragon');if(!s.object
 test('reconnaît une animation de chute',()=>{const s=Engine.create('Une balle tombe avec la gravité');if(!s.actions.some(a=>a.kind==='fall'))throw Error('action de chute absente')});
 test('choisit le mode 2D',()=>{if(Engine.create('Un dessin 2D de cube').mode!=='2D')throw Error('mode incorrect')});
 test('choisit le mode 3D',()=>{if(Engine.create('Une maison en 3D').mode!=='3D')throw Error('mode incorrect')});
+test('construit des maillages 3D valides',()=>{for(const type of ['cube','house','tree','car','robot','dragon','ball']){const g=Engine.geometryInfo(type,'#58A6FF');if(!g.valid||g.vertices<8||g.faces<6)throw Error('maillage invalide: '+type)}});
 test('fournit un objet de secours pour une idée inconnue',()=>{if(!Engine.create('Un objet étrange').objects.length)throw Error('scène vide')});
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
