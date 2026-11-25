@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
@@ -36,13 +37,29 @@ public class MainActivity extends Activity {
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(Locale.FRENCH);
-                tts.setSpeechRate(0.95f);
+                Voice offlineFrench = null;
+                if (tts.getVoices() != null) {
+                    for (Voice voice : tts.getVoices()) {
+                        if ("fr".equals(voice.getLocale().getLanguage())
+                                && !voice.isNetworkConnectionRequired()) {
+                            offlineFrench = voice;
+                            break;
+                        }
+                    }
+                }
+                if (offlineFrench != null) {
+                    tts.setVoice(offlineFrench);
+                    tts.setSpeechRate(0.95f);
+                    ttsReady = true;
+                } else {
+                    // L'application reste entièrement utilisable sans voix réseau.
+                    ttsReady = false;
+                }
                 tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                     @Override public void onStart(String id) { }
                     @Override public void onDone(String id) { done(); }
                     @Override public void onError(String id) { done(); }
                 });
-                ttsReady = true;
             }
         });
         web.loadUrl("file:///android_asset/index.html");
