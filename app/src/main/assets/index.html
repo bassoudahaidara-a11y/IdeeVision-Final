@@ -2,8 +2,9 @@
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Idée Vision</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script src="engine/json-engine-v2-1.js"></script>
+<script src="engine/offline-scene-engine.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -91,11 +92,6 @@ textarea::placeholder{color:#7C7EA3}
   <div id="pbar"></div>
 </section>
 
-<div id="sheet"><div class="panel">
-  <h3>Clé d'accès</h3>
-  <p>Elle reste seulement sur ton téléphone.</p>
-  <label>Clé Groq<small>Gratuite sur console.groq.com. Elle sert à comprendre ton idée et à écrire l'animation.</small></label><input id="kq" type="password" autocomplete="off" placeholder="gsk_…">
-  <button class="cta" id="save">Enregistrer</button>
 </div></div>
 
 <script>
@@ -307,42 +303,7 @@ function setW(t,s,p){$('wt').textContent=t;$('ws').textContent=s||'';$('wb').sty
 function cnt(){const n=$('idea').value.length;$('cnt').textContent=n+(n>1?' caractères':' caractère')}
 $('idea').addEventListener('input',cnt);
 
-function openSheet(){$('kq').value=LS.get('k_groq');$('sheet').classList.add('on')}
-$('gear').onclick=openSheet;
-$('save').onclick=()=>{LS.set('k_groq',$('kq').value.trim());MODELS=null;$('sheet').classList.remove('on');msg('')};
-$('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('sheet').classList.remove('on')});
-if(!LS.get('k_groq'))setTimeout(openSheet,500);
-
-async function groqModels(key){
-  const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{Authorization:'Bearer '+key}});
-  if(r.status===401)throw new Error('Ta clé Groq n\'est pas acceptée. Vérifie-la dans les réglages ⚙.');
-  if(!r.ok)throw new Error('Groq ne répond pas (erreur '+r.status+'). Réessaie dans un instant.');
-  const ids=((await r.json()).data||[]).map(m=>m.id);
-  const pref=['llama-3.3-70b-versatile','openai/gpt-oss-120b','openai/gpt-oss-20b','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant'];
-  const bad=/whisper|guard|tts|orpheus|playai|allam|safeguard/i;
-  const first=pref.filter(x=>ids.includes(x));
-  return first.concat(ids.filter(x=>!first.includes(x)&&!bad.test(x))).slice(0,4);
-}
-async function chat(messages,o){
-  const key=LS.get('k_groq');
-  if(!key)throw new Error('Ajoute ta clé Groq dans les réglages ⚙ pour commencer.');
-  if(!MODELS)MODELS=await groqModels(key);
-  if(!MODELS.length)throw new Error('Aucun modèle Groq disponible avec cette clé.');
-  let last='';
-  for(const m of MODELS){
-    for(const json of (o.json?[true,false]:[false])){
-      try{
-        const body={model:m,temperature:o.temp||.4,max_tokens:o.max||1500,messages:messages};
-        if(json)body.response_format={type:'json_object'};
-        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)});
-        if(!r.ok){last=r.status;continue}
-        const j=await r.json();return j.choices[0].message.content||'';
-      }catch(e){last=e.message}
-    }
-  }
-  throw new Error(last==429?'Groq reçoit trop de demandes. Attends une minute puis réessaie.':'Groq n\'a pas pu répondre (erreur '+last+'). Réessaie dans un instant.');
-}
-function extractCode(t){const m=t.match(/```(?:js|javascript)?\s*([\s\S]*?)```/);return (m?m[1]:t).trim()}
+$('gear').onclick=()=>msg('Idée Vision utilise maintenant son moteur local, sans clé API.');
 
 /* voix */
 function stopSpeech(){try{if(window.Android)Android.stop();else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}}
@@ -416,97 +377,22 @@ function stopLive(){
   if(cancelSay)cancelSay();stopSpeech();
 }
 
-/* pipeline */
+/* Pipeline local : aucune requête réseau ni clé API. */
+let offlineScene=null,stopOffline=null;
 async function start(){
  const idea=$('idea').value.trim();
- if(idea.length<10){msg('Écris un peu plus, pour que je comprenne bien ton idée.');return}
- if(!window.THREE){msg('Il faut internet pour afficher le film. Connecte-toi puis réessaie.');return}
- msg('');
- const my=++run;
- show('work');
- $('und').textContent='';
- setW('Je lis ton idée…','Un instant, je comprends ce que tu veux montrer.',8);
+ if(idea.length<5){msg('Décris ton idée avec quelques mots.');return}
+ if(!window.IdeeVisionOffline){msg('Le moteur local est introuvable.');return}
+ msg('');const my=++run;show('work');$('und').textContent='';
+ setW('Je construis ta scène…','Analyse locale de ta description.',25);
+ await new Promise(r=>setTimeout(r,120));
+ if(my!==run)return;
  try{
-  const t=await chat([{role:'system',content:UNDERSTAND_SYS},{role:'user',content:idea}],{json:true,max:900,temp:.4});
-  if(my!==run)return;
-  const d=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
-  und=d.comprehension||'';
-  $('und').textContent=und;
-  const refus=d.idee_claire===false&&!/image|schéma|schema|dessin|graphique|outil|générer|generer/i.test(d.raison||'');
-  if(refus){show('home');msg(d.raison||'Ajoute des détails à ton idée.');return}
-  if(!und)und='Je vais dessiner ton idée comme tu l’as décrite.';
-  setW('Je prépare les plans…','Je choisis les tailles et les positions.',25);
-  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'');
-  const bp=await chat([{role:'system',content:BLUEPRINT_SYS},{role:'user',content:base}],{max:1100,temp:.3});
-  if(my!==run)return;
-
-  // Essai JSON V2.1
-  let jsonOK=false;
-  try{
-   setW('Je construis la scène…','Moteur JSON V2.1.',42);
-   const messages=[{role:'system',content:JSON_SYS},{role:'user',content:base+'\nBLUEPRINT:\n'+bp}];
-   for(let attempt=0;attempt<3;attempt++){
-    try{
-     const answer=await chat(messages,{json:true,max:3800,temp:.2});
-     if(my!==run)return;
-     const spec=parseScene(answer);
-     window.IdeeVisionJSONV21.validate(spec);
-     setW('Je vérifie la scène…','Validation et simulation.',55+attempt*8);
-     const S=await dryJSON(spec);
-     if(my!==run)return;
-     const issues=S.report();
-     if(!issues.length){
-      lastScene=spec;
-      lastMode='json';
-      jsonOK=true;
-      break;
-     }
-     messages.push({role:'assistant',content:JSON.stringify(spec)});
-     messages.push({role:'user',content:'Corrige ces problèmes de réalisme : '+issues.join('; ')+'. Retourne le JSON complet.'});
-    }catch(e){
-     if(my!==run)return;
-     messages.push({role:'user',content:'Le JSON est invalide ou la simulation échoue : '+(e.message||e)+'. Corrige et retourne le JSON complet conforme au format demandé.'});
-    }
-   }
-  }catch(e){
-   jsonOK=false;
-  }
-
-  // Secours : ancien générateur JavaScript conservé
-  if(!jsonOK){
-   setW('Mode de secours…','Utilisation du générateur JavaScript existant.',60);
-   const msgs=[{role:'system',content:CODE_SYS},{role:'user',content:base+'\nBLUEPRINT:\n'+bp}];
-   let code=extractCode(await chat(msgs,{max:3800,temp:.3})),good=null;
-   if(my!==run)return;
-   for(let a=0;;a++){
-    setW('Je vérifie le réalisme…','Rien ne doit traverser un mur ni le sol.',65+a*10);
-    let err=null,issues=[];
-    try{const S=await dry(code);issues=S.report();good=code}catch(e){err=e}
-    if(my!==run)return;
-    if(!err&&!issues.length)break;
-    if(a>=2){
-     if(err){
-      if(good){code=good;break}
-      throw new Error('Je n’ai pas réussi à dessiner cette idée. Réessaie avec une description plus simple.');
-     }
-     break;
-    }
-    msgs.push({role:'assistant',content:'```js\n'+code+'\n```'});
-    msgs.push({role:'user',content:err?
-     'Corrige cette erreur : '+err.message+'. Retourne le code complet.':
-     'Corrige ces problèmes de réalisme : '+issues.join('; ')+'. Retourne le code complet.'});
-    code=extractCode(await chat(msgs,{max:3800,temp:.2}));
-   }
-   if(my!==run)return;
-   lastCode=code;
-   lastMode='js';
-  }
-  if(my!==run)return;
-  setW('Ton film est prêt','',100);
-  setTimeout(()=>{if(my===run)play()},800);
- }catch(e){
-  if(my===run){show('home');msg(e.message||'Une erreur est arrivée. Vérifie ta connexion et réessaie.')}
- }
+  offlineScene=window.IdeeVisionOffline.create(idea);
+  $('und').textContent='J’ai repéré '+offlineScene.objects.length+' élément(s). Mode '+offlineScene.mode+'.';
+  setW('Construction terminée','Aucun accès Internet nécessaire.',100);
+  setTimeout(()=>{if(my===run)play()},450);
+ }catch(e){show('home');msg('Je ne peux pas construire cette scène : '+e.message)}
 }
 $('go').onclick=start;
 
@@ -518,15 +404,9 @@ function setBar(mode){
   else mk('ghost','Arrêter',closePlay);
 }
 async function play(){
- if(!initGL()){msg('Il faut internet pour afficher le film.');show('home');return}
- stopLive();show('play');resize();$('cap').textContent='';setBar('stop');
- try{
-  if(lastMode==='json')await executeJSON(lastScene,true);
-  else await execute(lastCode,true);
-  setBar('end');
- }catch(e){
-  if(e.message!=='abort'){$('cap').textContent='Un problème est arrivé pendant le film.';setBar('end')}
- }
+ if(!offlineScene){show('home');msg('Décris une idée avant de lancer la scène.');return}
+ stopLive();if(stopOffline)stopOffline();show('play');$('cap').textContent='';setBar('stop');
+ stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>$('cap').textContent=t,()=>setBar('end'));
 }
 function closePlay(){stopLive();renderScene=null;show('home')}
 $('close').onclick=closePlay;
