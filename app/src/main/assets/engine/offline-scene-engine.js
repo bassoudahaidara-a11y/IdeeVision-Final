@@ -13,9 +13,16 @@ function detect(idea){
  if(/cube|boîte|boite/.test(t))add('cube','Cube',COLORS.bleu);
  if(/table/.test(t))add('table','Table',COLORS.orange);
  if(/soleil/.test(t))add('sun','Soleil',COLORS.jaune);
+ if(/planète|planete|satellite naturel/.test(t))add('planet','Planète',COLORS.bleu);
+ if(/fusée|fusee|rocket/.test(t))add('rocket','Fusée',COLORS.rouge);
+ if(/avion|aéronef|aeronef/.test(t))add('airplane','Avion',COLORS.bleu);
+ if(/bateau|navire|voilier/.test(t))add('boat','Bateau',COLORS.orange);
+ if(/fleur|rose des jardins/.test(t))add('flower','Fleur',COLORS.violet);
+ if(/personne|personnage|humain/.test(t))add('person','Personne',COLORS.bleu);
+ if(/pont/.test(t))add('bridge','Pont',COLORS.orange);
  if(!objects.length)add('cube','Objet',COLORS.bleu);
  const quantityWords={'deux':2,'2':2,'trois':3,'3':3,'quatre':4,'4':4,'cinq':5,'5':5};
- const nouns={house:'maison|villa|bâtiment|batiment',tree:'arbre',car:'voiture|véhicule|vehicule|auto',robot:'robot',dragon:'dragon',ball:'ballon|balle|sphère|sphere',cube:'cube|boîte|boite',table:'table',sun:'soleil'};
+ const nouns={house:'maison|villa|bâtiment|batiment',tree:'arbre',car:'voiture|véhicule|vehicule|auto',robot:'robot',dragon:'dragon',ball:'ballon|balle|sphère|sphere',cube:'cube|boîte|boite',table:'table',sun:'soleil',planet:'planète|planete',rocket:'fusée|fusee|rocket',airplane:'avion|aéronef|aeronef',boat:'bateau|navire|voilier',flower:'fleur',person:'personne|personnage|humain',bridge:'pont'};
  const expanded=[];
  objects.forEach(o=>{
   const pattern=nouns[o.type];
@@ -85,7 +92,13 @@ function modelParts(type,color){
  if(type==='robot')return [cubeMesh(.62,.62,.48,color,0,-.08,0),cubeMesh(.72,.72,.56,'#A8C8E8',0,.66,0),sphereMesh(.09,'#FFFFFF',-.17,.72,.29),sphereMesh(.09,'#FFFFFF',.17,.72,.29),cylinderMesh(.09,.5,'#A8C8E8',-.48,-.25,0),cylinderMesh(.09,.5,'#A8C8E8',.48,-.25,0)];
  if(type==='dragon')return [sphereMesh(.52,color,-.05,0,0,1.45,.72,.72),sphereMesh(.25,color,.62,.22,.02),sphereMesh(.18,'#FFD166',.78,.17,.18),roofMesh('#B892FF'),cylinderMesh(.09,.8,color,-.66,-.05,0,.025),sphereMesh(.16,color,-.5,-.28,.32),sphereMesh(.16,color,.28,-.28,.32)];
  if(type==='table')return [cubeMesh(1.5,.16,.85,color,0,.22,0),cubeMesh(.13,.75,.13,'#95613D',-.58,-.2,-.28),cubeMesh(.13,.75,.13,'#95613D',.58,-.2,-.28),cubeMesh(.13,.75,.13,'#95613D',-.58,-.2,.28),cubeMesh(.13,.75,.13,'#95613D',.58,-.2,.28)];
- if(type==='ball'||type==='sun')return [sphereMesh(.55,color)];
+ if(type==='ball'||type==='sun'||type==='planet')return [sphereMesh(.55,color)];
+ if(type==='rocket')return [cylinderMesh(.24,1.05,'#DCE8F8',0,-.05,0),roofMesh(color),sphereMesh(.08,'#9BE0FF',0,.1,.25),cubeMesh(.18,.34,.08,color,-.3,-.38,0),cubeMesh(.18,.34,.08,color,.3,-.38,0)];
+ if(type==='airplane')return [cubeMesh(1.35,.18,.2,'#DCE8F8',0,0,0),cubeMesh(.34,.09,1.45,color,0,.02,0),cubeMesh(.5,.08,.65,color,-.55,.02,0),cubeMesh(.5,.08,.65,color,.55,.02,0),sphereMesh(.13,'#9BE0FF',.05,.12,.08)];
+ if(type==='boat')return [cubeMesh(1.5,.25,.75,color,0,-.25,0),roofMesh('#DCE8F8'),cubeMesh(.12,.75,.12,'#95613D',0,.25,0)];
+ if(type==='flower')return [cylinderMesh(.045,.8,'#58D68D',0,-.25,0),sphereMesh(.2,'#FFD166',0,.25,0),sphereMesh(.18,color,.22,.28,0),sphereMesh(.18,color,-.22,.28,0),sphereMesh(.18,color,0,.28,.22),sphereMesh(.18,color,0,.28,-.22)];
+ if(type==='person')return [sphereMesh(.2,'#E8B66A',0,.65,0),cubeMesh(.38,.7,.25,color,0,.05,0),cylinderMesh(.07,.55,'#30384D',-.13,-.55,0),cylinderMesh(.07,.55,'#30384D',.13,-.55,0),cylinderMesh(.06,.48,'#E8B66A',-.28,.12,0),cylinderMesh(.06,.48,'#E8B66A',.28,.12,0)];
+ if(type==='bridge')return [cubeMesh(1.7,.15,.5,color,0,0,0),cubeMesh(.18,.7,.18,'#AAB3C5',-.65,-.4,0),cubeMesh(.18,.7,.18,'#AAB3C5',.65,-.4,0)];
  return [cubeMesh(.9,.9,.9,color)];
 }
 function project3D(p,s,rot){
