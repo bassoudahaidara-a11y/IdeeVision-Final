@@ -41,7 +41,8 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 
 ### 3. Comparaison des modèles
 - [x] Définir les critères et le protocole de notation.
-- [ ] Vérifier les fiches officielles, licences et restrictions de redistribution.
+- [x] Faire une présélection documentaire de quatre candidats à partir de leurs fiches officielles.
+- [ ] Vérifier les licences complètes et restrictions de redistribution.
 - [ ] Évaluer plusieurs candidats sur le même corpus.
 - [ ] Mesurer mémoire, vitesse, chauffe et stabilité sur le Galaxy A05s.
 - [ ] Choisir le modèle seulement après les résultats.
