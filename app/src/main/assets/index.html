@@ -6,6 +6,7 @@
 <script src="engine/json-engine-v2-1.js"></script>
 <script src="engine/cognitive-core-v1.js"></script>
 <script src="engine/context-memory-v1.js"></script>
+<script src="engine/logical-reasoning-v1.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -427,6 +428,9 @@ async function start(){
  const cognitive = window.IdeeVisionCognitive ? window.IdeeVisionCognitive.analyze(idea) : null;
  window.lastCognitiveAnalysis = cognitive;
  if(cognitive && cognitive.safety.status === 'review_required'){msg('Je ne peux pas aider à préparer des instructions dangereuses. Je peux expliquer les principes de sécurité ou proposer une alternative sans danger.');return}
+ const reasoningPlan = window.IdeeVisionReasoning ? window.IdeeVisionReasoning.buildPlan(idea,cognitive) : null;
+ const reasoningContext = reasoningPlan ? window.IdeeVisionReasoning.toPromptContext(reasoningPlan) : 'Moteur de raisonnement indisponible.';
+ window.lastReasoningPlan = reasoningPlan;
  const referenceContext = contextMemory ? contextMemory.resolveReference(idea) : null;
  const previousContext = contextMemory ? contextMemory.context(idea) : '';
  if(contextMemory) contextMemory.add('user',idea,{intent:cognitive&&cognitive.intent});
@@ -450,7 +454,7 @@ async function start(){
   setW('Je prépare les plans…','Je choisis les tailles et les positions.',25);
   const cognitiveContext = cognitive ? window.IdeeVisionCognitive.makePromptContext(cognitive) : 'Analyse cognitive locale indisponible.';
   const recentIntentions = cognitionSession ? cognitionSession.recent().slice(-4).map(x=>x.intent).join(', ') : '';
-  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
+  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
   const bp=await chat([{role:'system',content:BLUEPRINT_SYS},{role:'user',content:base}],{max:1100,temp:.3});
   if(my!==run)return;
 
