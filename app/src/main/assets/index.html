@@ -9,6 +9,7 @@
 <script src="engine/reasoning-engine-v1.js"></script>
 <script src="engine/problem-solving-engine-v1.js"></script>
 <script src="engine/scientific-engine-v1.js"></script>
+<script src="engine/scientific-advanced-engine-v1.js"></script>
 <script src="engine/world-engine-v1.js"></script>
 <script src="engine/offline-scene-engine.js"></script>
 <style>
@@ -210,7 +211,7 @@ async function start(){
    const structured=window.IdeeVisionUnderstandingContract.fromLexical(lexical);
    const checked=window.IdeeVisionUnderstandingContract.validate(structured);
    window.IdeeVisionLastUnderstanding={result:structured,valid:checked.valid,errors:checked.errors};
-   if(window.IdeeVisionReasoning){const base=window.IdeeVisionReasoning.createScientificStarterBase();const imported=window.IdeeVisionReasoning.importActiveKnowledge(base,window.IdeeVisionKnowledge);const reasoning=window.IdeeVisionReasoning.answerText(base,idea,window.IdeeVisionKnowledge);window.IdeeVisionLastReasoning={result:reasoning,importedKnowledge:imported,baseRevision:base.revision,scientificEngine:window.IdeeVisionScientific?window.IdeeVisionScientific.version:null,problemSolver:window.IdeeVisionProblemSolver?window.IdeeVisionProblemSolver.version:null};window.IdeeVisionReasoningBase=base;window.IdeeVisionProblemSolverReady=!!window.IdeeVisionProblemSolver;window.IdeeVisionScientificReady=!!window.IdeeVisionScientific;}
+   if(window.IdeeVisionReasoning){const base=window.IdeeVisionReasoning.createScientificStarterBase();const imported=window.IdeeVisionReasoning.importActiveKnowledge(base,window.IdeeVisionKnowledge);const reasoning=window.IdeeVisionReasoning.answerText(base,idea,window.IdeeVisionKnowledge);window.IdeeVisionLastReasoning={result:reasoning,importedKnowledge:imported,baseRevision:base.revision,scientificEngine:window.IdeeVisionScientific?window.IdeeVisionScientific.version:null,problemSolver:window.IdeeVisionProblemSolver?window.IdeeVisionProblemSolver.version:null,scientificAdvanced:window.IdeeVisionScientificAdvanced?window.IdeeVisionScientificAdvanced.version:null};window.IdeeVisionReasoningBase=base;window.IdeeVisionProblemSolverReady=!!window.IdeeVisionProblemSolver;window.IdeeVisionScientificReady=!!window.IdeeVisionScientific;window.IdeeVisionScientificAdvancedReady=!!window.IdeeVisionScientificAdvanced;}
    if(!checked.valid) console.warn('Interprétation provisoire non validée',checked.errors);
   }
   isWorldScene=!!(window.IdeeVisionWorld&&window.IdeeVisionWorld.isWorldRequest(idea));
