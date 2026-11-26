@@ -5,6 +5,7 @@ function detect(idea){
  const t=idea.toLowerCase(), mode=/\b(3d|trois dimensions|volume|en relief)\b/.test(t)?'3D':/\b(2d|deux dimensions|à plat|schema|schéma|dessin)\b/.test(t)?'2D':'3D';
  const objects=[], add=(type,label,color,props={})=>objects.push({type,label,color,props});
  if(/maison|villa|bâtiment|batiment/.test(t)){add('house','Maison',COLORS.orange);if(/arbre/.test(t))add('tree','Arbre',COLORS.vert,{x:-2.7});if(/voiture|auto/.test(t))add('car','Voiture',COLORS.rouge,{x:2.5});}
+ if(/ordinateur|pc de bureau|ordinateur portable|ordinateur fixe/.test(t))add('computer','Ordinateur',COLORS.bleu);
  if(/robot/.test(t))add('robot','Robot',COLORS.bleu);
  if(/dragon/.test(t))add('dragon','Dragon',COLORS.violet);
  if(/voiture|voiture|véhicule|vehicule|auto/.test(t)&&!objects.some(o=>o.type==='car'))add('car','Voiture',COLORS.rouge);
@@ -22,7 +23,7 @@ function detect(idea){
  if(/pont/.test(t))add('bridge','Pont',COLORS.orange);
  if(!objects.length)add('cube','Objet',COLORS.bleu);
  const quantityWords={'deux':2,'2':2,'trois':3,'3':3,'quatre':4,'4':4,'cinq':5,'5':5};
- const nouns={house:'maison|villa|bâtiment|batiment',tree:'arbre',car:'voiture|véhicule|vehicule|auto',robot:'robot',dragon:'dragon',ball:'ballon|balle|sphère|sphere',cube:'cube|boîte|boite',table:'table',sun:'soleil',planet:'planète|planete',rocket:'fusée|fusee|rocket',airplane:'avion|aéronef|aeronef',boat:'bateau|navire|voilier',flower:'fleur',person:'personne|personnage|humain',bridge:'pont'};
+ const nouns={house:'maison|villa|bâtiment|batiment',computer:'ordinateur|pc de bureau|ordinateur portable|ordinateur fixe',tree:'arbre',car:'voiture|véhicule|vehicule|auto',robot:'robot',dragon:'dragon',ball:'ballon|balle|sphère|sphere',cube:'cube|boîte|boite',table:'table',sun:'soleil',planet:'planète|planete',rocket:'fusée|fusee|rocket',airplane:'avion|aéronef|aeronef',boat:'bateau|navire|voilier',flower:'fleur',person:'personne|personnage|humain',bridge:'pont'};
  const expanded=[];
  objects.forEach(o=>{
   const pattern=nouns[o.type];
@@ -86,6 +87,14 @@ function roofMesh(color){
  return {color,vertices:[[-.9,.48,-.68],[.9,.48,-.68],[0,1.2,-.68],[-.9,.48,.68],[.9,.48,.68],[0,1.2,.68]],faces:[[0,1,2],[5,4,3],[0,3,4,1],[0,2,5,3],[1,4,5,2]]};
 }
 function modelParts(type,color){
+ if(type==='computer')return [
+  cubeMesh(1.05,.72,.10,'#26364F',0,.38,-.10),
+  cubeMesh(.94,.61,.035,'#72B9E8',0,.39,-.035),
+  cubeMesh(.13,.28,.13,'#AAB3C5',0,-.10,-.10),
+  cubeMesh(.56,.08,.34,'#8999B2',0,-.27,.02),
+  cubeMesh(.72,.045,.28,'#D6DFEC',-.02,-.36,.38),
+  cubeMesh(.16,.045,.20,'#AAB3C5',.52,-.37,.42)
+ ];
  if(type==='house')return [cubeMesh(1.5,.95,1.2,'#E8B66A',0,-.1,0),roofMesh('#C65A45'),cubeMesh(.28,.48,.05,'#71452F',0,-.32,.63),cubeMesh(.25,.22,.05,'#9BE0FF',-.48,-.05,.63),cubeMesh(.25,.22,.05,'#9BE0FF',.48,-.05,.63)];
  if(type==='tree')return [cylinderMesh(.13,.85,'#95613D',0,-.3,0),sphereMesh(.53,'#58D68D',0,.42,0,.95,1.05,.95),sphereMesh(.38,'#70E09A',-.22,.68,.05)];
  if(type==='car')return [cubeMesh(1.5,.38,.72,color,0,-.1,0),cubeMesh(.78,.42,.62,'#9BE0FF',-.08,.27,0),sphereMesh(.2,'#20283B',-.48,-.31,.38,1,1,.55),sphereMesh(.2,'#20283B',.48,-.31,.38,1,1,.55),sphereMesh(.2,'#20283B',-.48,-.31,-.38,1,1,.55),sphereMesh(.2,'#20283B',.48,-.31,-.38,1,1,.55)];
