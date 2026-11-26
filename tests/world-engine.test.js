@@ -893,5 +893,16 @@ test('une sélection vide efface l’objet précédemment sélectionné',()=>{
  assert(selected.selectedId==='cube'&&cleared.selectedId===null&&cleared.lastSelection===null,'sélection non effacée');
 });
 
+
+test('initialise une caméra avec paramètres normalisés',()=>{const c=World.createCameraState({mode:'invalide',fov:500,distance:-2});assert(c.mode==='orbit'&&c.fov===100&&c.distance===.25,'normalisation incorrecte');});
+test('calcule une direction de caméra normalisée',()=>{const d=World.getCameraDirection(World.createCameraState());assert(Math.abs(d.x)<1e-9&&Math.abs(d.y)<1e-9&&Math.abs(d.z+1)<1e-9,'direction incorrecte');});
+test('orbite autour de la cible et limite le tangage',()=>{const c=World.createCameraState({target:{x:2,y:1,z:3},distance:5}),n=World.orbitCamera(c,Math.PI/2,10);assert(Math.abs(n.position.x-7)<1e-6&&n.pitch<1.53,'orbite incorrecte');});
+test('zoom et dolly conservent une distance sûre',()=>{const c=World.createCameraState({distance:5});assert(World.dollyCamera(c,-100).distance===.25&&World.zoomCamera(c,-3).distance>=.25,'limite de zoom incorrecte');});
+test('déplace caméra et cible dans le même repère',()=>{const c=World.createCameraState({position:{x:0,y:2,z:5},target:{x:0,y:2,z:4},moveSpeed:2}),n=World.moveCamera(c,{x:1,y:1,z:0});assert(n.position.x===2&&n.position.y===4&&n.target.x===2,'translation incorrecte');});
+test('respecte les limites spatiales de déplacement',()=>{const c=World.createCameraState({moveSpeed:5,bounds:{minX:-1,maxX:1,minY:0,maxY:3,minZ:-2,maxZ:2}}),n=World.moveCamera(c,{x:1,y:1,z:0});assert(n.position.x===1&&n.position.y===3,'bornes ignorées');});
+test('change de mode et suit un objet',()=>{const o={id:'cube',transform:{position:{x:4,y:0,z:2}}};let c=World.updateCameraMode(World.createCameraState(),'follow',{followId:'cube'});c=World.updateCameraFollow(c,[o],1);assert(c.target.x===4&&c.target.z===2,'suivi incorrect');c=World.updateCameraMode(c,'first-person',{target:{x:1,y:2,z:3}});assert(c.mode==='first-person'&&c.distance===1,'première personne incorrecte');});
+test('cadre un objet à partir de sa géométrie',()=>{const mesh=World.createBoxGeometry(2,2,2),o={id:'box',mesh,transform:{position:{x:3,y:1,z:0},rotation:{x:0,y:0,z:0},scale:{x:1,y:1,z:1}}},c=World.focusCameraOnObject(World.createCameraState(),o);assert(c.target.x===3&&c.target.y===1&&c.distance>0,'cadrage incorrect');});
+test('sauvegarde et restaure une caméra',()=>{const c=World.createCameraState({mode:'third-person',yaw:.7,pitch:.2,fov:72,distance:8,followId:'hero'}),r=World.restoreCameraState(World.serializeCameraState(c));assert(r.ok&&r.camera.mode==='third-person'&&r.camera.fov===72&&r.camera.yaw===.7&&r.camera.followId==='hero','restauration incorrecte');assert(!World.restoreCameraState('{bad').ok,'JSON invalide accepté');});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
