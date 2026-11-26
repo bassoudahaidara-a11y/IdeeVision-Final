@@ -22,3 +22,6 @@ jobs:
         run: node --test tests/knowledge-base-v1.test.js
       - name: Tester le planificateur multi-moteurs
         run: node --test tests/multi-engine-orchestrator-v1.test.js
+
+      - name: Tester le contrôle scientifique
+        run: node --test tests/scientific-validation-v1.test.js
