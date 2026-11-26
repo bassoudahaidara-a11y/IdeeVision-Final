@@ -797,5 +797,101 @@ test('l’aperçu de matériau expose plusieurs échantillons et propriétés',(
  assert(preview.validation.valid&&preview.properties.roughness===material.roughness,'propriétés non validées');
 });
 
+
+test('une scène interactive valide ses objets et rejette les identifiants dupliqués',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([{id:'cube',name:'Cube',mesh},{id:'cube',mesh}]);
+ assert(scene.kind==='interactive-3d-scene'&&!scene.validation.valid,'identifiants dupliqués acceptés');
+ assert(scene.validation.errors.some(e=>e.indexOf('duplicate-object-id')===0),'doublon non signalé');
+ const valid=World.createInteractiveScene([{id:'cube',mesh}]);
+ assert(valid.validation.valid&&valid.objects.length===1,'scène valide rejetée');
+});
+test('le lancer de rayon sélectionne le premier objet rencontré',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([
+  {id:'far',mesh,transform:{position:{z:5}}},
+  {id:'near',mesh,transform:{position:{z:2}}}
+ ]);
+ const hit=World.pickSceneObject(scene,{origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}});
+ assert(hit&&hit.id==='near'&&Math.abs(hit.distance-1)<1e-9,'objet le plus proche non sélectionné');
+ const selected=World.selectSceneObject(scene,{origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}});
+ assert(selected.selectedId==='near'&&selected.revision===1,'état de sélection incorrect');
+});
+test('le lancer de rayon respecte les objets cachés, verrouillés et non sélectionnables',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([
+  {id:'hidden',mesh,visible:false},
+  {id:'locked',mesh,locked:true,transform:{position:{z:2}}},
+  {id:'disabled',mesh,selectable:false,transform:{position:{z:4}}},
+  {id:'target',mesh,transform:{position:{z:6}}}
+ ]);
+ const hit=World.pickSceneObject(scene,{origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}});
+ assert(hit&&hit.id==='target','objet non sélectionnable choisi');
+ const none=World.pickSceneObject(scene,{origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}},{maxDistance:4});
+ assert(none===null,'distance maximale ignorée');
+});
+test('les intersections de rayons gèrent les directions nulles et les rayons invalides',()=>{
+ const bounds={min:[-1,-1,-1],max:[1,1,1]};
+ const hit=World.intersectRayBounds({origin:{x:0,y:0,z:-4},direction:{x:0,y:0,z:2}},bounds);
+ assert(hit&&Math.abs(hit.distance-3)<1e-9,'direction non normalisée incorrecte');
+ assert(World.intersectRayBounds({origin:{x:3,y:0,z:0},direction:{x:0,y:1,z:0}},bounds)===null,'rayon parallèle mal traité');
+ assert(World.intersectRayBounds({origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:0}},bounds)===null,'rayon nul accepté');
+ assert(World.intersectRayBounds({origin:{x:0,y:0,z:4},direction:{x:0,y:0,z:1}},bounds)===null,'intersection derrière la caméra acceptée');
+});
+test('le déplacement, la rotation et le redimensionnement conservent les objets sources',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([{id:'piece',mesh}]);
+ const moved=World.moveSceneObject(scene,'piece',{x:3,y:1,z:-2});
+ assert(moved.updated&&moved.scene.objects[0].transform.position.x===3,'déplacement incorrect');
+ const rotated=World.rotateSceneObject(moved.scene,'piece',{y:Math.PI/2});
+ assert(rotated.updated&&Math.abs(rotated.scene.objects[0].transform.rotation.y-Math.PI/2)<1e-9,'rotation incorrecte');
+ const scaled=World.scaleSceneObject(rotated.scene,'piece',{x:2,y:1,z:.5});
+ assert(scaled.updated&&scaled.scene.objects[0].transform.scale.x===2&&scaled.scene.objects[0].transform.scale.z===.5,'redimensionnement incorrect');
+ assert(scene.objects[0].transform.position.x===0&&scene.objects[0].transform.scale.x===1,'scène source modifiée');
+});
+test('les objets verrouillés ne peuvent pas être transformés',()=>{
+ const scene=World.createInteractiveScene([{id:'fixed',mesh:World.createBoxGeometry(1,1,1),locked:true}]);
+ for(const result of [World.moveSceneObject(scene,'fixed',{x:1}),World.rotateSceneObject(scene,'fixed',{y:1}),World.scaleSceneObject(scene,'fixed',2)]){
+  assert(!result.updated&&result.reason==='object-locked','objet verrouillé modifié');
+ }
+});
+test('la détection de collisions mesure les recouvrements des volumes englobants',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([
+  {id:'a',mesh},{id:'b',mesh,transform:{position:{x:1.5}}},{id:'c',mesh,transform:{position:{x:5}}}
+ ]);
+ const collisions=World.detectSceneCollisions(scene);
+ assert(collisions.length===1&&collisions[0].objectA==='a'&&collisions[0].objectB==='b','collision inattendue');
+ assert(Math.abs(collisions[0].penetration-.5)<1e-9,'profondeur de collision incorrecte');
+});
+test('le déplacement peut être bloqué lorsqu’il crée une collision',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([
+  {id:'moving',mesh,transform:{position:{x:-3}}},{id:'obstacle',mesh}
+ ]);
+ const blocked=World.moveSceneObject(scene,'moving',{x:2},{preventCollision:true});
+ assert(!blocked.updated&&blocked.reason==='collision-blocked','déplacement en collision accepté');
+ assert(scene.objects[0].transform.position.x===-3,'scène initiale modifiée');
+ const allowed=World.moveSceneObject(scene,'moving',{x:2});
+ assert(allowed.updated&&allowed.collisions.length===1,'déplacement libre non effectué');
+});
+test('la visibilité et le verrouillage modifient un objet sans altérer la scène source',()=>{
+ const scene=World.createInteractiveScene([{id:'target',mesh:World.createBoxGeometry(1,1,1)}]);
+ const hidden=World.setSceneObjectVisibility(scene,'target',false);
+ const locked=World.setSceneObjectLock(hidden,'target',true);
+ assert(hidden.objects[0].visible===false&&locked.objects[0].locked,'états objet incorrects');
+ assert(scene.objects[0].visible===true&&scene.objects[0].locked===false,'scène source altérée');
+});
+test('le résumé de scène expose sélection, visibilité, verrouillage et collisions',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),scene=World.createInteractiveScene([
+  {id:'a',name:'Objet A',mesh},{id:'b',name:'Objet B',mesh,visible:false},{id:'c',mesh,locked:true,transform:{position:{x:1}}}
+ ]);
+ const selected=World.selectSceneObject(scene,{origin:{x:0,y:0,z:-5},direction:{x:0,y:0,z:1}});
+ const summary=World.getSceneInteractionSummary(selected);
+ assert(summary.objectCount===3&&summary.visibleCount===2&&summary.lockedCount===1,'comptage incorrect');
+ assert(summary.selectedId==='a'&&summary.selectedName==='Objet A','résumé sélection incorrect');
+ assert(summary.collisionCount===1&&summary.valid,'résumé collision ou validation incorrect');
+});
+test('une sélection vide efface l’objet précédemment sélectionné',()=>{
+ const mesh=World.createBoxGeometry(1,1,1),scene=World.createInteractiveScene([{id:'cube',mesh}]);
+ const selected=World.selectSceneObject(scene,{origin:{x:0,y:0,z:-3},direction:{x:0,y:0,z:1}});
+ const cleared=World.selectSceneObject(selected,{origin:{x:10,y:0,z:0},direction:{x:0,y:1,z:0}});
+ assert(selected.selectedId==='cube'&&cleared.selectedId===null&&cleared.lastSelection===null,'sélection non effacée');
+});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
