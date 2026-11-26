@@ -106,7 +106,7 @@
       return {
         id: 'objet_' + (index + 1),
         type: mention.type,
-        quantity: Math.min(20, amount),
+        quantity: Math.min(20, amount),\n        quantityClamped: amount > 20,
         attributes: {
           color: color ? color.value : null,
           size: size ? size.value : null,
@@ -134,7 +134,7 @@
     const clarifications = [];
     if (!source) clarifications.push('Décris ce que tu veux créer ou étudier.');
     else if (objects.length === 0) clarifications.push('Je n’ai pas encore identifié l’objet principal. Peux-tu le décrire autrement ?');
-    if (objects.some(o => o.quantity === 20)) clarifications.push('La quantité demandée dépasse la limite initiale de 20 objets.');
+    if (objects.some(o => o.quantityClamped)) clarifications.push('La quantité demandée dépasse la limite initiale de 20 objets.');
 
     return {
       schemaVersion: 1,
