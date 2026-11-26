@@ -640,6 +640,62 @@ function mixColors(a,b,t){
  const x=hexToRgb(a),y=hexToRgb(b),f=Math.max(0,Math.min(1,Number(t)||0));
  return rgbToHex(x.map((v,i)=>v+(y[i]-v)*f));
 }
+
+function cloneGeometryMesh(mesh){if(!mesh||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.faces))return null;return Object.assign({},mesh,{vertices:mesh.vertices.map(v=>v.slice()),faces:mesh.faces.map(f=>f.slice()),uvs:Array.isArray(mesh.uvs)?mesh.uvs.map(v=>v.slice()):mesh.uvs,faceMaterials:Array.isArray(mesh.faceMaterials)?mesh.faceMaterials.slice():mesh.faceMaterials});}
+function geometryFaceNormal(vertices,face){const a=vertices[face[0]],b=vertices[face[1]],c=vertices[face[2]],u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(...n)||1;return n.map(x=>x/l);}
+function extrudeGeometryFace(mesh,faceIndex,distance){
+ const out=cloneGeometryMesh(mesh),d=Number(distance);if(!out||!Number.isInteger(faceIndex)||!out.faces[faceIndex]||!Number.isFinite(d)||Math.abs(d)<1e-9)return {ok:false,mesh:null,error:'invalid-extrusion'};
+ const face=out.faces[faceIndex],normal=geometryFaceNormal(out.vertices,face),top=[];
+ face.forEach(i=>{const v=out.vertices[i];top.push(out.vertices.length);out.vertices.push([v[0]+normal[0]*d,v[1]+normal[1]*d,v[2]+normal[2]*d]);});
+ const sides=[];for(let i=0;i<face.length;i++){const j=(i+1)%face.length;sides.push([face[i],face[j],top[j],top[i]]);}
+ out.faces.splice(faceIndex,1,...sides,top);
+ if(Array.isArray(out.faceMaterials)){const mat=out.faceMaterials.splice(faceIndex,1)[0];out.faceMaterials.splice(faceIndex,0,...sides.map(()=>mat),mat);}
+ out.primitive='extruded';const validation=validateGeometryMesh(out);return {ok:validation.valid,mesh:out,error:validation.valid?null:validation.errors[0],normal};
+}
+function subdivideGeometryFace(mesh,faceIndex){
+ const out=cloneGeometryMesh(mesh);if(!out||!Number.isInteger(faceIndex)||!out.faces[faceIndex])return {ok:false,mesh:null,error:'face-not-found'};
+ const face=out.faces[faceIndex],center=face.reduce((p,i)=>p.map((v,k)=>v+out.vertices[i][k]/face.length),[0,0,0]),centerIndex=out.vertices.length;out.vertices.push(center);
+ const triangles=face.map((v,i)=>[v,face[(i+1)%face.length],centerIndex]);out.faces.splice(faceIndex,1,...triangles);
+ if(Array.isArray(out.faceMaterials)){const mat=out.faceMaterials.splice(faceIndex,1)[0];out.faceMaterials.splice(faceIndex,0,...triangles.map(()=>mat));}
+ out.primitive='subdivided';const validation=validateGeometryMesh(out);return {ok:validation.valid,mesh:out,error:validation.valid?null:validation.errors[0]};
+}
+function moveGeometryVertex(mesh,vertexIndex,position){
+ const out=cloneGeometryMesh(mesh),p=position&&typeof position==='object'?position:null;if(!out||!Number.isInteger(vertexIndex)||!out.vertices[vertexIndex]||!p||![p.x,p.y,p.z].every(v=>Number.isFinite(Number(v))))return {ok:false,mesh:null,error:'invalid-vertex-edit'};
+ out.vertices[vertexIndex]=[Number(p.x),Number(p.y),Number(p.z)];const validation=validateGeometryMesh(out);return {ok:validation.valid,mesh:out,error:validation.valid?null:validation.errors[0],validation};
+}
+function splitGeometryEdge(mesh,a,b){
+ const out=cloneGeometryMesh(mesh);if(!out||!Number.isInteger(a)||!Number.isInteger(b)||a===b||!out.vertices[a]||!out.vertices[b])return {ok:false,mesh:null,error:'invalid-edge'};
+ let count=0;const mid=out.vertices.length,va=out.vertices[a],vb=out.vertices[b];out.vertices.push(va.map((v,i)=>(v+vb[i])/2));
+ out.faces=out.faces.map(face=>{const next=[];for(let i=0;i<face.length;i++){const x=face[i],y=face[(i+1)%face.length];next.push(x);if((x===a&&y===b)||(x===b&&y===a)){next.push(mid);count++;}}return next;});
+ if(count===0)return {ok:false,mesh:null,error:'edge-not-found'};out.primitive='edge-split';return {ok:true,mesh:out,splitCount:count,vertexIndex:mid};
+}
+function separateGeometryIslands(mesh){
+ if(!mesh||!Array.isArray(mesh.faces)||!Array.isArray(mesh.vertices))return [];
+ const parent=mesh.faces.map((_,i)=>i),find=x=>parent[x]===x?x:(parent[x]=find(parent[x])),join=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[b]=a;},owners=new Map();
+ mesh.faces.forEach((face,i)=>face.forEach(v=>{if(owners.has(v))join(i,owners.get(v));else owners.set(v,i);}));
+ const groups=new Map();mesh.faces.forEach((face,i)=>{const root=find(i);if(!groups.has(root))groups.set(root,[]);groups.get(root).push(face);});
+ return Array.from(groups.values()).map((faces,index)=>{const used=Array.from(new Set(faces.flat())),map=new Map(used.map((v,i)=>[v,i])),out={type:'mesh',primitive:'island',vertices:used.map(i=>mesh.vertices[i].slice()),faces:faces.map(f=>f.map(i=>map.get(i))),material:mesh.material||'#AAB6C4'};return {id:'island-'+index,mesh:out,validation:validateGeometryMesh(out)};});
+}
+function createExtrudedPolygonGeometry(profile,height,material){
+ if(!Array.isArray(profile)||profile.length<3||!profile.every(p=>Array.isArray(p)&&p.length>=2&&p.slice(0,2).every(Number.isFinite))||!Number.isFinite(Number(height))||Math.abs(Number(height))<.001)return {type:'mesh',primitive:'invalid',vertices:[],faces:[],material};
+ const h=Number(height),vertices=profile.map(p=>[p[0],-h/2,p[1]]).concat(profile.map(p=>[p[0],h/2,p[1]])),n=profile.length,faces=[profile.map((_,i)=>n-1-i),profile.map((_,i)=>n+i)];
+ for(let i=0;i<n;i++){const j=(i+1)%n;faces.push([i,j,n+j,n+i]);}
+ return {type:'mesh',primitive:'extruded-polygon',vertices,faces,material:material||'#AAB6C4'};
+}
+function createLatheGeometry(profile,segments,material){
+ const count=Math.max(3,Math.min(128,Math.floor(Number(segments)||24)));if(!Array.isArray(profile)||profile.length<2||!profile.every(p=>Array.isArray(p)&&p.length>=2&&p.slice(0,2).every(Number.isFinite)&&p[0]>=0))return {type:'mesh',primitive:'invalid',vertices:[],faces:[],material};
+ const vertices=[],faces=[];profile.forEach(p=>{for(let i=0;i<count;i++){const a=2*Math.PI*i/count;vertices.push([p[0]*Math.cos(a),p[1],p[0]*Math.sin(a)]);}});
+ for(let row=0;row<profile.length-1;row++)for(let i=0;i<count;i++){const j=(i+1)%count,a=row*count+i,b=row*count+j,c=(row+1)*count+j,d=(row+1)*count+i;faces.push([a,b,c,d]);}
+ return {type:'mesh',primitive:'lathe',vertices,faces,material:material||'#AAB6C4'};
+}
+function createParametricSurface(options){
+ const o=options&&typeof options==='object'?options:{},uCount=Math.max(2,Math.min(128,Math.floor(Number(o.uSegments)||24))),vCount=Math.max(2,Math.min(128,Math.floor(Number(o.vSegments)||12))),fn=o.evaluate;
+ if(typeof fn!=='function')return {type:'mesh',primitive:'invalid',vertices:[],faces:[],material:o.material};
+ const vertices=[],faces=[];try{for(let v=0;v<=vCount;v++)for(let u=0;u<=uCount;u++){const p=fn(u/uCount,v/vCount);if(!Array.isArray(p)||p.length<3||!p.slice(0,3).every(Number.isFinite))throw new Error('invalid-parametric-point');vertices.push(p.slice(0,3));}
+ for(let v=0;v<vCount;v++)for(let u=0;u<uCount;u++){const a=v*(uCount+1)+u,b=a+1,c=b+uCount+1,d=a+uCount+1;faces.push([a,b,c,d]);}}
+ catch(e){return {type:'mesh',primitive:'invalid',vertices:[],faces:[],material:o.material,error:'invalid-parametric-surface'};}
+ return {type:'mesh',primitive:'parametric-surface',vertices,faces,material:o.material||'#AAB6C4'};
+}
 function createMaterial(options){
  const o=options&&typeof options==='object'?options:{},opacity=Math.max(0,Math.min(1,o.opacity===undefined?1:Number(o.opacity)));
  const textures={};
@@ -1115,5 +1171,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createParametricSurface,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
