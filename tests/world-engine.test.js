@@ -232,5 +232,14 @@ test('l’interaction de proximité fonctionne sans clavier pour les commandes t
  assert(!far.ok&&far.states&&far.nearby===null,'interaction déclenchée trop loin');
 });
 
+test('les trois commandes tactiles intérieures sont détectées séparément',()=>{
+ const w=360,h=640,c=w/2,y=h-70;
+ assert(World.getInteriorTouchAction(c-106,y,w,h)==='door','bouton porte non détecté');
+ assert(World.getInteriorTouchAction(c,y,w,h)==='examine','bouton examiner non détecté');
+ assert(World.getInteriorTouchAction(c+106,y,w,h)==='select-door','bouton choisir non détecté');
+ assert(World.getInteriorTouchAction(8,y,w,h)==='none','zone extérieure prise pour un bouton');
+ assert(World.getInteriorTouchAction(c,y-40,w,h)==='none','zone au-dessus des boutons prise pour un bouton');
+});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
