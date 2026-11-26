@@ -179,6 +179,29 @@ test('retourne un itinéraire vide lorsque le joueur est déjà dans la destinat
  const route=World.findInteriorRoute(['Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Salon','Salon');
  assert(route.reachable&&route.steps===0&&route.rooms.length===1,'itinéraire sur place incorrect');
 });
+test('propose plusieurs itinéraires courts alternatifs entre deux pièces',()=>{
+ const result=World.findInteriorRouteAlternatives(['Hall','Salon','Cuisine','Bureau'],[
+  {from:'Hall',to:'Salon',doorId:'hs'},
+  {from:'Salon',to:'Cuisine',doorId:'sc'},
+  {from:'Hall',to:'Bureau',doorId:'hb'},
+  {from:'Bureau',to:'Cuisine',doorId:'bc'}
+ ],'Hall','Cuisine',4);
+ assert(result.reachable&&result.routes.length===2,'itinéraires alternatifs absents');
+ assert(result.shortestSteps===2&&result.routes.every(route=>route.steps===2),'longueur des itinéraires incorrecte');
+});
+test('limite le nombre de routes alternatives et exclut les portes fermées',()=>{
+ const result=World.findInteriorRouteAlternatives(['A','B','C','D'],[
+  {from:'A',to:'B',doorId:'ab'},
+  {from:'B',to:'D',doorId:'bd'},
+  {from:'A',to:'C',doorId:'ac'},
+  {from:'C',to:'D',doorId:'cd',openable:false}
+ ],'A','D',20);
+ assert(result.routes.length===1&&result.routes[0].doorIds.join(',')==='ab,bd','limite ou filtrage des portes incorrect');
+});
+test('signale une absence de route alternative vers une destination inaccessible',()=>{
+ const result=World.findInteriorRouteAlternatives(['A','B','C'],[{from:'A',to:'B',doorId:'ab'}],'A','C');
+ assert(!result.reachable&&result.routes.length===0&&result.shortestSteps===null,'destination inaccessible déclarée atteignable');
+});
 test('détecte les pièces et portes critiques du réseau de circulation',()=>{
  const result=World.analyzeInteriorCirculation(['Hall','Couloir','Cuisine','Chambre','Bureau'],[
   {from:'Hall',to:'Couloir',doorId:'d1'},
