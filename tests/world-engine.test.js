@@ -222,8 +222,14 @@ test('l’indicateur de transition affiche la bonne direction et la progression'
  assert(down.label==='DESCENTE EN COURS'&&down.percent===80,'indicateur de descente incorrect');
  const clamped=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:1.4});
  assert(clamped.progress===1&&clamped.percent===100,'progression non bornée');
+ const departure=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.2});
+ assert(departure.phase==='departure'&&departure.phaseLabel==='DÉPART'&&departure.phaseProgress===.5,'phase de départ incorrecte');
+ const switching=World.getInteriorTransitionIndicator({active:true,direction:'down',progress:.5});
+ assert(switching.phase==='switch'&&switching.phaseLabel==='CHANGEMENT D’ÉTAGE'&&switching.phaseProgress===.5,'phase de changement incorrecte');
+ const arrival=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.8});
+ assert(arrival.phase==='arrival'&&arrival.phaseLabel==='ARRIVÉE'&&arrival.phaseProgress===.5,'phase d’arrivée incorrecte');
  const empty=World.getInteriorTransitionIndicator(null);
- assert(!empty.active&&empty.percent===0,'indicateur inactif incorrect');
+ assert(!empty.active&&empty.percent===0&&empty.phase==='idle','indicateur inactif incorrect');
 });
 test('la traversée des escaliers se déclenche en s’en approchant dans le bon sens',()=>{
  const far=World.getInteriorStairTraversal(0,.55,0,-.02,0,3,true);
