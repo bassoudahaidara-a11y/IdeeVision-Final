@@ -137,6 +137,22 @@ test('l’indicateur des étages décrit correctement le niveau et les escaliers
  const invalid=World.getInteriorLevelIndicator(-4,0,true);
  assert(invalid.level===1&&invalid.total===1,'niveau invalide non normalisé');
 });
+test('la transition d’étage progresse, change de niveau au milieu et se termine proprement',()=>{
+ const initial=World.createInteriorLevelTransition(2,'up');
+ assert(initial.active&&initial.targetLevel===2&&initial.progress===0,'transition initiale incorrecte');
+ const first=World.advanceInteriorLevelTransition(initial,.2);
+ assert(first.transition.progress===.2&&!first.switchLevel&&first.opacity>.7,'fondu initial incorrect');
+ const middle=World.advanceInteriorLevelTransition(first.transition,.35);
+ assert(middle.switchLevel&&middle.transition.switched&&middle.opacity>.8,'changement de niveau non déclenché au milieu');
+ const after=World.advanceInteriorLevelTransition(middle.transition,.2);
+ assert(!after.switchLevel&&after.transition.progress>.5,'changement de niveau déclenché deux fois');
+ const final=World.advanceInteriorLevelTransition(after.transition,.25);
+ assert(final.complete&&final.transition===null&&final.opacity===0,'transition non terminée proprement');
+ const empty=World.advanceInteriorLevelTransition(null,.1);
+ assert(empty.complete&&empty.opacity===0,'état sans transition incorrect');
+ const down=World.createInteriorLevelTransition(0,'down');
+ assert(down.direction==='down'&&down.targetLevel===0,'transition descendante incorrecte');
+});
 test('la traversée des escaliers se déclenche en s’en approchant dans le bon sens',()=>{
  const far=World.getInteriorStairTraversal(0,.55,0,-.02,0,3,true);
  assert(!far.triggered&&far.reason==='too-far','transition déclenchée à distance');
