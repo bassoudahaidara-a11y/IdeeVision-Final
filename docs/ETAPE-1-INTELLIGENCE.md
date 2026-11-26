@@ -258,3 +258,55 @@ Le moteur scientifique est chargé dans l'application. Avant la génération, il
 Les calculs déterministes exposés par le module peuvent être testés directement. En revanche, le branchement au générateur reste un contexte de vérification : le module ne recalcule pas automatiquement chaque réponse produite par le modèle et ne certifie pas une solution. Le catalogue de formules et la reconnaissance des unités sont limités aux éléments explicitement implémentés. Le contrôle de coefficients chimiques ne vérifie pas l'équilibrage des équations. Les alertes lexicales peuvent manquer des erreurs ou signaler à tort un risque.
 
 Le moteur fonctionne localement et ne nécessite pas de service distant pour ses opérations. La génération de films/scènes utilise toujours le service Groq configuré dans l'application. Aucun APK n'est compilé à cette étape.
+
+
+## Groupe 1.7 — Moteur mathématique et calcul symbolique (38 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Créer un tokenizer mathématique | Développé |
+| 2 | Construire un parseur récursif sécurisé | Développé |
+| 3 | Accepter les nombres décimaux | Développé |
+| 4 | Reconnaître la variable x | Développé |
+| 5 | Gérer les parenthèses | Développé |
+| 6 | Respecter les priorités opératoires | Développé |
+| 7 | Gérer les puissances entières | Développé |
+| 8 | Évaluer une expression numérique | Développé |
+| 9 | Refuser les caractères et fonctions inconnus | Développé |
+| 10 | Refuser les divisions par zéro | Développé |
+| 11 | Convertir les expressions en polynômes | Développé, degré limité à 8 |
+| 12 | Additionner et soustraire les polynômes | Développé |
+| 13 | Multiplier les polynômes | Développé |
+| 14 | Simplifier les expressions polynomiales | Développé |
+| 15 | Calculer la dérivée des polynômes | Développé |
+| 16 | Calculer une primitive polynomiale | Développé |
+| 17 | Résoudre les équations linéaires | Développé |
+| 18 | Distinguer identité et équation impossible | Développé |
+| 19 | Calculer le discriminant | Développé |
+| 20 | Résoudre les équations du second degré réelles | Développé |
+| 21 | Détecter les équations de degré non pris en charge | Développé |
+| 22 | Résoudre une équation polynomiale des deux côtés | Développé, degrés 1 et 2 |
+| 23 | Résoudre un système linéaire 2×2 | Développé |
+| 24 | Détecter les systèmes singuliers | Développé |
+| 25 | Construire une table de valeurs | Développé |
+| 26 | Vérifier des racines par substitution | Développé |
+| 27 | Signaler quelques restrictions de domaine | Développé, heuristique |
+| 28 | Calculer moyenne et médiane | Développé |
+| 29 | Calculer le PGCD | Développé |
+| 30 | Calculer le PPCM | Développé |
+| 31 | Réduire une fraction rationnelle simple | Développé |
+| 32 | Calculer un pourcentage | Développé |
+| 33 | Calculer le sommet d'une parabole | Développé |
+| 34 | Construire un audit de demande mathématique | Développé |
+| 35 | Générer des consignes de vérification | Développé |
+| 36 | Exposer les diagnostics hors ligne | Développé |
+| 37 | Limiter la taille des expressions et les degrés | Développé |
+| 38 | Ajouter 38 tests automatisés | Développé |
+
+### Intégration et limites du groupe 1.7
+
+Le moteur est chargé avant la génération. Il repère certains sujets mathématiques dans la demande et ajoute des consignes de prudence au contexte envoyé au générateur. Ses fonctions de calcul symbolique sont accessibles au code de l'application.
+
+Le parseur accepte uniquement les opérations arithmétiques élémentaires, les parenthèses et la variable x. Il ne prend pas encore en charge les fonctions trigonométriques, logarithmiques, exponentielles, les matrices générales, les nombres complexes, ni les intégrales définies. La résolution exacte est limitée aux équations polynomiales de degrés 1 et 2 et aux systèmes linéaires 2×2. Les primitives sont calculées pour les polynômes seulement. Ce moteur n'est pas un logiciel de calcul formel complet.
+
+Aucun APK n'est compilé à cette étape ; les vérifications restent automatisées sur GitHub.
