@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: '20'
       - run: node tests/json-engine-v2-1.test.js
-      - run: node tests/offline-scene-engine.test.js
+      - run: node tests/offline-scene-engine.test.js\n      - run: node tests/french-understanding.test.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
