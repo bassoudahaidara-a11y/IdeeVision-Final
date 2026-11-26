@@ -117,6 +117,30 @@ test('chaque pièce expose une géométrie intérieure avec murs et ouverture de
  assert(backWalls.some(w=>w.to<0)&&backWalls.some(w=>w.from>0),'les segments latéraux ne préservent pas le passage central');
  assert(room.bounds.left===-.88&&room.bounds.right===.88,'limites de pièce incorrectes');
 });
+test('les seuils de porte sont définis sur les quatre côtés',()=>{
+ const left=World.getInteriorDoorThreshold('left'),right=World.getInteriorDoorThreshold('right');
+ const front=World.getInteriorDoorThreshold('front'),back=World.getInteriorDoorThreshold('back');
+ assert(left.x<0&&right.x>0&&front.z>0&&back.z<0,'seuils de porte mal orientés');
+ assert(World.isNearInteriorDoor(left.x,left.z,'left'),'détection de proximité côté gauche incorrecte');
+ assert(!World.isNearInteriorDoor(0,0,'left'),'détection de proximité trop large');
+});
+test('les escaliers respectent les limites des étages',()=>{
+ assert(World.changeInteriorLevel(0,3,-1,true).level===0,'descente sous le rez-de-chaussée');
+ assert(World.changeInteriorLevel(0,3,-1,true).changed===false,'changement impossible signalé comme réussi');
+ assert(World.changeInteriorLevel(0,3,1,true).level===1,'montée au premier étage impossible');
+ assert(World.changeInteriorLevel(2,3,1,true).level===2,'montée au-dessus du dernier étage');
+ assert(World.changeInteriorLevel(0,3,1,false).changed===false,'étage accessible sans escalier');
+});
+test('les collisions protègent les portes fermées et libèrent le passage ouvert',()=>{
+ const closed=World.resolveInteriorMovement(0,-.6,0,-.2,'séjour',0,'back');
+ const opened=World.resolveInteriorMovement(0,-.6,0,-.2,'séjour',1,'back');
+ assert(closed.z===-.6,'le joueur traverse une porte fermée');
+ assert(opened.z<-.6,'la porte ouverte ne permet pas le passage');
+ const sideClosed=World.resolveInteriorMovement(-.6,0,-.2,0,'séjour',0,'left');
+ const sideOpen=World.resolveInteriorMovement(-.6,0,-.2,0,'séjour',1,'left');
+ assert(sideClosed.x===-.6,'le joueur traverse une porte latérale fermée');
+ assert(sideOpen.x<-.6,'la porte latérale ouverte ne permet pas le passage');
+});
 test('le modèle d’une pièce reçoit les portes de ses connexions',()=>{
  const rooms=['entrée','séjour','cuisine','chambre'];
  const options=World.getConnectedRoomOptions(rooms,1);
