@@ -139,13 +139,20 @@ function interactWithNearbyFurniture(x,z,roomName,states,maxDistance){
  const result=interactWithFurniture(roomName,nearby.id,states);
  return Object.assign({nearby},result);
 }
+function getInteriorTouchLayout(width,height){
+ const w=Math.max(200,Number(width)||200),h=Math.max(160,Number(height)||160);
+ const buttonWidth=Math.min(92,Math.max(64,(w-32)/3));
+ const spacing=Math.min(106,Math.max(buttonWidth/2+5,(w-buttonWidth)/2-8));
+ const center=w/2;
+ return {buttonWidth,centers:[center-spacing,center,center+spacing],top:h-94,bottom:h-46,centerY:h-70};
+}
 function getInteriorTouchAction(x,y,width,height){
- if(y<height-96||y>height-40)return 'none';
- const center=width/2,offset=x-center;
- if(Math.abs(offset+106)<=46)return 'door';
- if(Math.abs(offset)<=46)return 'examine';
- if(Math.abs(offset-106)<=46)return 'select-door';
- return 'none';
+ const layout=getInteriorTouchLayout(width,height);
+ if(y<layout.top||y>layout.bottom)return 'none';
+ let nearest=-1,distance=Infinity;
+ layout.centers.forEach((center,index)=>{const d=Math.abs(x-center);if(d<distance){distance=d;nearest=index;}});
+ if(distance>layout.buttonWidth/2+4)return 'none';
+ return ['door','examine','select-door'][nearest]||'none';
 }
 function getInteriorTouchLabels(doorOpen,doorTarget,doorCount,nearbyFurniture){
  return {
@@ -345,7 +352,7 @@ function play(canvas,world,onCaption){
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   ctx.fillText(selectedDoor?'Porte : '+selectedDoor.target+' • mur '+selectedDoor.side:'Aucune porte reliée',cx,h-30);
   ctx.fillText(nearbyFurniture?'Meuble proche : '+nearbyFurniture.label+' • F ou bouton pour examiner':'Approche-toi d’un meuble • F ou bouton pour examiner',cx,h-12);
-  const touchLabels=getInteriorTouchLabels(inside.doorOpen,inside.doorTarget,doorOptions.length,nearbyFurniture);const touchButtons=[{x:cx-106,label:touchLabels.door,enabled:true},{x:cx,label:touchLabels.examine,enabled:touchLabels.examineEnabled},{x:cx+106,label:touchLabels.selectDoor,enabled:touchLabels.selectDoorEnabled}];touchButtons.forEach(button=>{ctx.fillStyle=button.enabled?'rgba(20,29,42,.92)':'rgba(20,29,42,.55)';ctx.fillRect(button.x-46,h-94,92,48);ctx.strokeStyle=button.enabled?'#F4D27A':'rgba(190,198,208,.45)';ctx.lineWidth=1.5;ctx.strokeRect(button.x-46,h-94,92,48);ctx.fillStyle=button.enabled?'#F4D27A':'rgba(210,216,224,.6)';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,h-65);});
+  const touchLabels=getInteriorTouchLabels(inside.doorOpen,inside.doorTarget,doorOptions.length,nearbyFurniture),touchLayout=getInteriorTouchLayout(w,h);const touchButtons=[{x:touchLayout.centers[0],label:touchLabels.door,enabled:true},{x:touchLayout.centers[1],label:touchLabels.examine,enabled:touchLabels.examineEnabled},{x:touchLayout.centers[2],label:touchLabels.selectDoor,enabled:touchLabels.selectDoorEnabled}];touchButtons.forEach(button=>{const bw=touchLayout.buttonWidth;ctx.fillStyle=button.enabled?'rgba(20,29,42,.92)':'rgba(20,29,42,.55)';ctx.fillRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.strokeStyle=button.enabled?'#F4D27A':'rgba(190,198,208,.45)';ctx.lineWidth=1.5;ctx.strokeRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.fillStyle=button.enabled?'#F4D27A':'rgba(210,216,224,.6)';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,touchLayout.centerY+4);});
  }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
@@ -386,5 +393,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLabels,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
 })(window);
