@@ -62,31 +62,61 @@ function getInteriorRoomConnections(rooms,customConnections){
 function analyzeInteriorRoomNetwork(rooms,connections,startRoom){
  const names=Array.isArray(rooms)?Array.from(new Set(rooms.map(v=>String(v||'').trim()).filter(Boolean))):[];
  const links=getInteriorRoomConnections(names,connections),adjacency=new Map(names.map(name=>[name,[]]));
- links.forEach(link=>{
-  if(link.openable===false||!adjacency.has(link.from)||!adjacency.has(link.to))return;
-  adjacency.get(link.from).push(link.to);
-  adjacency.get(link.to).push(link.from);
+ const openLinks=links.filter(link=>link.openable!==false&&adjacency.has(link.from)&&adjacency.has(link.to));
+ openLinks.forEach(link=>{
+  adjacency.get(link.from).push({room:link.to,doorId:link.doorId});
+  adjacency.get(link.to).push({room:link.from,doorId:link.doorId});
  });
  const start=names.includes(String(startRoom||''))?String(startRoom):names[0]||null;
- const paths=Object.create(null),queue=[];
- if(start){paths[start]=[start];queue.push(start);}
+ const paths=Object.create(null),distances=Object.create(null),queue=[];
+ if(start){paths[start]=[start];distances[start]=0;queue.push(start);}
  while(queue.length){
   const current=queue.shift();
-  adjacency.get(current).forEach(next=>{
-   if(paths[next])return;
-   paths[next]=paths[current].concat(next);
-   queue.push(next);
+  adjacency.get(current).forEach(edge=>{
+   if(Object.prototype.hasOwnProperty.call(paths,edge.room))return;
+   paths[edge.room]=paths[current].concat(edge.room);
+   distances[edge.room]=distances[current]+1;
+   queue.push(edge.room);
   });
  }
+ const components=[],visited=new Set();
+ names.forEach(name=>{
+  if(visited.has(name))return;
+  const component=[],pending=[name];visited.add(name);
+  while(pending.length){
+   const current=pending.shift();component.push(current);
+   adjacency.get(current).forEach(edge=>{
+    if(visited.has(edge.room))return;
+    visited.add(edge.room);pending.push(edge.room);
+   });
+  }
+  components.push(component);
+ });
  const roomDetails=names.map(name=>{
-  const degree=adjacency.get(name).length;
-  return {name,degree,reachable:!!paths[name],deadEnd:!!paths[name]&&degree===1,isolated:degree===0};
+  const degree=adjacency.get(name).length,reachable=Object.prototype.hasOwnProperty.call(paths,name);
+  return {name,degree,reachable,distance:reachable?distances[name]:null,deadEnd:reachable&&degree===1,isolated:degree===0,connections:adjacency.get(name).map(edge=>({room:edge.room,doorId:edge.doorId}))};
  });
  const reachableRooms=roomDetails.filter(room=>room.reachable).map(room=>room.name);
  const unreachableRooms=roomDetails.filter(room=>!room.reachable).map(room=>room.name);
  const deadEnds=roomDetails.filter(room=>room.deadEnd).map(room=>room.name);
  const isolatedRooms=roomDetails.filter(room=>room.isolated).map(room=>room.name);
- return {roomCount:names.length,connectionCount:links.length,startRoom:start,isConnected:names.length>0&&unreachableRooms.length===0,rooms:roomDetails,reachableRooms,unreachableRooms,deadEnds,isolatedRooms,paths};
+ const cycleRank=Math.max(0,openLinks.length-names.length+components.length);
+ return {roomCount:names.length,connectionCount:links.length,openConnectionCount:openLinks.length,componentCount:components.length,components,cycleRank,startRoom:start,isConnected:names.length>0&&components.length===1,rooms:roomDetails,reachableRooms,unreachableRooms,deadEnds,isolatedRooms,paths,distances};
+}
+function findInteriorRoute(rooms,connections,fromRoom,toRoom){
+ const analysis=analyzeInteriorRoomNetwork(rooms,connections,fromRoom);
+ const from=String(fromRoom||''),to=String(toRoom||'');
+ if(!analysis.rooms.some(room=>room.name===from)||!analysis.rooms.some(room=>room.name===to))
+  return {reachable:false,from,to,rooms:[],doorIds:[],steps:0,message:'Pièce de départ ou destination inconnue.'};
+ const route=analysis.paths[to];
+ if(!route)return {reachable:false,from,to,rooms:[],doorIds:[],steps:0,message:'Aucun passage accessible vers cette pièce.'};
+ const links=getInteriorRoomConnections(analysis.rooms.map(room=>room.name),connections);
+ const doorIds=[];
+ for(let i=0;i<route.length-1;i++){
+  const link=links.find(item=>item.openable!==false&&((item.from===route[i]&&item.to===route[i+1])||(item.to===route[i]&&item.from===route[i+1])));
+  if(link)doorIds.push(link.doorId);
+ }
+ return {reachable:true,from,to,rooms:route,doorIds,steps:Math.max(0,route.length-1),message:route.length===1?'Tu es déjà dans cette pièce.':'Itinéraire trouvé : '+route.join(' → ')};
 }
 function getConnectedRoomOptions(rooms,currentIndex,connections){
  if(!Array.isArray(rooms)||!rooms.length)return [];
@@ -559,5 +589,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
