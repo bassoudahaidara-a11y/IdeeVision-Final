@@ -877,6 +877,91 @@ function getAssemblySummary(assembly){
  const roots=assembly.components.filter(c=>!c.parentId).map(c=>c.id),visible=assembly.components.filter(c=>c.visible),meshCount=visible.filter(c=>c.mesh).length,metrics=evaluateAssemblyConnections(assembly);
  return {valid:!!assembly.validation.valid,componentCount:assembly.components.length,visibleCount:visible.length,meshCount,jointCount:assembly.connections.length,roots,alignedJointCount:metrics.alignedCount,revision:assembly.revision||0,errors:assembly.validation.errors.slice()};
 }
+
+function createSceneDocument(name,options){
+ const o=options&&typeof options==='object'?options:{};
+ return {kind:'ideevision-scene-document',formatVersion:1,documentId:String(o.documentId||'scene-'+Date.now()),name:String(name||'Nouvelle scène'),description:String(o.description||''),metadata:Object.assign({},o.metadata||{}),objects:[],collections:[{id:'collection-main',name:'Collection principale',parentId:null,visible:true,locked:false,metadata:{}}],assets:[],activeCollectionId:'collection-main',revision:0,history:[{revision:0,action:'created'}],validation:{valid:true,errors:[]}};
+}
+function cloneSceneDocument(document){
+ if(!document||document.kind!=='ideevision-scene-document')return null;
+ try{return JSON.parse(JSON.stringify(document));}catch(e){return null;}
+}
+function validateSceneDocument(document){
+ const errors=[];if(!document||document.kind!=='ideevision-scene-document')return {valid:false,errors:['invalid-scene-document']};
+ if(!Number.isInteger(document.formatVersion)||document.formatVersion!==1)errors.push('unsupported-scene-version');
+ const ids=new Set(),collections=new Map();
+ (document.collections||[]).forEach(c=>{if(!c||!c.id||ids.has(c.id))errors.push('duplicate-collection-id');else ids.add(c.id);collections.set(c.id,c);});
+ const objectIds=new Set();(document.objects||[]).forEach(o=>{if(!o||!o.id||objectIds.has(o.id))errors.push('duplicate-object-id');else objectIds.add(o.id);if(o.collectionId&&!collections.has(o.collectionId))errors.push('missing-object-collection:'+o.id);if(o.parentId&&!objectIds.has(o.parentId)&&!(document.objects||[]).some(x=>x.id===o.parentId))errors.push('missing-object-parent:'+o.id);if(o.mesh&&!validateGeometryMesh(o.mesh).valid)errors.push('invalid-object-mesh:'+o.id);});
+ collections.forEach(c=>{if(c.parentId&&!collections.has(c.parentId))errors.push('missing-collection-parent:'+c.id);const seen=new Set([c.id]);let p=c.parentId;while(p&&collections.has(p)){if(seen.has(p)){errors.push('collection-cycle:'+c.id);break;}seen.add(p);p=collections.get(p).parentId;}});
+ objectIds.forEach(id=>{const seen=new Set([id]);let p=(document.objects||[]).find(o=>o.id===id)?.parentId;while(p){if(seen.has(p)){errors.push('object-hierarchy-cycle:'+id);break;}seen.add(p);p=(document.objects||[]).find(o=>o.id===p)?.parentId;}});
+ if(document.activeCollectionId&&!collections.has(document.activeCollectionId))errors.push('active-collection-missing');
+ return {valid:errors.length===0,errors};
+}
+function recordSceneChange(document,action){
+ const next=cloneSceneDocument(document);if(!next)return null;next.revision=(next.revision||0)+1;next.history=(next.history||[]).concat([{revision:next.revision,action:String(action||'updated')}]).slice(-100);next.validation=validateSceneDocument(next);return next;
+}
+function addSceneObject(document,object){
+ const next=cloneSceneDocument(document),o=object&&typeof object==='object'?object:{};if(!next||!o.id||next.objects.some(x=>x.id===o.id))return {ok:false,document,error:'invalid-or-duplicate-object'};
+ const mesh=o.mesh||(o.geometry&&o.geometry.mesh);if(!mesh||!validateGeometryMesh(mesh).valid)return {ok:false,document,error:'invalid-object-mesh'};
+ const collectionId=o.collectionId||next.activeCollectionId||'collection-main';if(!next.collections.some(c=>c.id===collectionId))return {ok:false,document,error:'collection-not-found'};
+ next.objects.push({id:String(o.id),name:String(o.name||o.id),type:String(o.type||'mesh'),mesh:cloneGeometryMesh(mesh),transform:normalizeAssemblyTransform(o.transform),parentId:o.parentId?String(o.parentId):null,collectionId,assetId:o.assetId||null,metadata:Object.assign({},o.metadata||{}),visible:o.visible!==false,locked:o.locked===true});
+ const result=recordSceneChange(next,'object-added:'+o.id);const validation=validateSceneDocument(result);return {ok:validation.valid,document:result,error:validation.valid?null:validation.errors[0]};
+}
+function addSceneCollection(document,collection){
+ const next=cloneSceneDocument(document),c=collection&&typeof collection==='object'?collection:{};if(!next||!c.id||next.collections.some(x=>x.id===c.id))return {ok:false,document,error:'invalid-or-duplicate-collection'};
+ if(c.parentId&&!next.collections.some(x=>x.id===c.parentId))return {ok:false,document,error:'collection-parent-not-found'};
+ next.collections.push({id:String(c.id),name:String(c.name||c.id),parentId:c.parentId||null,visible:c.visible!==false,locked:c.locked===true,metadata:Object.assign({},c.metadata||{})});
+ const result=recordSceneChange(next,'collection-added:'+c.id),validation=validateSceneDocument(result);return {ok:validation.valid,document:result,error:validation.valid?null:validation.errors[0]};
+}
+function moveSceneObjectToCollection(document,objectId,collectionId){
+ const next=cloneSceneDocument(document);if(!next)return {ok:false,document,error:'invalid-scene'};
+ if(!next.collections.some(c=>c.id===collectionId))return {ok:false,document,error:'collection-not-found'};
+ const object=next.objects.find(o=>o.id===objectId);if(!object)return {ok:false,document,error:'object-not-found'};
+ object.collectionId=collectionId;const result=recordSceneChange(next,'object-moved:'+objectId);return {ok:true,document:result,error:null};
+}
+function updateSceneObjectMetadata(document,objectId,metadata){
+ const next=cloneSceneDocument(document),object=next&&next.objects.find(o=>o.id===objectId);if(!object)return {ok:false,document,error:'object-not-found'};
+ object.metadata=Object.assign({},object.metadata||{},metadata||{});const result=recordSceneChange(next,'metadata-updated:'+objectId);return {ok:true,document:result,error:null};
+}
+function setSceneCollectionVisibility(document,collectionId,visible){
+ const next=cloneSceneDocument(document),collection=next&&next.collections.find(c=>c.id===collectionId);if(!collection)return {ok:false,document,error:'collection-not-found'};
+ collection.visible=visible!==false;const result=recordSceneChange(next,'collection-visibility:'+collectionId);return {ok:true,document:result,error:null};
+}
+function createAssetLibrary(name){
+ return {kind:'ideevision-asset-library',version:1,name:String(name||'Bibliothèque de modèles'),assets:[],revision:0,validation:{valid:true,errors:[]}};
+}
+function registerSceneAsset(library,asset){
+ if(!library||library.kind!=='ideevision-asset-library')return {ok:false,library,error:'invalid-asset-library'};
+ const a=asset&&typeof asset==='object'?asset:{},mesh=a.mesh||(a.geometry&&a.geometry.mesh);
+ if(!a.id||library.assets.some(x=>x.id===a.id)||!mesh||!validateGeometryMesh(mesh).valid)return {ok:false,library,error:'invalid-or-duplicate-asset'};
+ const next=JSON.parse(JSON.stringify({kind:library.kind,version:library.version,name:library.name,assets:library.assets,revision:library.revision||0}));
+ next.assets.push({id:String(a.id),name:String(a.name||a.id),category:String(a.category||'Général'),tags:Array.isArray(a.tags)?a.tags.map(String):[],mesh:cloneGeometryMesh(mesh),defaultTransform:normalizeAssemblyTransform(a.defaultTransform),metadata:Object.assign({},a.metadata||{})});next.revision++;return {ok:true,library:next,asset:next.assets[next.assets.length-1],error:null};
+}
+function searchSceneAssets(library,query,category){
+ if(!library||!Array.isArray(library.assets))return [];
+ const q=String(query||'').trim().toLocaleLowerCase(),cat=String(category||'').toLocaleLowerCase();
+ return library.assets.filter(a=>(!cat||a.category.toLocaleLowerCase()===cat)&&(!q||[a.id,a.name,a.category,...a.tags].join(' ').toLocaleLowerCase().includes(q))).map(a=>({id:a.id,name:a.name,category:a.category,tags:a.tags.slice(),metadata:Object.assign({},a.metadata)}));
+}
+function instantiateSceneAsset(library,assetId,instanceId,options){
+ const asset=library&&library.assets&&library.assets.find(a=>a.id===assetId);if(!asset||!instanceId)return {ok:false,object:null,error:'asset-or-instance-id-not-found'};
+ const o=options&&typeof options==='object'?options:{};
+ return {ok:true,object:{id:String(instanceId),name:String(o.name||asset.name),type:'asset-instance',assetId:asset.id,mesh:cloneGeometryMesh(asset.mesh),transform:normalizeAssemblyTransform(o.transform||asset.defaultTransform),metadata:Object.assign({},asset.metadata,o.metadata||{duplicatedFromAsset:asset.id}),collectionId:o.collectionId||null,visible:true,locked:false},error:null};
+}
+function saveSceneDocument(document){
+ const validation=validateSceneDocument(document);if(!validation.valid)return {ok:false,data:null,error:validation.errors[0]};
+ try{return {ok:true,data:JSON.stringify(document),formatVersion:document.formatVersion,revision:document.revision,error:null};}catch(e){return {ok:false,data:null,error:'scene-serialization-failed'};}
+}
+function loadSceneDocument(data){
+ try{const parsed=typeof data==='string'?JSON.parse(data):data;if(!parsed||parsed.kind!=='ideevision-scene-document')return {ok:false,document:null,error:'invalid-scene-format'};
+ const doc=cloneSceneDocument(parsed);if(!doc)return {ok:false,document:null,error:'scene-clone-failed'};
+ if(doc.formatVersion===undefined)doc.formatVersion=1;
+ const validation=validateSceneDocument(doc);if(!validation.valid)return {ok:false,document:null,error:validation.errors[0],validation};
+ return {ok:true,document:doc,error:null,validation};
+ }catch(e){return {ok:false,document:null,error:'scene-parse-failed'};}
+}
+function getSceneDocumentSummary(document){
+ const validation=validateSceneDocument(document);return {valid:validation.valid,objectCount:document&&document.objects?document.objects.length:0,collectionCount:document&&document.collections?document.collections.length:0,assetReferenceCount:document&&document.objects?document.objects.filter(o=>o.assetId).length:0,revision:document&&document.revision||0,formatVersion:document&&document.formatVersion,errors:validation.errors};
+}
 function createInteractiveScene(objects,options){
  const o=options&&typeof options==='object'?options:{};
  const source=Array.isArray(objects)?objects:[];
@@ -1259,5 +1344,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createParametricSurface,createParametricComponent,updateParametricComponent,createAssemblyModel,getAssemblyWorldTransform,getAssemblyAnchorWorldPosition,evaluateAssemblyConnections,updateAssemblyComponent,duplicateAssemblyComponent,getAssemblySummary,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createSceneDocument,validateSceneDocument,addSceneObject,addSceneCollection,moveSceneObjectToCollection,updateSceneObjectMetadata,setSceneCollectionVisibility,createAssetLibrary,registerSceneAsset,searchSceneAssets,instantiateSceneAsset,saveSceneDocument,loadSceneDocument,getSceneDocumentSummary,createParametricSurface,createParametricComponent,updateParametricComponent,createAssemblyModel,getAssemblyWorldTransform,getAssemblyAnchorWorldPosition,evaluateAssemblyConnections,updateAssemblyComponent,duplicateAssemblyComponent,getAssemblySummary,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
