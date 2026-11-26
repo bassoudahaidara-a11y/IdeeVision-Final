@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Idée Vision</title>
 
+<script src="engine/idea-understanding-contract-v1.js"></script>
 <script src="engine/french-understanding-v1.js"></script>
 <script src="engine/offline-scene-engine.js"></script>
 <style>
@@ -126,6 +127,13 @@ async function start(){
  await new Promise(r=>setTimeout(r,120));
  if(my!==run)return;
  try{
+  if(window.IdeeVisionLanguage && window.IdeeVisionUnderstandingContract){
+   const lexical=window.IdeeVisionLanguage.analyze(idea);
+   const structured=window.IdeeVisionUnderstandingContract.fromLexical(lexical);
+   const checked=window.IdeeVisionUnderstandingContract.validate(structured);
+   window.IdeeVisionLastUnderstanding={result:structured,valid:checked.valid,errors:checked.errors};
+   if(!checked.valid) console.warn('Interprétation provisoire non validée',checked.errors);
+  }
   offlineScene=window.IdeeVisionOffline.create(idea);
   $('und').textContent='J’ai repéré '+offlineScene.objects.length+' élément(s). Mode '+offlineScene.mode+'.';
   setW('Construction terminée','Aucun accès Internet nécessaire.',100);
