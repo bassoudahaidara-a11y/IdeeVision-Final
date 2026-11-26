@@ -32,7 +32,7 @@ function parseFormula(formula){
  const lhs=parts[0].trim(),rhs=parts[1].trim();
  if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(lhs)||!rhs)return fail('formula-shape-invalid','La formule doit avoir une variable à gauche et une expression à droite.');
  if(!S)return fail('scientific-engine-unavailable','Le moteur de calcul est indisponible.');
- const parsed=S.parse(rhs);
+ let parsed;try{parsed=S.parse(rhs);}catch(e){return fail('formula-expression-invalid','Expression de formule refusée par le parseur sécurisé.');}
  return {ok:true,resultSymbol:lhs,expression:rhs,ast:parsed};
 }
 function aliasForMeaning(meaning){
