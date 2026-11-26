@@ -16,3 +16,26 @@ Règles impératives :
 
 Le JSON doit respecter exactement le contrat décrit dans `idea-understanding-contract-v1.js` :
 schemaVersion=1, language="fr", intent, mode, objects, relations, actions, confidence, needsClarification, clarificationQuestion optionnel, notes optionnel.
+
+
+## Exemple de sortie structurée
+Pour la demande « Place une petite sphère au-dessus d'un cube », la sortie doit décrire deux objets distincts et une relation explicite. Exemple de structure (les valeurs sont illustratives) :
+
+```json
+{
+  "schemaVersion": 1,
+  "language": "fr",
+  "intent": "create",
+  "mode": "3D",
+  "objects": [
+    {"id": "objet_1", "concept": "sphere", "label": "sphère", "quantity": 1, "properties": {"size": "small"}},
+    {"id": "objet_2", "concept": "cube", "label": "cube", "quantity": 1, "properties": {}}
+  ],
+  "relations": [{"from": "objet_1", "to": "objet_2", "type": "above"}],
+  "actions": [],
+  "confidence": 0.95,
+  "needsClarification": false
+}
+```
+
+Les identifiants doivent être uniques. Toute relation et toute cible d'action doit référencer un objet existant. Si la description ne permet pas d'identifier les objets ou leur relation, demande une précision au lieu de compléter les informations au hasard.
