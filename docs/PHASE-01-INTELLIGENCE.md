@@ -123,3 +123,8 @@ Les tests vérifient que les immeubles possèdent un nombre d'étages cohérent 
 Les maisons et immeubles générés possèdent maintenant des métadonnées d'intérieur : pièces prévues, porte et présence d'un escalier. Dans le mode monde, le joueur peut s'approcher d'un bâtiment puis toucher l'écran pour entrer. Une vue intérieure simplifiée affiche les murs, le sol, une porte et, pour les immeubles, un escalier stylisé. Un toucher permet de ressortir.
 
 Cette première version est une transition vers une vue intérieure illustrative : les pièces ne sont pas encore séparées en espaces réellement traversables, les escaliers ne permettent pas encore de changer d'étage et les portes ne possèdent pas encore d'animation d'ouverture. Les tests vérifient les métadonnées des maisons et des immeubles.
+
+
+### Intérieurs procéduraux — première disposition des pièces
+
+Les maisons et immeubles possèdent désormais une disposition déclarative de pièces avec positions relatives. Le rendu intérieur affiche des séparations simplifiées et des emplacements de mobilier schématiques. Cette version reste une représentation 2D dans le canvas pendant le mode intérieur : les pièces ne sont pas encore des espaces 3D séparés et les meubles ne sont pas encore interactifs. La porte utilise une animation visuelle et les niveaux d'immeuble sont représentés par un changement d'étage logique. La compilation APK et la validation sur appareil restent à faire après autorisation explicite.
