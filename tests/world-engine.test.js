@@ -241,5 +241,16 @@ test('les trois commandes tactiles intérieures sont détectées séparément',(
  assert(World.getInteriorTouchAction(c,y-40,w,h)==='none','zone au-dessus des boutons prise pour un bouton');
 });
 
+test('les libellés tactiles suivent l’état de la porte et les possibilités',()=>{
+ const closed=World.getInteriorTouchLabels(0,0,2,null);
+ assert(closed.door==='OUVRIR','libellé porte fermée incorrect');
+ assert(closed.examine==='MEUBLE'&&!closed.examineEnabled,'meuble indisponible non signalé');
+ assert(closed.selectDoor==='PORTE SUIV.'&&closed.selectDoorEnabled,'portes reliées non signalées');
+ const opened=World.getInteriorTouchLabels(.9,1,0,{id:'canape'});
+ assert(opened.door==='FERMER','libellé porte ouverte incorrect');
+ assert(opened.examine==='EXAMINER'&&opened.examineEnabled,'meuble proche non activé');
+ assert(opened.selectDoor==='SANS PORTE'&&!opened.selectDoorEnabled,'absence de porte non signalée');
+});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
