@@ -721,6 +721,130 @@ function createMaterialSurfacePreview(material,uvSamples){
  return {materialId:mat.id,name:mat.name,properties:{baseColor:mat.baseColor,roughness:mat.roughness,metallic:mat.metallic,opacity:mat.opacity,alphaMode:mat.alphaMode},samples:samples.map(uv=>({uv:uv.slice(0,2),appearance:evaluateMaterialAppearance(mat,uv)})),validation:validateMaterial(mat)};
 }
 
+
+function getSceneObjectWorldMesh(object){
+ const source=object&&(object.mesh||(object.geometry&&object.geometry.mesh));
+ if(!source)return null;
+ return transformGeometryMesh(source,object.transform||{});
+}
+function getMeshBounds(mesh){
+ if(!mesh||!Array.isArray(mesh.vertices)||!mesh.vertices.length)return null;
+ const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+ mesh.vertices.forEach(v=>{for(let i=0;i<3;i++){min[i]=Math.min(min[i],v[i]);max[i]=Math.max(max[i],v[i]);}});
+ return {min,max,size:max.map((v,i)=>v-min[i]),center:max.map((v,i)=>(v+min[i])/2)};
+}
+function createInteractiveScene(objects,options){
+ const o=options&&typeof options==='object'?options:{};
+ const source=Array.isArray(objects)?objects:[];
+ const normalized=source.map((item,index)=>{
+  const object=item||{},mesh=object.mesh||(object.geometry&&object.geometry.mesh);
+  const id=String(object.id||'scene-object-'+index);
+  return {id,name:String(object.name||id),mesh,transform:Object.assign({position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0},scale:{x:1,y:1,z:1}},object.transform||{}),visible:object.visible!==false,selectable:object.selectable!==false,locked:object.locked===true,metadata:object.metadata||{}};
+ });
+ const ids=new Set(),errors=[];
+ normalized.forEach(item=>{if(ids.has(item.id))errors.push('duplicate-object-id:'+item.id);ids.add(item.id);if(!item.mesh||!validateGeometryMesh(item.mesh).valid)errors.push('invalid-object-mesh:'+item.id);});
+ return {kind:'interactive-3d-scene',objects:normalized,selectedId:null,hoveredId:null,revision:0,validation:{valid:errors.length===0,errors},settings:{collisionDetection:o.collisionDetection!==false,selectionEnabled:o.selectionEnabled!==false}};
+}
+function intersectRayBounds(ray,bounds,maxDistance){
+ if(!ray||!ray.origin||!ray.direction||!bounds)return null;
+ const origin=[Number(ray.origin.x),Number(ray.origin.y),Number(ray.origin.z)],direction=[Number(ray.direction.x),Number(ray.direction.y),Number(ray.direction.z)];
+ if(!origin.every(Number.isFinite)||!direction.every(Number.isFinite))return null;
+ const length=Math.hypot(...direction);if(length<1e-12)return null;
+ for(let i=0;i<3;i++)direction[i]/=length;
+ let near=-Infinity,far=Infinity;
+ for(let i=0;i<3;i++){
+  if(Math.abs(direction[i])<1e-12){if(origin[i]<bounds.min[i]||origin[i]>bounds.max[i])return null;continue;}
+  let a=(bounds.min[i]-origin[i])/direction[i],b=(bounds.max[i]-origin[i])/direction[i];
+  if(a>b){const swap=a;a=b;b=swap;}
+  near=Math.max(near,a);far=Math.min(far,b);
+  if(near>far)return null;
+ }
+ if(far<0)return null;
+ const distance=near>=0?near:far;
+ if(Number.isFinite(maxDistance)&&distance>maxDistance)return null;
+ return {distance,point:{x:origin[0]+direction[0]*distance,y:origin[1]+direction[1]*distance,z:origin[2]+direction[2]*distance}};
+}
+function pickSceneObject(scene,ray,options){
+ if(!scene||!Array.isArray(scene.objects)||scene.settings&&scene.settings.selectionEnabled===false)return null;
+ const o=options&&typeof options==='object'?options:{},hits=[];
+ scene.objects.forEach(object=>{
+  if(!object.visible||!object.selectable||object.locked)return;
+  const bounds=getMeshBounds(getSceneObjectWorldMesh(object));
+  const hit=intersectRayBounds(ray,bounds,o.maxDistance);
+  if(hit)hits.push(Object.assign({id:object.id,name:object.name},hit));
+ });
+ hits.sort((a,b)=>a.distance-b.distance);
+ return hits[0]||null;
+}
+function selectSceneObject(scene,ray,options){
+ if(!scene||!Array.isArray(scene.objects))return null;
+ const hit=pickSceneObject(scene,ray,options),selectedId=hit?hit.id:null;
+ return Object.assign({},scene,{selectedId,hoveredId:selectedId,revision:(scene.revision||0)+1,lastSelection:hit?{id:hit.id,distance:hit.distance,point:hit.point}:null});
+}
+function updateSceneObjectTransform(scene,id,patch){
+ if(!scene||!Array.isArray(scene.objects))return null;
+ const changes=patch&&typeof patch==='object'?patch:{};
+ let found=false;
+ const objects=scene.objects.map(object=>{
+  if(object.id!==id)return object;
+  found=true;
+  const previous=object.transform||{},next={};
+  ['position','rotation','scale'].forEach(key=>next[key]=Object.assign({},previous[key]||{},changes[key]||{}));
+  return Object.assign({},object,{transform:next});
+ });
+ if(!found)return scene;
+ return Object.assign({},scene,{objects,revision:(scene.revision||0)+1});
+}
+function moveSceneObject(scene,id,delta,options){
+ const object=scene&&scene.objects&&scene.objects.find(item=>item.id===id);
+ if(!object||object.locked)return {scene,updated:false,reason:object?'object-locked':'object-not-found',collisions:[]};
+ const d=delta&&typeof delta==='object'?delta:{},p=object.transform.position||{};
+ const next=updateSceneObjectTransform(scene,id,{position:{x:(Number(p.x)||0)+(Number(d.x)||0),y:(Number(p.y)||0)+(Number(d.y)||0),z:(Number(p.z)||0)+(Number(d.z)||0)}});
+ const collisions=detectSceneCollisions(next);
+ const collision=collisions.filter(item=>item.objectA===id||item.objectB===id);
+ if(options&&options.preventCollision&&collision.length)return {scene,updated:false,reason:'collision-blocked',collisions:collision};
+ return {scene:next,updated:true,reason:null,collisions:collision};
+}
+function rotateSceneObject(scene,id,delta){
+ const object=scene&&scene.objects&&scene.objects.find(item=>item.id===id);
+ if(!object||object.locked)return {scene,updated:false,reason:object?'object-locked':'object-not-found'};
+ const d=delta&&typeof delta==='object'?delta:{},r=object.transform.rotation||{};
+ return {scene:updateSceneObjectTransform(scene,id,{rotation:{x:(Number(r.x)||0)+(Number(d.x)||0),y:(Number(r.y)||0)+(Number(d.y)||0),z:(Number(r.z)||0)+(Number(d.z)||0)}}),updated:true,reason:null};
+}
+function scaleSceneObject(scene,id,factor){
+ const object=scene&&scene.objects&&scene.objects.find(item=>item.id===id);
+ if(!object||object.locked)return {scene,updated:false,reason:object?'object-locked':'object-not-found'};
+ const f=typeof factor==='number'?{x:factor,y:factor,z:factor}:factor||{},s=object.transform.scale||{};
+ const validAxis=key=>Math.max(.01,Math.min(100,(Number(s[key])||1)*(Number(f[key])||1)));
+ return {scene:updateSceneObjectTransform(scene,id,{scale:{x:validAxis('x'),y:validAxis('y'),z:validAxis('z')}}),updated:true,reason:null};
+}
+function detectSceneCollisions(scene,options){
+ if(!scene||!Array.isArray(scene.objects))return [];
+ const o=options&&typeof options==='object'?options:{},tolerance=Math.max(0,Number(o.tolerance)||0),items=scene.objects.filter(object=>object.visible).map(object=>({id:object.id,bounds:getMeshBounds(getSceneObjectWorldMesh(object))})).filter(item=>item.bounds),collisions=[];
+ for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){
+  const a=items[i],b=items[j],overlap=[0,1,2].every(axis=>a.bounds.max[axis]-tolerance>b.bounds.min[axis]&&b.bounds.max[axis]-tolerance>a.bounds.min[axis]);
+  if(overlap){const depth=[0,1,2].map(axis=>Math.min(a.bounds.max[axis],b.bounds.max[axis])-Math.max(a.bounds.min[axis],b.bounds.min[axis]));collisions.push({objectA:a.id,objectB:b.id,depth,penetration:Math.min(...depth)});}
+ }
+ return collisions;
+}
+function setSceneObjectVisibility(scene,id,visible){
+ if(!scene||!Array.isArray(scene.objects))return null;
+ let found=false;
+ const objects=scene.objects.map(object=>{if(object.id!==id)return object;found=true;return Object.assign({},object,{visible:visible===true})});
+ return found?Object.assign({},scene,{objects,revision:(scene.revision||0)+1}):scene;
+}
+function setSceneObjectLock(scene,id,locked){
+ if(!scene||!Array.isArray(scene.objects))return null;
+ let found=false;
+ const objects=scene.objects.map(object=>{if(object.id!==id)return object;found=true;return Object.assign({},object,{locked:locked===true})});
+ return found?Object.assign({},scene,{objects,revision:(scene.revision||0)+1}):scene;
+}
+function getSceneInteractionSummary(scene){
+ const objects=scene&&Array.isArray(scene.objects)?scene.objects:[];
+ const selected=objects.find(item=>item.id===(scene&&scene.selectedId))||null;
+ return {objectCount:objects.length,visibleCount:objects.filter(item=>item.visible).length,lockedCount:objects.filter(item=>item.locked).length,selectedId:selected?selected.id:null,selectedName:selected?selected.name:null,collisionCount:detectSceneCollisions(scene).length,revision:scene&&scene.revision||0,valid:!!(scene&&scene.validation&&scene.validation.valid)};
+}
+
 function play(canvas,world,onCaption){
  const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0,inside=null,pointerStart=null;
  const resize=()=>{const d=Math.min(root.devicePixelRatio||1,2);canvas.width=canvas.clientWidth*d;canvas.height=canvas.clientHeight*d;ctx.setTransform(d,0,0,d,0,0)};
@@ -932,5 +1056,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
