@@ -78,20 +78,33 @@ test('les intérieurs possèdent un plan de pièces et des emplacements de mobil
  const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
  for(const item of [house,building]){assert(item.interior.layout.length>=3,'plan intérieur incomplet');item.interior.layout.forEach(room=>{assert(typeof room.name==='string'&&Number.isFinite(room.x)&&Number.isFinite(room.z),'position de pièce invalide')})}
 });
-test('les pièces sont reliées par des portes explicites dans l’ordre du plan',()=>{
+test('le plan intérieur crée des connexions en branches et des portes sur plusieurs murs',()=>{
  const rooms=['entrée','séjour','cuisine','chambre'];
  const links=World.getInteriorRoomConnections(rooms);
  assert(links.length===3,'nombre de portes incorrect');
- assert(links[0].from==='entrée'&&links[0].to==='séjour','liaison entrée-séjour absente');
- assert(links[2].from==='cuisine'&&links[2].to==='chambre','liaison cuisine-chambre absente');
- assert(links.every(link=>link.openable&&link.width>0),'porte non franchissable');
+ assert(links.some(link=>link.from==='entrée'&&link.to==='séjour'),'liaison entrée-séjour absente');
+ assert(links.some(link=>link.from==='séjour'&&link.to==='cuisine'),'liaison séjour-cuisine absente');
+ assert(links.some(link=>link.from==='séjour'&&link.to==='chambre'),'liaison séjour-chambre absente');
+ assert(new Set(links.map(link=>link.side)).size>=3,'les portes ne sont pas réparties sur plusieurs murs');
+ assert(links.every(link=>link.openable&&link.width>0&&link.doorId),'porte non franchissable ou sans identifiant');
 });
-test('le passage suit les pièces reliées et permet de revenir',()=>{
+test('le joueur peut choisir une porte parmi plusieurs pièces reliées',()=>{
  const rooms=['entrée','séjour','cuisine','chambre'];
- assert(World.getNextConnectedRoomIndex(rooms,0)===1,'entrée ne mène pas au séjour');
- assert(World.getNextConnectedRoomIndex(rooms,1)===2,'séjour ne mène pas à la cuisine');
- assert(World.getNextConnectedRoomIndex(rooms,2)===3,'cuisine ne mène pas à la chambre');
- assert(World.getNextConnectedRoomIndex(rooms,3)===2,'retour depuis la dernière pièce impossible');
+ const fromEntry=World.getConnectedRoomOptions(rooms,0);
+ const fromLiving=World.getConnectedRoomOptions(rooms,1);
+ assert(fromEntry.length===1&&fromEntry[0].target==='séjour','la porte de l’entrée est incorrecte');
+ assert(fromLiving.length===3,'le séjour doit proposer entrée, cuisine et chambre');
+ assert(fromLiving[1].target==='cuisine'&&fromLiving[2].target==='chambre','choix des portes du séjour incorrect');
+ assert(World.getNextConnectedRoomIndex(rooms,1,1)===2,'le premier choix du séjour ne mène pas à la cuisine');
+ assert(World.getNextConnectedRoomIndex(rooms,1,2)===3,'le deuxième choix du séjour ne mène pas à la chambre');
+ assert(World.getNextConnectedRoomIndex(rooms,3,0)===1,'retour de la chambre vers le séjour impossible');
+});
+test('les connexions personnalisées valident les pièces et leurs portes',()=>{
+ const rooms=['entrée','salon','bureau'];
+ const links=World.getInteriorRoomConnections(rooms,[{from:'entrée',to:'salon',doorId:'porte-principale',side:'front',width:.5},{from:'salon',to:'bureau',side:'left',openable:false},{from:'inconnue',to:'salon'}]);
+ assert(links.length===2,'les connexions invalides ne sont pas filtrées');
+ assert(links[0].side==='front'&&links[0].width===.5,'position ou largeur de porte personnalisée perdue');
+ assert(World.getConnectedRoomOptions(rooms,1,[{from:'entrée',to:'salon'},{from:'salon',to:'bureau',openable:false}]).length===1,'porte désactivée proposée au joueur');
 });
 test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
  const room=World.getInteriorRoomModel('séjour');
