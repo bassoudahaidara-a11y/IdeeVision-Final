@@ -17,7 +17,7 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - `french-understanding-v1.js` : analyse lexicale initiale, limitée à un vocabulaire connu.
 - `idea-understanding-contract-v1.js` : contrat JSON strict et conversion du résultat lexical.
 - `index.html` : charge le contrat et le moteur lexical ; conserve le moteur de scène et l'apparence existants. Le résultat structuré est validé et conservé pour diagnostic, mais ne pilote pas encore la scène.
-- `training/phase01/examples-fr-v0.2.jsonl` : corpus initial élargi (70 exemples).
+- `training/phase01/examples-fr-v0.2.jsonl` : corpus français élargi (116 exemples : formulations standard, orales et variantes avec fautes courantes).
 - `training/phase01/system-prompt-fr-v0.1.md` : consignes destinées au futur modèle.
 - `training/phase01/MODEL-SELECTION.md` : protocole de sélection et de mesure.
 - Aucun modèle neuronal ni runtime natif n'est intégré à ce stade.
@@ -27,7 +27,8 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 ### 1. Corpus français
 - [x] Élargir le corpus initial à des demandes de création, simulation et explication.
 - [x] Ajouter un contrôle automatique de format et de conformité au contrat.
-- [ ] Ajouter davantage de paraphrases, fautes courantes, langage oral, demandes longues et multi-objets.
+- [x] Ajouter des paraphrases orales, des synonymes et quelques fautes courantes.
+- [ ] Ajouter des demandes longues, complexes et multi-étapes.
 - [ ] Faire vérifier les exemples ambigus et corriger les étiquettes.
 - [ ] Séparer les ensembles entraînement, validation et test.
 
