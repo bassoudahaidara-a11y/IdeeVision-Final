@@ -14,3 +14,5 @@ jobs:
         run: node --test tests/cognitive-core-v1.test.js
       - name: Tester la mémoire de contexte
         run: node --test tests/context-memory-v1.test.js
+      - name: Tester le raisonnement logique
+        run: node --test tests/logical-reasoning-v1.test.js
