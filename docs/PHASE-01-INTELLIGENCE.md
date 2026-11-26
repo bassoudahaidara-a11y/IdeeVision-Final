@@ -116,3 +116,10 @@ Les tests automatisés vérifient la détection des montagnes, la présence d'un
 Le moteur distingue désormais les maisons et les immeubles. Les maisons de campagne reçoivent une façade avec porte et fenêtres ainsi qu'une toiture à deux pentes. Les immeubles urbains reçoivent un nombre d'étages déterministe, des fenêtres répétées, des séparations de niveaux, une entrée et un toit plat avec acrotère. Les bâtiments sont dessinés à partir de primitives géométriques dans le moteur de rendu existant.
 
 Les tests vérifient que les immeubles possèdent un nombre d'étages cohérent et que les maisons disposent d'une échelle valide. Les intérieurs visitables, l'ouverture des portes et l'édition libre des bâtiments ne sont pas encore implémentés.
+
+
+## Premiers intérieurs et portes interactives
+
+Les maisons et immeubles générés possèdent maintenant des métadonnées d'intérieur : pièces prévues, porte et présence d'un escalier. Dans le mode monde, le joueur peut s'approcher d'un bâtiment puis toucher l'écran pour entrer. Une vue intérieure simplifiée affiche les murs, le sol, une porte et, pour les immeubles, un escalier stylisé. Un toucher permet de ressortir.
+
+Cette première version est une transition vers une vue intérieure illustrative : les pièces ne sont pas encore séparées en espaces réellement traversables, les escaliers ne permettent pas encore de changer d'étage et les portes ne possèdent pas encore d'animation d'ouverture. Les tests vérifient les métadonnées des maisons et des immeubles.
