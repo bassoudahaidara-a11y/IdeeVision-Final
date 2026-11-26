@@ -7,7 +7,7 @@
  const VERSION="1.0.0", DB_NAME="idee-vision-knowledge", STORE="documents";
  const MAX_DOCS=40, MAX_FILE_BYTES=3*1024*1024, MAX_TOTAL_CHARS=1200000;
  const ALLOWED=new Set(["txt","md","markdown","csv","json","log","xml"]);
- const STOP=new Set(["avec","dans","pour","mais","donc","plus","moins","faire","fait","cela","ceci","comme","this","that","with","from","have","will","your","what","when","where","which","their","there","about","then"]);
+ const STOP=new Set(["et","avec","dans","pour","mais","donc","plus","moins","faire","fait","cela","ceci","comme","this","that","with","from","have","will","your","what","when","where","which","their","there","about","then"]);
  const clean=s=>String(s==null?"":s).normalize("NFKC").replace(/\r/g,"").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g," ").replace(/[ \t]+/g," ").trim();
  const fold=s=>clean(s).toLocaleLowerCase("fr").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
  function tokenize(s){return (fold(s).match(/[\p{L}\p{N}]{2,}/gu)||[]).filter(w=>!STOP.has(w));}
