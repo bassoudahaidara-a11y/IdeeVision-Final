@@ -25,9 +25,9 @@ test("22 impulsion force-temps",()=>assert.deepEqual(P.impulse({x:4,y:0},2),{x:8
 test("23 variation de quantité de mouvement",()=>assert.deepEqual(P.impulseFromMomentumChange(2,{x:1,y:0},{x:4,y:0}),{x:6,y:0,z:0}));
 test("24 gravitation universelle",()=>close(P.gravitationalForce(1,1,1),6.67430e-11,1e-20));
 test("25 loi de Hooke signe restaurateur",()=>assert.equal(P.springForce(100,.1),-10));
-test("26 énergie élastique",()=>assert.equal(P.springEnergy(100,.2),2));
+test("26 énergie élastique",()=>close(P.springEnergy(100,.2),2));
 test("27 frottement",()=>assert.equal(P.frictionForce(.2,50),10));
-test("28 composantes poids plan incliné",()=>{const r=P.inclineComponents(2,Math.PI/6);close(r.parallel,9.80665);close(r.perpendicular,16.984);});
+test("28 composantes poids plan incliné",()=>{const r=P.inclineComponents(2,Math.PI/6);close(r.parallel,9.80665);close(r.perpendicular,16.98561605204533);});
 test("29 moment d'une force",()=>assert.equal(P.torque(2,10),20));
 test("30 énergie cinétique de rotation",()=>assert.equal(P.rotationalKineticEnergy(4,3),18));
 test("31 moment cinétique",()=>assert.equal(P.angularMomentum(4,3),12));
