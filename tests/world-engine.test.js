@@ -66,6 +66,11 @@ test('les immeubles disposent d’étages, d’une porte et d’un escalier int�
  assert(building.door&&building.interior,'porte ou intérieur absent');
  assert(building.interior.stairs===true&&building.interior.levels===building.floors,'escalier ou niveaux absents');
 });
+test('les intérieurs possèdent un plan de pièces et des emplacements de mobilier',()=>{
+ const house=World.create('Crée une campagne').elements.find(e=>e.type==='house');
+ const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
+ for(const item of [house,building]){assert(item.interior.layout.length>=3,'plan intérieur incomplet');item.interior.layout.forEach(room=>{assert(typeof room.name==='string'&&Number.isFinite(room.x)&&Number.isFinite(room.z),'position de pièce invalide')})}
+});
 test('chaque élément possède un identifiant et des coordonnées valides',()=>{
  const w=World.create('Crée un quartier');
  const ids=new Set();
