@@ -219,6 +219,27 @@ test('propose plusieurs itinéraires courts alternatifs entre deux pièces',()=>
  assert(result.reachable&&result.routes.length===2,'itinéraires alternatifs absents');
  assert(result.shortestSteps===2&&result.routes.every(route=>route.steps===2),'longueur des itinéraires incorrecte');
 });
+test('les itinéraires alternatifs respectent les clés et les niveaux d’accès',()=>{
+ const rooms=['Hall','Couloir','Bureau'];
+ const doors=[
+  {from:'Hall',to:'Couloir',doorId:'locked',locked:true,requiredKey:'master'},
+  {from:'Couloir',to:'Bureau',doorId:'level',requiredAccessLevel:2}
+ ];
+ const denied=World.findInteriorRouteAlternatives(rooms,doors,'Hall','Bureau',3,{keys:[],accessLevel:0});
+ assert(!denied.reachable&&denied.routes.length===0,'un itinéraire protégé est accessible sans autorisation');
+ const withKey=World.findInteriorRouteAlternatives(rooms,doors,'Hall','Bureau',3,{keys:['master'],accessLevel:1});
+ assert(!withKey.reachable,'le niveau d’accès insuffisant est ignoré');
+ const authorized=World.findInteriorRouteAlternatives(rooms,doors,'Hall','Bureau',3,{keys:['master'],accessLevel:2});
+ assert(authorized.reachable&&authorized.routes[0].doorIds.join(',')==='locked,level','l’itinéraire autorisé est refusé');
+});
+test('les itinéraires alternatifs respectent les portes à sens unique',()=>{
+ const rooms=['Entrée','Hall','Bureau'];
+ const doors=[{from:'Entrée',to:'Hall',doorId:'one-way',oneWay:true},{from:'Hall',to:'Bureau',doorId:'hall-office'}];
+ const forward=World.findInteriorRouteAlternatives(rooms,doors,'Entrée','Bureau');
+ const backward=World.findInteriorRouteAlternatives(rooms,doors,'Hall','Entrée');
+ assert(forward.reachable,'le sens autorisé est refusé');
+ assert(!backward.reachable,'le sens inverse d’une porte à sens unique est autorisé');
+});
 test('limite le nombre de routes alternatives et exclut les portes fermées',()=>{
  const result=World.findInteriorRouteAlternatives(['A','B','C','D'],[
   {from:'A',to:'B',doorId:'ab'},
