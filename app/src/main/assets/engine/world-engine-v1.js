@@ -624,6 +624,103 @@ function createFurnitureGeometry(type,options){
  return assembleGeometryModel(String(o.name||kind),parts);
 }
 
+
+function normalizeHexColor(value,fallback){
+ const color=String(value||fallback||'#AAB6C4').trim();
+ return /^#[0-9a-fA-F]{6}$/.test(color)?color.toUpperCase():String(fallback||'#AAB6C4').toUpperCase();
+}
+function hexToRgb(color){
+ const hex=normalizeHexColor(color,'#AAB6C4');
+ return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
+}
+function rgbToHex(rgb){
+ return '#'+rgb.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function mixColors(a,b,t){
+ const x=hexToRgb(a),y=hexToRgb(b),f=Math.max(0,Math.min(1,Number(t)||0));
+ return rgbToHex(x.map((v,i)=>v+(y[i]-v)*f));
+}
+function createMaterial(options){
+ const o=options&&typeof options==='object'?options:{},opacity=Math.max(0,Math.min(1,o.opacity===undefined?1:Number(o.opacity)));
+ const textures={};
+ ['baseColor','normal','roughness','opacity','emissive'].forEach(slot=>{
+  const texture=o.textures&&o.textures[slot];
+  if(texture&&typeof texture==='object'){
+   const type=['checker','stripes','grid','gradient','wood'].includes(texture.type)?texture.type:'checker';
+   textures[slot]={type,scale:Math.max(.01,Math.min(100,Number(texture.scale)||4)),colorA:normalizeHexColor(texture.colorA,o.baseColor||'#AAB6C4'),colorB:normalizeHexColor(texture.colorB,'#FFFFFF'),strength:Math.max(0,Math.min(1,texture.strength===undefined?1:Number(texture.strength))),axis:texture.axis==='v'?'v':'u'};
+  }
+ });
+ return {kind:'material',id:String(o.id||'material-custom'),name:String(o.name||'Matériau personnalisé'),baseColor:normalizeHexColor(o.baseColor,'#AAB6C4'),roughness:Math.max(0,Math.min(1,o.roughness===undefined?.65:Number(o.roughness))),metallic:Math.max(0,Math.min(1,Number(o.metallic)||0)),opacity,transparent:opacity<1||o.transparent===true,alphaMode:['opaque','blend','mask'].includes(o.alphaMode)?o.alphaMode:(opacity<1?'blend':'opaque'),alphaCutoff:Math.max(0,Math.min(1,o.alphaCutoff===undefined?.5:Number(o.alphaCutoff))),emissive:normalizeHexColor(o.emissive,'#000000'),emissiveStrength:Math.max(0,Math.min(5,Number(o.emissiveStrength)||0)),doubleSided:o.doubleSided===true,shadingModel:['lambert','standard','unlit'].includes(o.shadingModel)?o.shadingModel:'standard',textures};
+}
+function validateMaterial(material){
+ const errors=[];
+ if(!material||material.kind!=='material')errors.push('material-kind-required');
+ else{
+  if(!/^#[0-9A-F]{6}$/.test(material.baseColor))errors.push('invalid-base-color');
+  ['roughness','metallic','opacity','alphaCutoff'].forEach(k=>{if(!Number.isFinite(material[k])||material[k]<0||material[k]>1)errors.push('invalid-'+k)});
+  if(material.transparent!==(material.opacity<1||material.alphaMode==='blend'))errors.push('transparency-mismatch');
+  if(!['opaque','blend','mask'].includes(material.alphaMode))errors.push('invalid-alpha-mode');
+  if(!['lambert','standard','unlit'].includes(material.shadingModel))errors.push('invalid-shading-model');
+  Object.keys(material.textures||{}).forEach(slot=>{const tex=material.textures[slot];if(!['baseColor','normal','roughness','opacity','emissive'].includes(slot)||!['checker','stripes','grid','gradient','wood'].includes(tex.type))errors.push('invalid-texture-'+slot)});
+ }
+ return {valid:errors.length===0,errors};
+}
+function createMaterialLibrary(){
+ const definitions=[
+  {id:'wall-plaster',name:'Enduit mural',baseColor:'#D8D0C2',roughness:.92},
+  {id:'oak-wood',name:'Bois de chêne',baseColor:'#986B43',roughness:.72,textures:{baseColor:{type:'wood',scale:7,colorA:'#68452D',colorB:'#C0925F'}}},
+  {id:'polished-metal',name:'Métal poli',baseColor:'#AAB7C4',roughness:.2,metallic:.88},
+  {id:'clear-glass',name:'Verre transparent',baseColor:'#B8E6F2',roughness:.08,opacity:.28,transparent:true,doubleSided:true},
+  {id:'ceramic-tile',name:'Carrelage',baseColor:'#D9DDE2',roughness:.3,textures:{baseColor:{type:'grid',scale:5,colorA:'#D9DDE2',colorB:'#AEB8C3',strength:.22}}},
+  {id:'fabric-blue',name:'Tissu bleu',baseColor:'#52718F',roughness:.98,textures:{baseColor:{type:'checker',scale:18,colorA:'#52718F',colorB:'#6685A2',strength:.16}}}
+ ];
+ return definitions.map(createMaterial);
+}
+function getMaterialPreset(library,id){
+ const list=Array.isArray(library)?library:createMaterialLibrary();
+ const found=list.find(item=>item&&item.id===id);
+ return found?createMaterial(found):null;
+}
+function generatePlanarUV(mesh,axis){
+ if(!mesh||!Array.isArray(mesh.vertices)||!mesh.vertices.length)return [];
+ const selected=['xy','xz','yz'].includes(axis)?axis:'xz',indices=selected==='xy'?[0,1]:selected==='yz'?[1,2]:[0,2];
+ const min=[Infinity,Infinity],max=[-Infinity,-Infinity];
+ mesh.vertices.forEach(v=>indices.forEach((k,j)=>{min[j]=Math.min(min[j],v[k]);max[j]=Math.max(max[j],v[k])}));
+ return mesh.vertices.map(v=>indices.map((k,j)=>max[j]-min[j]<1e-12?0:(v[k]-min[j])/(max[j]-min[j])));
+}
+function sampleMaterialTexture(texture,uv){
+ if(!texture)return null;
+ const u=((Number(uv&&uv[0])||0)*texture.scale),v=((Number(uv&&uv[1])||0)*texture.scale);
+ let factor=0;
+ if(texture.type==='checker')factor=(Math.floor(u)+Math.floor(v))%2;
+ else if(texture.type==='stripes')factor=(Math.floor(texture.axis==='v'?v:u)%2);
+ else if(texture.type==='grid'){const lineU=Math.abs(u-Math.round(u))<.12,lineV=Math.abs(v-Math.round(v))<.12;factor=lineU||lineV?1:0;}
+ else if(texture.type==='gradient')factor=Math.max(0,Math.min(1,texture.axis==='v'?uv[1]:uv[0]));
+ else if(texture.type==='wood'){const wave=Math.sin(v*2.7+Math.sin(u*1.4)*1.8);factor=(wave+1)/2;}
+ return mixColors(texture.colorA,texture.colorB,factor*texture.strength);
+}
+function applyMaterialToMesh(mesh,material,options){
+ if(!mesh||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.faces))return null;
+ const mat=createMaterial(material),o=options&&typeof options==='object'?options:{},indices=Array.isArray(o.faceIndices)?o.faceIndices:null;
+ const faceMaterials=mesh.faces.map((_,i)=>indices&&!indices.includes(i)?(mesh.faceMaterials&&mesh.faceMaterials[i]||mesh.material||mat.baseColor):mat.id);
+ const materials=Object.assign({},mesh.materials||{});
+ materials[mat.id]=mat;
+ return Object.assign({},mesh,{vertices:mesh.vertices.map(v=>v.slice()),faces:mesh.faces.map(f=>f.slice()),material:mat.baseColor,materials,faceMaterials,uvs:generatePlanarUV(mesh,o.uvAxis||'xz')});
+}
+function evaluateMaterialAppearance(material,uv,lighting){
+ const mat=createMaterial(material),light=lighting&&typeof lighting==='object'?lighting:{},base=sampleMaterialTexture(mat.textures.baseColor,uv)||mat.baseColor;
+ const ambient=Math.max(0,Math.min(1,light.ambient===undefined?.35:Number(light.ambient))),diffuse=Math.max(0,Math.min(1,light.diffuse===undefined?.65:Number(light.diffuse)));
+ const intensity=mat.shadingModel==='unlit'?1:Math.max(.04,Math.min(1.5,ambient+diffuse*(1-mat.roughness*.18)));
+ const shaded=rgbToHex(hexToRgb(base).map(v=>v*intensity));
+ const specular=mat.shadingModel==='unlit'?0:(1-mat.roughness)*(.15+.65*mat.metallic);
+ const opacity=mat.alphaMode==='mask'?(mat.opacity>=mat.alphaCutoff?1:0):mat.opacity;
+ return {color:shaded,baseColor:base,opacity,transparent:opacity<1||mat.transparent,roughness:mat.roughness,metallic:mat.metallic,specular,emissive:mat.emissive,emissiveStrength:mat.emissiveStrength,shadingModel:mat.shadingModel};
+}
+function createMaterialSurfacePreview(material,uvSamples){
+ const mat=createMaterial(material),samples=Array.isArray(uvSamples)&&uvSamples.length?uvSamples:[[0,0],[.25,.25],[.5,.5],[.75,.75],[1,1]];
+ return {materialId:mat.id,name:mat.name,properties:{baseColor:mat.baseColor,roughness:mat.roughness,metallic:mat.metallic,opacity:mat.opacity,alphaMode:mat.alphaMode},samples:samples.map(uv=>({uv:uv.slice(0,2),appearance:evaluateMaterialAppearance(mat,uv)})),validation:validateMaterial(mat)};
+}
+
 function play(canvas,world,onCaption){
  const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0,inside=null,pointerStart=null;
  const resize=()=>{const d=Math.min(root.devicePixelRatio||1,2);canvas.width=canvas.clientWidth*d;canvas.height=canvas.clientHeight*d;ctx.setTransform(d,0,0,d,0,0)};
@@ -835,5 +932,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
