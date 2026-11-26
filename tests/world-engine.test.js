@@ -124,6 +124,19 @@ test('les seuils de porte sont définis sur les quatre côtés',()=>{
  assert(World.isNearInteriorDoor(left.x,left.z,'left'),'détection de proximité côté gauche incorrecte');
  assert(!World.isNearInteriorDoor(0,0,'left'),'détection de proximité trop large');
 });
+test('l’indicateur des étages décrit correctement le niveau et les escaliers',()=>{
+ const ground=World.getInteriorLevelIndicator(0,3,true);
+ assert(ground.floorName==='REZ-DE-CHAUSSÉE'&&ground.up&&!ground.down,'indicateur du rez-de-chaussée incorrect');
+ assert(ground.action==='MONTER','action de montée absente');
+ const middle=World.getInteriorLevelIndicator(1,3,true);
+ assert(middle.floorName==='ÉTAGE 2'&&middle.up&&middle.down,'indicateur de l’étage intermédiaire incorrect');
+ const top=World.getInteriorLevelIndicator(2,3,true);
+ assert(!top.up&&top.down&&top.action==='DESCENDRE','limite du dernier étage incorrecte');
+ const noStairs=World.getInteriorLevelIndicator(0,1,false);
+ assert(!noStairs.stairs&&!noStairs.up&&!noStairs.down&&noStairs.action==='AUCUN ESCALIER','bâtiment sans escalier incorrect');
+ const invalid=World.getInteriorLevelIndicator(-4,0,true);
+ assert(invalid.level===1&&invalid.total===1,'niveau invalide non normalisé');
+});
 test('les escaliers respectent les limites des étages',()=>{
  assert(World.changeInteriorLevel(0,3,-1,true).level===0,'descente sous le rez-de-chaussée');
  assert(World.changeInteriorLevel(0,3,-1,true).changed===false,'changement impossible signalé comme réussi');
