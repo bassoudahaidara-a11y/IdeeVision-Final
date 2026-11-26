@@ -137,6 +137,19 @@ test('l’indicateur des étages décrit correctement le niveau et les escaliers
  const invalid=World.getInteriorLevelIndicator(-4,0,true);
  assert(invalid.level===1&&invalid.total===1,'niveau invalide non normalisé');
 });
+test('l’accès aux escaliers exige une proximité réelle et respecte le sens de circulation',()=>{
+ const far=World.getInteriorStairInteraction(0,.55,0,3,true);
+ assert(far.visible&&!far.near&&!far.canGoUp,'accès autorisé depuis le point de départ éloigné');
+ assert(far.message==='APPROCHE-TOI DES ESCALIERS','instruction de proximité absente');
+ const near=World.getInteriorStairInteraction(.58,-.55,0,3,true);
+ assert(near.near&&near.canGoUp&&!near.canGoDown,'accès au rez-de-chaussée incorrect');
+ const middle=World.getInteriorStairInteraction(.58,-.55,1,3,true);
+ assert(middle.canGoUp&&middle.canGoDown,'circulation étage intermédiaire incorrecte');
+ const top=World.getInteriorStairInteraction(.58,-.55,2,3,true);
+ assert(!top.canGoUp&&top.canGoDown,'montée au-dessus du dernier étage autorisée');
+ const absent=World.getInteriorStairInteraction(.58,-.55,0,1,false);
+ assert(!absent.visible&&!absent.near,'escalier absent accessible');
+});
 test('le modèle d’escalier fournit des marches et un sens de circulation cohérents',()=>{
  const ground=World.getInteriorStairModel(0,3,true);
  assert(ground.visible&&ground.steps.length===10&&ground.direction==='up','escalier montant absent au rez-de-chaussée');
