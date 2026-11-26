@@ -18,8 +18,7 @@
 
   function isPlainObject(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-    const proto = Object.getPrototypeOf(value);
-    return proto === Object.prototype || proto === null;
+    return Object.prototype.toString.call(value) === '[object Object]';
   }
 
   function ownKeys(value, allowed, label, errors) {
