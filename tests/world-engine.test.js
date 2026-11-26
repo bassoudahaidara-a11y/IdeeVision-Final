@@ -106,6 +106,45 @@ test('les connexions personnalisées valident les pièces et leurs portes',()=>{
  assert(links[0].side==='front'&&links[0].width===.5,'position ou largeur de porte personnalisée perdue');
  assert(World.getConnectedRoomOptions(rooms,1,[{from:'entrée',to:'salon'},{from:'salon',to:'bureau',openable:false}]).length===1,'porte désactivée proposée au joueur');
 });
+test('analyse le réseau intérieur et calcule les chemins depuis l’entrée',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Entrée','Séjour','Cuisine','Chambre'],[
+  {from:'Entrée',to:'Séjour',doorId:'d1'},
+  {from:'Séjour',to:'Cuisine',doorId:'d2'},
+  {from:'Séjour',to:'Chambre',doorId:'d3'}
+ ],'Entrée');
+ assert(result.isConnected&&result.reachableRooms.length===4,'réseau connecté mal détecté');
+ assert(result.paths.Cuisine.join('>')==='Entrée>Séjour>Cuisine','chemin vers la cuisine incorrect');
+ assert(result.rooms.find(room=>room.name==='Séjour').degree===3,'degré de connexion du séjour incorrect');
+});
+test('détecte les pièces isolées et les portes non franchissables',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Entrée','Séjour','Grenier'],[
+  {from:'Entrée',to:'Séjour',doorId:'d1'},
+  {from:'Séjour',to:'Grenier',doorId:'d2',openable:false}
+ ],'Entrée');
+ assert(!result.isConnected&&result.unreachableRooms.includes('Grenier'),'pièce inaccessible non détectée');
+ assert(result.isolatedRooms.includes('Grenier'),'pièce isolée non détectée');
+});
+test('identifie les extrémités d’un réseau en branches',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Hall','Salon','Cuisine','Bureau'],[
+  {from:'Hall',to:'Salon',doorId:'d1'},
+  {from:'Salon',to:'Cuisine',doorId:'d2'},
+  {from:'Salon',to:'Bureau',doorId:'d3'}
+ ],'Hall');
+ assert(result.deadEnds.includes('Cuisine')&&result.deadEnds.includes('Bureau'),'extrémités des branches incorrectes');
+ assert(!result.deadEnds.includes('Salon'),'carrefour classé comme extrémité');
+});
+test('ignore les noms vides et les pièces dupliquées',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Hall','','Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Hall');
+ assert(result.roomCount===2&&result.isConnected,'normalisation des pièces incorrecte');
+});
+test('utilise la première pièce si le point de départ est inconnu',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Inconnue');
+ assert(result.startRoom==='Hall'&&result.paths.Salon.length===2,'point de départ de secours incorrect');
+});
+test('retourne un résultat stable pour un bâtiment sans pièce',()=>{
+ const result=World.analyzeInteriorRoomNetwork([],[],'');
+ assert(result.roomCount===0&&result.connectionCount===0&&!result.isConnected&&result.startRoom===null,'réseau vide incorrect');
+});
 test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
  const room=World.getInteriorRoomModel('séjour');
  assert(room.walls.length>=5,'segments de murs insuffisants');
