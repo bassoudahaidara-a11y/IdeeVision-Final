@@ -90,3 +90,16 @@ Le téléphone Android est la cible d'exécution, pas la machine sur laquelle no
 - Toute relation, unité, formule et action est validée avant utilisation.
 - Une inconnue ou une ambiguïté déclenche une question, pas une invention.
 - Aucune compilation Android sans autorisation explicite de l'utilisateur.
+
+
+## Bibliothèque évolutive de connaissances
+
+Le moteur principal est extensible par une bibliothèque de connaissances séparée du code. L'utilisateur peut importer depuis les paramètres des paquets JSON hors ligne. Le gestionnaire valide la structure, refuse les entrées invalides ou dupliquées, puis enregistre les entrées acceptées en brouillon. L'utilisateur peut les examiner, les activer, les désactiver ou les supprimer.
+
+Les données validées sont conservées dans le stockage local de l'application et ne dépendent plus du fichier importé. La suppression du fichier source n'efface donc pas les connaissances enregistrées. Une sauvegarde/export est nécessaire pour les préserver en cas d'effacement des données ou de désinstallation.
+
+Les fichiers importés sont traités comme des données, jamais comme du code exécutable. Une formule déclarative ne devient utilisable que si un solveur compatible sait l'interpréter. L'ajout de connaissances ne nécessite pas une réinstallation ; l'ajout d'un nouvel algorithme peut encore nécessiter une mise à jour du moteur.
+
+## Première démonstration 3D filaire
+
+Le moteur de scène réutilise les maillages polygonaux déjà définis et peut les afficher en fil de fer : seules les arêtes des faces sont tracées. Le choix est accessible dans les paramètres et mémorisé localement. Ce mode est un rendu de visualisation, pas encore un éditeur 3D interactif.
