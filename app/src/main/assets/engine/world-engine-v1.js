@@ -62,7 +62,7 @@ function getInteriorRoomModel(roomName){
    {side:'back-right',from:.22,to:.88,height:.9},
    {side:'back-lintel',from:-.22,to:.22,height:.28}
   ],
-  doorway:{side:'back',left:-.22,right:.22,width:.44},
+  doorway:{side:'back',left:-.22,right:.22,width:.44,headerHeight:.28,wallOpening:true},
   furniture
  };
 }
@@ -171,8 +171,14 @@ function play(canvas,world,onCaption){
   poly([{x:left,y:back},{x:cx,y:top},{x:cx,y:floorY-45},{x:left,y:floorY}],'#D7C9AE','#5C5145');
   poly([{x:cx,y:top},{x:right,y:back},{x:right,y:floorY},{x:cx,y:floorY-45}],'#B8AA91','#51483E');
   poly([{x:left,y:floorY},{x:cx,y:floorY-45},{x:right,y:floorY},{x:cx,y:h*.96}],'#776D5F','#403A34');
-  // Porte en perspective, son ouverture est animée.
-  const doorW=half*.34,doorH=(floorY-back)*.58,doorX=cx-doorW*.55,doorY=floorY-doorH;
+  // Mur du fond divisé en deux panneaux : le passage reste libre au centre.
+  const doorW=half*roomModel.doorway.width*.78,doorH=(floorY-back)*.58,doorX=cx-doorW*.55,doorY=floorY-doorH;
+  const wallTop=back+28,wallBottom=floorY;
+  ctx.fillStyle='#A99D89';ctx.fillRect(left,wallTop,Math.max(0,doorX-left),wallBottom-wallTop);
+  ctx.fillStyle='#988B78';ctx.fillRect(doorX+doorW,wallTop,Math.max(0,right-doorX-doorW),wallBottom-wallTop);
+  ctx.fillStyle='#887A68';ctx.fillRect(doorX,wallTop,doorW,Math.max(0,doorY-wallTop));
+  ctx.strokeStyle='#5B4939';ctx.lineWidth=5;ctx.strokeRect(doorX,doorY,doorW,doorH);
+  // Porte en perspective, placée dans l'ouverture et animée sur ses gonds.
   ctx.fillStyle='#49382D';ctx.fillRect(doorX,doorY,doorW,doorH);
   ctx.save();ctx.translate(doorX+doorW,doorY+doorH*.5);ctx.rotate(-inside.doorOpen*.95);ctx.fillStyle='#95613F';ctx.fillRect(-doorW,-doorH*.5,doorW,doorH);ctx.restore();
   // Fenêtre et mobilier schématique en volume.
