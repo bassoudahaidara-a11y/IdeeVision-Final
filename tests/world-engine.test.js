@@ -145,6 +145,40 @@ test('retourne un résultat stable pour un bâtiment sans pièce',()=>{
  const result=World.analyzeInteriorRoomNetwork([],[],'');
  assert(result.roomCount===0&&result.connectionCount===0&&!result.isConnected&&result.startRoom===null,'réseau vide incorrect');
 });
+test('calcule les composantes, les distances et les cycles du réseau intérieur',()=>{
+ const result=World.analyzeInteriorRoomNetwork(['Hall','Salon','Cuisine','Bureau','Garage'],[
+  {from:'Hall',to:'Salon',doorId:'d1'},
+  {from:'Salon',to:'Cuisine',doorId:'d2'},
+  {from:'Cuisine',to:'Hall',doorId:'d3'},
+  {from:'Salon',to:'Bureau',doorId:'d4'}
+ ],'Hall');
+ assert(result.componentCount===2&&result.components.some(group=>group.includes('Garage')),'composantes incorrectes');
+ assert(result.cycleRank===1,'cycle du réseau incorrect');
+ assert(result.distances.Bureau===2&&result.distances.Garage===undefined,'distances incorrectes');
+ assert(result.openConnectionCount===4,'nombre de portes accessibles incorrect');
+});
+test('trouve le chemin accessible le plus court entre deux pièces',()=>{
+ const route=World.findInteriorRoute(['Hall','Salon','Cuisine','Bureau'],[
+  {from:'Hall',to:'Salon',doorId:'d1'},
+  {from:'Salon',to:'Cuisine',doorId:'d2'},
+  {from:'Hall',to:'Bureau',doorId:'d3'},
+  {from:'Bureau',to:'Cuisine',doorId:'d4'}
+ ],'Hall','Cuisine');
+ assert(route.reachable&&route.steps===2,'longueur du chemin incorrecte');
+ assert(route.rooms[0]==='Hall'&&route.rooms[route.rooms.length-1]==='Cuisine','extrémités du chemin incorrectes');
+ assert(route.doorIds.length===2,'identifiants des portes absents');
+});
+test('refuse un itinéraire vers une pièce isolée ou inconnue',()=>{
+ const connections=[{from:'Hall',to:'Salon',doorId:'d1'}];
+ const blocked=World.findInteriorRoute(['Hall','Salon','Grenier'],connections,'Hall','Grenier');
+ const unknown=World.findInteriorRoute(['Hall','Salon'],connections,'Hall','Cave');
+ assert(!blocked.reachable&&blocked.steps===0,'pièce isolée considérée accessible');
+ assert(!unknown.reachable&&unknown.message.includes('inconnue'),'destination inconnue non signalée');
+});
+test('retourne un itinéraire vide lorsque le joueur est déjà dans la destination',()=>{
+ const route=World.findInteriorRoute(['Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Salon','Salon');
+ assert(route.reachable&&route.steps===0&&route.rooms.length===1,'itinéraire sur place incorrect');
+});
 test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
  const room=World.getInteriorRoomModel('séjour');
  assert(room.walls.length>=5,'segments de murs insuffisants');
