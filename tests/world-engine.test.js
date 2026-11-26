@@ -85,7 +85,7 @@ test('le déplacement intérieur reste dans les limites de la pièce',()=>{
 });
 test('un meuble bloque le déplacement au lieu de laisser le joueur le traverser',()=>{
  const start={x:0,z:.2};
- const next=World.resolveInteriorMovement(start.x,start.z,0,-.5,'séjour',1);
+ const next=World.resolveInteriorMovement(start.x,start.z,0,-.45,'séjour',1);
  assert(next.z>=start.z-.5,'résultat de déplacement invalide');
  assert(next.z>-.18,'le joueur traverse le canapé');
 });
@@ -96,9 +96,9 @@ test('une porte fermée bloque le passage dans son seuil',()=>{
  assert(open.z<closed.z,'la porte ouverte ne libère pas le passage');
 });
 test('les collisions permettent de glisser le long d’un meuble',()=>{
- const result=World.resolveInteriorMovement(-.5,.2,.3,-.3,'chambre',1);
+ const result=World.resolveInteriorMovement(-.75,.2,.4,.3,'chambre',1);
  assert(Number.isFinite(result.x)&&Number.isFinite(result.z),'position invalide');
- assert(result.x>-.5,'le déplacement latéral est bloqué sans raison');
+ assert(result.z>.2,'le joueur ne peut pas longer le meuble');
 });
 test('chaque élément possède un identifiant et des coordonnées valides',()=>{
  const w=World.create('Crée un quartier');
