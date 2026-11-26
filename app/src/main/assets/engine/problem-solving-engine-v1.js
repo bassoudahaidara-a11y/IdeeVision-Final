@@ -52,7 +52,7 @@ function solveProblem(base,problem,options){
    }
   }
   if(!alternatives.length)return {status:'unknown',goal:clone(goal),reason:'Aucun fait ni règle applicable dans la base actuelle.',subgoals:[],proof:[]};
-  alternatives.sort((a,b)=>({derivable:0,incomplete:1}[a.status]-({derivable:0,incomplete:1}[b.status]));
+  alternatives.sort((a,b)=>(a.status==='derivable'?0:1)-(b.status==='derivable'?0:1));
   return alternatives[0];
  }
  const results=problem.goals.map(goal=>plan(goal,0,new Set()));
