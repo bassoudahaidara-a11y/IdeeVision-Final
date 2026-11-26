@@ -244,6 +244,19 @@ test('les commandes tactiles s’adaptent aux petites et grandes largeurs',()=>{
  }
 });
 
+test('un changement d’étage réinitialise proprement la navigation intérieure',()=>{
+ const up=World.getInteriorLevelEntryState(1);
+ assert(up.level===1,'niveau supérieur incorrect');
+ assert(up.roomIndex===0&&up.selectedDoorIndex===0,'ancienne pièce ou ancienne porte conservée');
+ assert(up.x===0&&up.z===.55,'position d’entrée incorrecte');
+ assert(up.doorOpen===0&&up.doorTarget===0,'état de porte conservé après changement d’étage');
+ const down=World.getInteriorLevelEntryState(0);
+ assert(down.level===0&&down.roomIndex===0&&down.selectedDoorIndex===0,'retour au rez-de-chaussée incorrect');
+ assert(down.doorOpen===0&&down.doorTarget===0,'porte ouverte au retour au rez-de-chaussée');
+ const invalid=World.getInteriorLevelEntryState(-2);
+ assert(invalid.level===0,'niveau négatif accepté');
+});
+
 test('changer de porte referme l’ouverture précédente et conserve la sélection circulaire',()=>{
  const doors=[{target:'séjour',side:'back'},{target:'cuisine',side:'right'},{target:'chambre',side:'left'}];
  const next=World.selectNextInteriorDoor(doors,0);
