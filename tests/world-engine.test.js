@@ -244,6 +244,20 @@ test('les commandes tactiles s’adaptent aux petites et grandes largeurs',()=>{
  }
 });
 
+test('changer de porte referme l’ouverture précédente et conserve la sélection circulaire',()=>{
+ const doors=[{target:'séjour',side:'back'},{target:'cuisine',side:'right'},{target:'chambre',side:'left'}];
+ const next=World.selectNextInteriorDoor(doors,0);
+ assert(next.selectedIndex===1&&next.choice.target==='cuisine','la porte suivante n’est pas sélectionnée');
+ assert(next.doorOpen===0&&next.doorTarget===0,'le changement de porte doit refermer la porte');
+ assert(next.message==='Porte choisie : cuisine (right).','message de sélection incorrect');
+ const last=World.selectNextInteriorDoor(doors,2);
+ assert(last.selectedIndex===0&&last.choice.target==='séjour','la sélection ne revient pas à la première porte');
+ const empty=World.selectNextInteriorDoor([],0);
+ assert(empty.selectedIndex===0&&empty.choice===null,'une porte inexistante a été sélectionnée');
+ assert(empty.doorOpen===0&&empty.doorTarget===0,'une porte reste ouverte sans destination');
+ assert(empty.message==='Aucune autre pièce reliée.','message sans porte incorrect');
+});
+
 test('le statut intérieur explique l’état de la porte et les possibilités d’action',()=>{
  const door={target:'cuisine',side:'right'};
  const closed=World.getInteriorInteractionStatus(0,0,door,false,null);
