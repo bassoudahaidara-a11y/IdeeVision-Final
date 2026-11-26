@@ -37,3 +37,8 @@ jobs:
         run: node --check app/src/main/assets/engine/geometry-engine-v1.js
       - name: Tester le moteur géométrique
         run: node --test tests/geometry-engine-v1.test.js
+
+      - name: Vérifier la syntaxe du moteur physique
+        run: node --check app/src/main/assets/engine/physics-mechanics-engine-v1.js
+      - name: Tester le moteur physique et mécanique
+        run: node --test tests/physics-mechanics-engine-v1.test.js
