@@ -1118,7 +1118,7 @@ function validate3DProject(project){
  const errors=[];if(!project||project.kind!=='ideevision-3d-project')return {valid:false,errors:['invalid-3d-project']};
  if(project.formatVersion!==1)errors.push('unsupported-project-version');
  const scene=validateSceneDocument(project.scene);if(!scene.valid)scene.errors.forEach(e=>errors.push('scene:'+e));
- if(!Array.isArray(project.assemblies))errors.push('assemblies-required');else project.assemblies.forEach((a,i)=>{const v=validateAssemblyModel(a);if(!v.valid)v.errors.forEach(e=>errors.push('assembly-'+i+':'+e));});
+ if(!Array.isArray(project.assemblies))errors.push('assemblies-required');else{const assemblyIds=new Set();project.assemblies.forEach((a,i)=>{const id=a&&(a.assemblyId||a.id);if(id&&assemblyIds.has(id))errors.push('duplicate-project-assembly:'+id);if(id)assemblyIds.add(id);const v=validateAssemblyModel(a);if(!v.valid)v.errors.forEach(e=>errors.push('assembly-'+i+':'+e));});}
  if(!project.camera||project.camera.kind!=='ideevision-camera')errors.push('invalid-project-camera');
  if(!project.environment||project.environment.kind!=='ideevision-render-environment')errors.push('invalid-project-environment');
  return {valid:errors.length===0,errors,objectCount:project.scene&&project.scene.objects?project.scene.objects.length:0,assemblyCount:Array.isArray(project.assemblies)?project.assemblies.length:0,revision:Number(project.revision)||0};
@@ -1126,8 +1126,8 @@ function validate3DProject(project){
 function add3DProjectAssembly(project,assembly){
  const validation=validate3DProject(project);if(!validation.valid)return {ok:false,project,error:'invalid-project',validation};
  const av=validateAssemblyModel(assembly);if(!av.valid)return {ok:false,project,error:'invalid-assembly',validation:av};
- if(project.assemblies.some(a=>a.id&&a.id===assembly.id))return {ok:false,project,error:'duplicate-assembly-id'};
- let next;try{next=JSON.parse(JSON.stringify(project));next.assemblies.push(assembly);next.revision++;}catch(e){return {ok:false,project,error:'project-clone-failed'};}
+ const assemblyId=String(assembly.assemblyId||assembly.id||'assembly-'+(project.assemblies.length+1));if(project.assemblies.some(a=>(a.assemblyId||a.id)===assemblyId))return {ok:false,project,error:'duplicate-assembly-id'};
+ let next;try{next=JSON.parse(JSON.stringify(project));const copy=JSON.parse(JSON.stringify(assembly));copy.assemblyId=assemblyId;next.assemblies.push(copy);next.revision++;}catch(e){return {ok:false,project,error:'project-clone-failed'};}
  const result=validate3DProject(next);return {ok:result.valid,project:result.valid?next:project,error:result.valid?null:'project-validation-failed',validation:result};
 }
 function createInteractiveSceneFromDocument(document,options){
