@@ -387,15 +387,15 @@ function play(canvas,world,onCaption){
   // Escalier intérieur : marches, palier et garde-corps dessinés en perspective 2D.
   const stairModel=getInteriorStairModel(inside.level,inside.building.interior.levels,inside.building.interior.stairs);
   if(stairModel.visible){
-   const sx=cx+half*.12,baseY=floorY-16,run=half*.055,rise=(floorY-back)*.055,sign=stairModel.direction==='up'?1:-1;
+   const sx=cx+half*.12,baseY=floorY-16,run=half*.055,rise=(floorY-back)*.055,ascending=stairModel.direction==='up';
    stairModel.steps.forEach(step=>{
-    const px=sx+step.progress*half*.48,py=baseY-step.rise*rise;
+    const px=sx+(ascending?step.progress:1-step.progress)*half*.48,py=baseY-step.rise*rise;
     ctx.fillStyle='#76543A';ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+run,py);ctx.lineTo(px+run,py+rise*.72);ctx.lineTo(px,py+rise*.72);ctx.closePath();ctx.fill();
     ctx.fillStyle='#B98A5C';ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+run,py);ctx.lineTo(px+run-3,py-5);ctx.lineTo(px-3,py-5);ctx.closePath();ctx.fill();
    });
    ctx.strokeStyle='#D8C29B';ctx.lineWidth=3;ctx.beginPath();
-   ctx.moveTo(sx,baseY-rise*.2);ctx.lineTo(sx+half*.48,baseY-rise*1.12);ctx.stroke();
-   ctx.strokeStyle='#5B4939';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx+half*.48,baseY-rise*1.12);ctx.lineTo(sx+half*.56,baseY-rise*1.12);ctx.lineTo(sx+half*.56,baseY-rise*.65);ctx.stroke();
+   ctx.moveTo(ascending?sx:sx+half*.48,baseY-rise*.2);ctx.lineTo(ascending?sx+half*.48:sx,baseY-rise*1.12);ctx.stroke();
+   ctx.strokeStyle='#5B4939';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ascending?sx+half*.48:sx,baseY-rise*1.12);ctx.lineTo(ascending?sx+half*.56:sx-half*.08,baseY-rise*1.12);ctx.lineTo(ascending?sx+half*.56:sx-half*.08,baseY-rise*.65);ctx.stroke();
    ctx.fillStyle='#F4D27A';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(stairModel.canGoUp&&stairModel.canGoDown?'ESCALIER • MONTER / DESCENDRE':stairModel.canGoUp?'ESCALIER • MONTER':'ESCALIER • DESCENDRE',sx+half*.34,baseY-rise*1.3);
   }
   // Éclairage ambiant simulé par un voile léger, sans calcul physique lourd.
