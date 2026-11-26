@@ -201,7 +201,7 @@ test('analyse les accès réellement disponibles et les portes bloquées',()=>{
 test('respecte les portes à sens unique dans la navigation',()=>{
  const result=World.analyzeInteriorAccessNetwork(['Hall','Zone','Sortie'],[
   {from:'Hall',to:'Zone',doorId:'entrée-zone',oneWay:true},
-  {from:'Sortie',to:'Zone',doorId:'sortie-zone'}
+  {from:'Sortie',to:'Zone',doorId:'sortie-zone',oneWay:true}
  ],'Hall',{});
  assert(result.reachableRooms.includes('Zone')&&!result.reachableRooms.includes('Sortie'),'sens unique non respecté');
 });
