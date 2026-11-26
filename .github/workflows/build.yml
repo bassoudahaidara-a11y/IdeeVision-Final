@@ -1,9 +1,38 @@
-name: Build APK
+name: Offline engine tests
 on:
   push:
+  pull_request:
   workflow_dispatch:
 jobs:
-  build:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node tests/json-engine-v2-1.test.js
+      - run: node tests/offline-scene-engine.test.js
+      - run: node tests/french-understanding.test.js
+      - run: node tests/idea-understanding-contract.test.js
+      - run: node tests/knowledge-manager.test.js
+      - run: node tests/reasoning-engine.test.js
+      - run: node tests/problem-solving-engine.test.js
+      - run: node tests/scientific-engine.test.js
+      - run: node tests/scientific-advanced-engine.test.js
+      - run: node tests/scientific-problem-engine.test.js
+      - run: node tests/scientific-knowledge-engine.test.js
+      - run: node tests/scientific-proof-engine.test.js
+      - run: node tests/scientific-multidomain-engine.test.js
+      - run: node tests/scientific-explanation-engine.test.js
+      - run: node tests/advanced-problem-solving-engine.test.js
+      - run: node tests/knowledge-intake-engine.test.js
+      - run: node tests/world-engine.test.js
+      - run: node --check app/src/main/assets/engine/workbench-ui-v1.js
+      - run: node tests/french-corpus.test.js
+      - run: node tests/french-corpus-splits.test.js
+
+  android-apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,9 +42,13 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
-      - run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+          gradle-version: '8.7'
+      - name: Build debug APK
+        run: gradle --no-daemon assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: IdeeVision-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: jarvis-scientifique-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

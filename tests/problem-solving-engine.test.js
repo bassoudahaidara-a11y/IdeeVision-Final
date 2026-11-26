@@ -1,0 +1,22 @@
+const fs=require('fs'),vm=require('vm');
+const window={};const context={window,JSON,Object,Array,String,Number,Math,Map,Set,Date};vm.createContext(context);
+vm.runInContext(fs.readFileSync('app/src/main/assets/engine/reasoning-engine-v1.js','utf8'),context);
+vm.runInContext(fs.readFileSync('app/src/main/assets/engine/problem-solving-engine-v1.js','utf8'),context);
+const R=window.IdeeVisionReasoning,S=window.IdeeVisionProblemSolver;let passed=0,failed=0;
+function test(name,fn){try{fn();passed++;console.log('✓ '+name)}catch(e){failed++;console.error('✗ '+name+': '+e.message)}}
+function assert(v,m){if(!v)throw new Error(m)}
+function sample(){const b=R.createKnowledgeBase('Base test');R.addFact(b,{id:'f-star',subject:'Soleil',predicate:'is-a',object:'star'});R.addRule(b,{id:'r-star',name:'Une étoile est un astre',when:[{subject:'?x',predicate:'is-a',object:'star'}],then:[{subject:'?x',predicate:'is-a',object:'celestial-body'}]});R.addRule(b,{id:'r-space',name:'Un astre se trouve dans l’espace',when:[{subject:'?x',predicate:'is-a',object:'celestial-body'}],then:[{subject:'?x',predicate:'located-in',object:'space'}]});return b}
+test('module et version chargés',()=>assert(S&&S.version==='0.1.0','module absent'));
+test('crée un problème structuré',()=>{const p=S.createProblem('Test',[{subject:'A',predicate:'p',object:'B'}],[]);assert(p.title==='Test'&&p.goals.length===1,'problème invalide')});
+test('refuse les objectifs mal formés',()=>assert(!S.solveProblem(sample(),{goals:[{subject:'A'}]}).ok,'objectif incomplet accepté'));
+test('résout un objectif déjà connu',()=>{const b=sample(),r=S.solveProblem(b,{title:'Soleil étoile',goals:[{subject:'Soleil',predicate:'is-a',object:'star'}]});assert(r.ok&&r.status==='solved'&&r.knownCount===1,'fait connu non reconnu')});
+test('retrouve une conclusion obtenue par déduction',()=>{const b=sample(),r=S.solveProblem(b,{goals:[{subject:'Soleil',predicate:'located-in',object:'space'}]});assert(r.ok&&r.status==='solved'&&r.inference.derived.length===2,'chaîne de déduction non reconnue')});
+test('décompose un objectif en sous-objectifs',()=>{const b=sample(),r=S.solveProblem(b,{goals:[{subject:'Soleil',predicate:'located-in',object:'space'}]},{maxSteps:1});assert(r.ok&&r.goals[0].status==='derivable'&&r.goals[0].subgoals.length===1,'décomposition absente')});
+test('signale les données manquantes sans inventer',()=>{const b=R.createKnowledgeBase(),r=S.solveProblem(b,{goals:[{subject:'Mars',predicate:'is-a',object:'planet'}]});assert(r.status==='insufficient_knowledge'&&r.missing.length===1&&r.goals[0].status==='unknown','inconnu mal signalé')});
+test('accepte des données fournies dans le problème',()=>{const b=R.createKnowledgeBase();R.addRule(b,{id:'r',name:'Règle',when:[{subject:'?x',predicate:'has',object:'wings'}],then:[{subject:'?x',predicate:'can',object:'fly'}]});const r=S.solveProblem(b,{givens:[{subject:'Bird',predicate:'has',object:'wings'}],goals:[{subject:'Bird',predicate:'can',object:'fly'}]});assert(r.ok&&r.status==='solved'&&r.acceptedGivens.length===1,'donnée initiale non utilisée')});
+test('identifie un problème partiellement résolu',()=>{const b=sample(),r=S.solveProblem(b,{goals:[{subject:'Soleil',predicate:'is-a',object:'star'},{subject:'Mars',predicate:'is-a',object:'planet'}]});assert(r.status==='partial'&&r.knownCount===1&&r.unresolvedCount===1,'statut partiel incorrect')});
+test('ne modifie pas la base d’origine',()=>{const b=R.createKnowledgeBase();S.solveProblem(b,{givens:[{subject:'A',predicate:'p',object:'B'}],goals:[{subject:'A',predicate:'p',object:'B'}]});assert(b.facts.length===0,'base originale modifiée')});
+test('respecte les limites de profondeur et de nœuds',()=>{const b=sample(),r=S.solveProblem(b,{goals:[{subject:'Soleil',predicate:'located-in',object:'space'}]},{maxDepth:1,maxNodes:1,maxSteps:1});assert(r.search.visitedNodes<=1&&r.search.limitReached,'limite de recherche dépassée ou absente')});
+test('refuse un trop grand nombre de prémisses initiales',()=>{const b=R.createKnowledgeBase(),givens=Array.from({length:101},(_,i)=>({subject:'A'+i,predicate:'p',object:'B'}));assert(S.solveProblem(b,{givens,goals:[{subject:'A',predicate:'p',object:'B'}]}).error==='too-many-givens','limite des faits initiaux absente')});
+test('refuse une base non reconnue',()=>assert(!S.solveProblem({}, {goals:[{subject:'A',predicate:'p',object:'B'}]}).ok,'base invalide acceptée'));
+console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');if(failed)process.exitCode=1;
