@@ -27,7 +27,7 @@ test('détecte une intention de simulation', () => assert(Engine.analyze('Simule
 test('détecte les actions de mouvement', () => assert(Engine.analyze('Un robot qui tourne et avance').actions.includes('rotate') && Engine.analyze('Un robot qui tourne et avance').actions.includes('move'), 'actions absentes'));
 test('choisit le mode 2D', () => assert(Engine.analyze('Un dessin 2D de maison').mode === '2D', 'mode incorrect'));
 test('demande une précision pour un objet inconnu', () => assert(Engine.analyze('Construis un appareil quantique inédit').status === 'needs_clarification', 'clarification absente'));
-test('ne dépasse pas la quantité maximale', () => assert(Engine.analyze('Construis 99 robots').objects[0].quantity === 20, 'limite non appliquée'));
+test('ne dépasse pas la quantité maximale', () => assert(Engine.analyze('Construis 99 robots').objects[0].quantity === 20 && Engine.analyze('Construis 99 robots').status === 'needs_clarification', 'limite non appliquée'));
 test('ne modifie pas le texte original fourni', () => assert(Engine.analyze('  Un arbre  ').normalizedText === 'un arbre', 'texte normalisé incorrect'));
 console.log('Résultat : ' + passed + ' réussis, ' + failed + ' échoués.');
 if (failed) process.exitCode = 1;
