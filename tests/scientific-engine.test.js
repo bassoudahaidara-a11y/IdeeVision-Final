@@ -20,7 +20,7 @@ test('vérifie les dimensions de la deuxième loi de Newton',()=>{const r=S.chec
 test('détecte une formule dimensionnellement incohérente',()=>{const r=S.checkDimensions('m+a',{m:[1,0,0,0,0],a:[1,0,-2,0,0]},'N');assert(!r.ok&&r.error==='dimension-mismatch-addition','addition dimensionnellement incorrecte acceptée')});
 test('convertit les unités compatibles',()=>{const r=S.convertUnit(2,'km','m');assert(r.ok&&r.value===2000,'conversion km vers m incorrecte')});
 test('refuse la conversion entre grandeurs incompatibles',()=>assert(!S.convertUnit(2,'kg','m').ok,'conversion incompatible acceptée'));
-test('évalue une formule avec contrôle dimensionnel',()=>{const r=S.evaluateFormula('m*a',{m:5,a:3},{m:'kg',a:'m'},'N');assert(r.ok&&r.value===15&&r.unit==='N','formule physique incorrecte')});
+test('évalue une formule avec contrôle dimensionnel',()=>{const r=S.evaluateFormula('m*a',{m:5,a:3},{m:'kg',a:'mps2'},'N');assert(r.ok&&r.value===15&&r.unit==='N','formule physique incorrecte')});
 test('calcule la force de Newton',()=>{const r=S.calculateMechanics('newton-second-law',{mass:4,acceleration:2.5});assert(r.ok&&r.value===10&&r.unit==='N','force incorrecte')});
 test('calcule énergie cinétique et poids',()=>{const e=S.calculateMechanics('kinetic-energy',{mass:2,speed:3}),p=S.calculateMechanics('weight',{mass:2});assert(e.ok&&e.value===9&&p.ok&&Math.abs(p.value-19.62)<1e-9,'calcul mécanique incorrect')});
 test('calcule une vitesse moyenne et refuse une durée nulle',()=>{assert(S.calculateMechanics('uniform-motion',{distance:100,time:20}).value===5&&!S.calculateMechanics('uniform-motion',{distance:100,time:0}).ok,'calcul de vitesse incorrect')});
