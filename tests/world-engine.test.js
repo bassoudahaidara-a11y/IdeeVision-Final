@@ -66,6 +66,13 @@ test('les immeubles disposent d’étages, d’une porte et d’un escalier int�
  assert(building.door&&building.interior,'porte ou intérieur absent');
  assert(building.interior.stairs===true&&building.interior.levels===building.floors,'escalier ou niveaux absents');
 });
+test('les maisons et immeubles déclarent plusieurs espaces intérieurs nommés',()=>{
+ const house=World.create('Crée une campagne').elements.find(e=>e.type==='house');
+ const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
+ assert(house.interior.rooms.length>=4,'pièces de maison insuffisantes');
+ assert(building.interior.rooms.length>=3,'pièces d’immeuble insuffisantes');
+ assert(new Set(house.interior.rooms).size===house.interior.rooms.length,'noms de pièces dupliqués');
+});
 test('les intérieurs possèdent un plan de pièces et des emplacements de mobilier',()=>{
  const house=World.create('Crée une campagne').elements.find(e=>e.type==='house');
  const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
