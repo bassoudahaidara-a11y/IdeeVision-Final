@@ -22,6 +22,7 @@ jobs:
       - run: node tests/scientific-advanced-engine.test.js
       - run: node tests/scientific-problem-engine.test.js
       - run: node tests/scientific-knowledge-engine.test.js
+      - run: node tests/scientific-proof-engine.test.js
       - run: node tests/world-engine.test.js
       - run: node tests/french-corpus.test.js
       - run: node tests/french-corpus-splits.test.js
