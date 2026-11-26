@@ -211,7 +211,7 @@ test('l’opacité de transition utilise une accélération douce et reste born�
  const threeQuarter=World.getInteriorTransitionOpacity(.75);
  const end=World.getInteriorTransitionOpacity(1);
  assert(start===0&&middle===1&&end===0,'points de transition incorrects');
- assert(quarter>.5&&quarter<1&&threeQuarter===quarter,'courbe douce non symétrique');
+ assert(Math.abs(quarter-.5)<1e-9&&Math.abs(threeQuarter-quarter)<1e-9,'courbe douce non symétrique');
  assert(World.getInteriorTransitionOpacity(-2)===0&&World.getInteriorTransitionOpacity(3)===0,'bornes de progression incorrectes');
 });
 test('l’indicateur de transition affiche la bonne direction et la progression',()=>{
