@@ -52,6 +52,20 @@ test('les maisons de campagne ont une échelle positive',()=>{
  assert(houses.length>0,'aucune maison générée');
  assert(houses.every(e=>e.scale>0),'échelle maison invalide');
 });
+test('les maisons disposent d’une porte et d’un intérieur défini',()=>{
+ const w=World.create('Crée une campagne');
+ const house=w.elements.find(e=>e.type==='house');
+ assert(house&&house.door&&house.interior,'données de porte ou intérieur absentes');
+ assert(house.interior.rooms.includes('séjour')&&house.interior.rooms.includes('chambre'),'pièces de maison absentes');
+ assert(house.interior.stairs===false,'une maison simple ne doit pas avoir d’escalier');
+});
+test('les immeubles disposent d’étages, d’une porte et d’un escalier intérieur',()=>{
+ const w=World.create('Crée une ville');
+ const building=w.elements.find(e=>e.type==='building');
+ assert(building&&building.floors>=2,'immeuble à étages absent');
+ assert(building.door&&building.interior,'porte ou intérieur absent');
+ assert(building.interior.stairs===true&&building.interior.levels===building.floors,'escalier ou niveaux absents');
+});
 test('chaque élément possède un identifiant et des coordonnées valides',()=>{
  const w=World.create('Crée un quartier');
  const ids=new Set();
