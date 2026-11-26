@@ -154,18 +154,20 @@ function analyzeInteriorAccessNetwork(rooms,connections,startRoom,context){
  const blockedDoors=doorDetails.filter(door=>!door.access.allowed);
  return {roomCount:names.length,startRoom:start,reachableRooms,unreachableRooms,paths,doors:doorDetails,blockedDoors,accessibleDoorCount:doorDetails.length-blockedDoors.length,lockedDoorCount:doorDetails.filter(door=>door.access.reason==='locked').length,accessLevelBlockedCount:doorDetails.filter(door=>door.access.reason==='access-level').length};
 }
-function findInteriorRouteAlternatives(rooms,connections,fromRoom,toRoom,maxRoutes){
+function findInteriorRouteAlternatives(rooms,connections,fromRoom,toRoom,maxRoutes,context){
  const names=Array.isArray(rooms)?Array.from(new Set(rooms.map(v=>String(v||'').trim()).filter(Boolean))):[];
  const from=String(fromRoom||''),to=String(toRoom||'');
  const limit=Math.max(1,Math.min(10,Math.floor(Number(maxRoutes)||3)));
  if(!names.includes(from)||!names.includes(to))return {reachable:false,from,to,shortestSteps:null,routes:[],message:'Pièce de départ ou destination inconnue.'};
  if(from===to)return {reachable:true,from,to,shortestSteps:0,routes:[{rooms:[from],doorIds:[],steps:0}],message:'Tu es déjà dans cette pièce.'};
- const links=getInteriorRoomConnections(names,connections).filter(link=>link.openable!==false);
+ const links=getInteriorRoomConnections(names,connections);
  const adjacency=new Map(names.map(name=>[name,[]]));
  links.forEach(link=>{
   if(!adjacency.has(link.from)||!adjacency.has(link.to))return;
+  const access=resolveInteriorDoorAccess(link,context);
+  if(!access.allowed)return;
   adjacency.get(link.from).push({room:link.to,doorId:link.doorId});
-  adjacency.get(link.to).push({room:link.from,doorId:link.doorId});
+  if(!link.oneWay)adjacency.get(link.to).push({room:link.from,doorId:link.doorId});
  });
  const queue=[{rooms:[from],doorIds:[]}],routes=[];let shortest=null;
  while(queue.length&&routes.length<limit){
