@@ -436,3 +436,73 @@ Le moteur couvre notamment (F=ma), (P=mg), (E_c=\frac12mv^2), (E_p=mgh), (W=Fd\c
 Les calculs utilisent les unités SI. Le mouvement cinématique suppose une accélération constante. Le pendule simple utilise l'approximation des petites oscillations. Le modèle de collision suppose une collision parfaitement inélastique sur une seule dimension. Les modèles ne remplacent pas une simulation numérique complète ni une validation expérimentale.
 
 Le moteur fournit des fonctions de calcul et des consignes au générateur ; il ne simule pas encore visuellement les mécanismes en temps réel. Aucun APK n'est compilé à ce groupe : le workflow GitHub exécute seulement les vérifications et tests.
+
+
+## Groupe 1.10 — Simulation numérique des systèmes physiques (52 tâches)
+
+| # | Fonction | État |
+|---:|---|---|
+| 1 | Intégration numérique d'Euler | Développé et testé |
+| 2 | Méthode du point milieu | Développé et testé |
+| 3 | Runge-Kutta d'ordre 4 (RK4) | Développé et testé |
+| 4 | Validation des états numériques | Développé et testé |
+| 5 | Vérification de compatibilité des dimensions d'état | Développé et testé |
+| 6 | Refus des pas de temps nuls ou négatifs | Développé et testé |
+| 7 | Détection des valeurs non finies | Développé et testé |
+| 8 | Simulation à pas de temps fixe | Développé et testé |
+| 9 | Dernier pas ajusté à la durée demandée | Développé et testé |
+| 10 | Limite de sécurité du nombre de pas | Développé et testé |
+| 11 | Détection de divergence numérique | Développé et testé |
+| 12 | Intégration semi-implicite pour position-vitesse | Développé et testé |
+| 13 | Modèle masse-ressort-amortisseur | Développé et testé |
+| 14 | Force extérieure variable ou constante sur le ressort | Développé et testé |
+| 15 | Calcul de l'énergie de l'oscillateur | Développé et testé |
+| 16 | Diagnostic de dissipation par amortissement | Développé et testé |
+| 17 | Pendule simple non linéaire | Développé et testé |
+| 18 | Prise en compte de l'amortissement du pendule | Développé et testé |
+| 19 | Calcul de l'énergie du pendule | Développé et testé |
+| 20 | Conservation des séries temps et états | Développé et testé |
+| 21 | Dérivée numérique centrée et aux bords | Développé et testé |
+| 22 | Intégration par trapèzes | Développé et testé |
+| 23 | Intégration de Simpson | Développé et testé |
+| 24 | Interpolation d'une valeur à un instant | Développé et testé |
+| 25 | Refus des instants hors de la série | Développé et testé |
+| 26 | Comparaison de deux pas pour estimer l'erreur | Développé et testé |
+| 27 | Analyse de la tendance énergétique | Développé et testé |
+| 28 | Calcul de l'amplitude maximale | Développé et testé |
+| 29 | Comptage des passages par zéro | Développé et testé |
+| 30 | Conversion période-fréquence | Développé et testé |
+| 31 | Calcul de la pulsation | Développé et testé |
+| 32 | Fréquence propre d'un ressort | Développé et testé |
+| 33 | Taux d'amortissement | Développé et testé |
+| 34 | Classification sous-amortie | Développé et testé |
+| 35 | Classification critique | Développé et testé |
+| 36 | Classification sur-amortie | Développé et testé |
+| 37 | Décroissance exponentielle | Développé et testé |
+| 38 | Construction d'une grille temporelle | Développé et testé |
+| 39 | Rééchantillonnage d'une série | Développé et testé |
+| 40 | Valeur quadratique moyenne (RMS) | Développé et testé |
+| 41 | Moyenne d'une série numérique | Développé et testé |
+| 42 | Validation des options de simulation | Développé et testé |
+| 43 | Détection des thèmes de simulation | Développé et testé |
+| 44 | Construction d'un contexte explicatif pour le générateur | Développé et testé |
+| 45 | Déclaration des unités SI et hypothèses | Développé et testé |
+| 46 | Contrôle de convergence par raffinement du pas | Développé et testé |
+| 47 | Protection contre les simulations trop longues | Développé et testé |
+| 48 | Diagnostics hors ligne | Développé et testé |
+| 49 | Tests des trois méthodes d'intégration | Développé et testé |
+| 50 | Tests de l'oscillateur et du pendule | Développé et testé |
+| 51 | Tests des outils d'analyse numérique | Développé et testé |
+| 52 | Tests automatisés de diagnostic et d'audit | Développé et testé |
+
+### Intégration dans Idée Vision
+
+Le fichier `numerical-simulation-v1.js` est chargé par `index.html`. Avant la génération, l'application analyse les demandes liées à la simulation, prépare un contexte qui précise les méthodes disponibles, les unités SI, le pas de temps, les conditions initiales et la nécessité de vérifier la convergence. Le moteur expose aussi des fonctions exécutables de simulation et d'analyse, accessibles depuis JavaScript.
+
+### Limites scientifiques
+
+Les simulations sont des modèles numériques pédagogiques. Elles dépendent des paramètres fournis et du pas de temps ; une sortie numérique n'est pas une mesure réelle. L'estimation par comparaison de pas est un indicateur, pas une borne mathématique universelle de l'erreur. Les modèles actuels couvrent l'oscillateur masse-ressort-amortisseur et le pendule simple non linéaire, sans prétendre simuler toute la physique. Le moteur est local, mais la génération de films et de scènes continue d'utiliser le service distant déjà présent.
+
+## Contrôle de version par groupes de dix
+
+À partir de la version 1.10.0, chaque bloc de dix groupes donne lieu à une vérification complète : présence des fichiers, chargement des moteurs dans l'application, tests automatisés, compilation Android et publication de l'APK de contrôle. Le nom affiché est **Idée Vision** et l'icône Android porte désormais le monogramme **IV**. Le code de version Android de ce jalon est 10.
