@@ -30,6 +30,26 @@ function terrainHeight(world,x,z){
  const peaks=world.biome==='mountain'?(Math.exp(-((x+3)*(x+3)+(z+1)*(z+1))/8)*a+Math.exp(-((x-3)*(x-3)+(z-2)*(z-2))/6)*a*.8):0;
  return rolling+peaks;
 }
+function resolveInteriorMovement(x,z,dx,dz,roomName,doorOpen){
+ const radius=.085,min=-.88,max=.88;
+ const obstacles=[];
+ if(/séjour|entree|entrée/i.test(roomName||''))obstacles.push({left:-.38,right:.34,top:-.18,bottom:.12});
+ if(/cuisine/i.test(roomName||''))obstacles.push({left:.12,right:.72,top:-.22,bottom:.14});
+ if(/chambre/i.test(roomName||''))obstacles.push({left:-.62,right:-.06,top:-.24,bottom:.22});
+ const blocked=(px,pz)=>{
+  if(Math.abs(px)<.22&&pz<-.68&&doorOpen<.7)return true;
+  return obstacles.some(o=>{
+   const qx=Math.max(o.left,Math.min(o.right,px));
+   const qz=Math.max(o.top,Math.min(o.bottom,pz));
+   return Math.hypot(px-qx,pz-qz)<radius;
+  });
+ };
+ let nx=Math.max(min,Math.min(max,x+dx));
+ if(blocked(nx,z))nx=x;
+ let nz=Math.max(min,Math.min(max,z+dz));
+ if(blocked(nx,nz))nz=z;
+ return {x:nx,z:nz,blockedX:nx!==x+dx,blockedZ:nz!==z+dz};
+}
 function play(canvas,world,onCaption){
  const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0,inside=null,pointerStart=null;
  const resize=()=>{const d=Math.min(root.devicePixelRatio||1,2);canvas.width=canvas.clientWidth*d;canvas.height=canvas.clientHeight*d;ctx.setTransform(d,0,0,d,0,0)};
@@ -38,7 +58,7 @@ function play(canvas,world,onCaption){
  const pointerMove=e=>{if(drag==='camera'){yaw+=(e.clientX-lastX)*.008;pitch=Math.max(.12,Math.min(.72,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY}else if(drag==='interior-pad'){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else if(drag){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}};
  const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.72&&inside.building.interior.stairs){inside.level=(inside.level+1)%inside.building.interior.levels;inside.roomIndex=0;onCaption('Tu es maintenant au niveau '+(inside.level+1)+'.')}else if(y>h*.78&&Math.abs(inside.x)<.35&&inside.z<-.45){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7){inside.roomIndex=(inside.roomIndex+1)%inside.building.interior.rooms.length;inside.x=0;inside.z=.55;onCaption('Tu entres dans : '+inside.building.interior.rooms[inside.roomIndex]+'.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
  const keys=new Set();
- const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(k)){keys.add(k);if(k==='e'&&inside){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}e.preventDefault()}};
+ const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(k)){keys.add(k);if(k==='e'&&inside&&!e.repeat){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}e.preventDefault()}};
  const keyUp=e=>keys.delete(e.key.toLowerCase());
  root.addEventListener('keydown',keyDown);root.addEventListener('keyup',keyUp);
  const wheel=e=>{zoom=Math.max(.65,Math.min(1.8,zoom+(e.deltaY<0?.08:-.08)))};
@@ -109,9 +129,10 @@ function play(canvas,world,onCaption){
   const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#34495E');sky.addColorStop(1,'#101827');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
   const cx=w*.5,top=h*.19,bottom=h*.82,half=Math.min(w*.43,250),floorY=bottom;
   const speed=.018;inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
-  inside.x=Math.max(-.88,Math.min(.88,inside.x+(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed));
-  inside.z=Math.max(-.88,Math.min(.88,inside.z+(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed));
   const roomNames=inside.building.interior.rooms||['séjour'],roomName=roomNames[inside.roomIndex]||roomNames[0];
+  const dx=(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
+  const dz=(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
+  const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen);inside.x=moved.x;inside.z=moved.z;
   const left=cx-half,right=cx+half,back=top+70;
   poly([{x:left,y:back},{x:cx,y:top},{x:right,y:back},{x:right,y:floorY},{x:left,y:floorY}],'#B9AD98','#45413B');
   poly([{x:left,y:back},{x:cx,y:top},{x:cx,y:floorY-45},{x:left,y:floorY}],'#D7C9AE','#5C5145');
@@ -175,5 +196,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,resolveInteriorMovement,play});
 })(window);
