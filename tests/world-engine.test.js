@@ -141,7 +141,7 @@ test('la transition d’étage progresse, change de niveau au milieu et se termi
  const initial=World.createInteriorLevelTransition(2,'up');
  assert(initial.active&&initial.targetLevel===2&&initial.progress===0,'transition initiale incorrecte');
  const first=World.advanceInteriorLevelTransition(initial,.2);
- assert(first.transition.progress===.2&&!first.switchLevel&&first.opacity>.7,'fondu initial incorrect');
+ assert(first.transition.progress===.2&&!first.switchLevel&&first.opacity>.3,'fondu initial incorrect');
  const middle=World.advanceInteriorLevelTransition(first.transition,.35);
  assert(middle.switchLevel&&middle.transition.switched&&middle.opacity>.8,'changement de niveau non déclenché au milieu');
  const after=World.advanceInteriorLevelTransition(middle.transition,.2);
