@@ -6,6 +6,7 @@
 <script src="engine/idea-understanding-contract-v1.js"></script>
 <script src="engine/french-understanding-v1.js"></script>
 <script src="engine/knowledge-manager-v1.js"></script>
+<script src="engine/world-engine-v1.js"></script>
 <script src="engine/offline-scene-engine.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
@@ -191,7 +192,7 @@ function sayNow(text){
 function stopLive(){if(cancelSay)cancelSay();stopSpeech()}
 
 /* Pipeline local : aucune requête réseau ni clé API. */
-let offlineScene=null,stopOffline=null;
+let offlineScene=null,stopOffline=null,isWorldScene=false;
 async function start(){
  const idea=$('idea').value.trim();
  if(idea.length<5){msg('Décris ton idée avec quelques mots.');return}
@@ -208,8 +209,9 @@ async function start(){
    window.IdeeVisionLastUnderstanding={result:structured,valid:checked.valid,errors:checked.errors};
    if(!checked.valid) console.warn('Interprétation provisoire non validée',checked.errors);
   }
-  offlineScene=window.IdeeVisionOffline.create(idea);
-  $('und').textContent='J’ai repéré '+offlineScene.objects.length+' élément(s). Mode '+offlineScene.mode+'.';
+  isWorldScene=!!(window.IdeeVisionWorld&&window.IdeeVisionWorld.isWorldRequest(idea));
+  offlineScene=isWorldScene?window.IdeeVisionWorld.create(idea):window.IdeeVisionOffline.create(idea);
+  $('und').textContent=isWorldScene?'Environnement 3D : '+offlineScene.elements.length+' éléments générés.': 'J’ai repéré '+offlineScene.objects.length+' élément(s). Mode '+offlineScene.mode+'.';
   setW('Construction terminée','Aucun accès Internet nécessaire.',100);
   setTimeout(()=>{if(my===run)play()},450);
  }catch(e){show('home');msg('Je ne peux pas construire cette scène : '+e.message)}
@@ -227,10 +229,14 @@ async function play(){
  if(!offlineScene){show('home');msg('Décris une idée avant de lancer la scène.');return}
  stopLive();if(stopOffline)stopOffline();show('play');$('cap').textContent='';setBar('stop');
  let spokenCaption='';
- stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>{
-  $('cap').textContent=t;
-  if(t&&t!==spokenCaption){spokenCaption=t;sayNow(t)}
- },()=>setBar('end'));
+ if(isWorldScene){
+  stopOffline=window.IdeeVisionWorld.play($('cv'),offlineScene,t=>{$('cap').textContent=t;if(t&&t!==spokenCaption){spokenCaption=t;sayNow(t)}});
+ }else{
+  stopOffline=window.IdeeVisionOffline.play($('cv'),offlineScene,t=>{
+   $('cap').textContent=t;
+   if(t&&t!==spokenCaption){spokenCaption=t;sayNow(t)}
+  },()=>setBar('end'));
+ }
 }
 function closePlay(){stopLive();if(stopOffline){stopOffline();stopOffline=null}show('home')}
 $('close').onclick=closePlay;
