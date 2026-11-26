@@ -27,6 +27,19 @@ test('génère une campagne avec maisons et arbres',()=>{
  assert(w.biome==='countryside','biome incorrect');
  assert(w.elements.some(e=>e.type==='house')&&w.elements.some(e=>e.type==='tree'),'éléments campagne absents');
 });
+test('reconnaît les montagnes et construit un relief plus élevé que la ville',()=>{
+ const mountain=World.create('Crée un paysage de montagnes');
+ const city=World.create('Crée une ville');
+ assert(mountain.biome==='mountain','biome montagne absent');
+ assert(mountain.terrain.amplitude>city.terrain.amplitude,'relief montagne trop faible');
+ const heights=[World.terrainHeight(mountain,-3,-1),World.terrainHeight(mountain,3,2),World.terrainHeight(mountain,0,0)];
+ assert(Math.max(...heights)-Math.min(...heights)>.35,'terrain trop plat');
+});
+test('terrain forêt et campagne avec amplitude intermédiaire',()=>{
+ const forest=World.create('Crée une forêt');const country=World.create('Crée une campagne');
+ assert(forest.terrain.amplitude>0&&country.terrain.amplitude>0,'terrain sans relief');
+ assert(forest.terrain.resolution>=8,'résolution du terrain trop faible');
+});
 test('chaque élément possède un identifiant et des coordonnées valides',()=>{
  const w=World.create('Crée un quartier');
  const ids=new Set();
