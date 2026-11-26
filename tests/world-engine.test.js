@@ -97,6 +97,11 @@ test('chaque pièce expose une géométrie intérieure avec murs et ouverture de
  const room=World.getInteriorRoomModel('séjour');
  assert(room.walls.length>=5,'segments de murs insuffisants');
  assert(room.doorway&&room.doorway.width>0,'ouverture de porte absente');
+ assert(room.doorway.side==='back'&&room.doorway.wallOpening===true,'porte non intégrée au mur du fond');
+ assert(room.doorway.headerHeight>0,'linteau au-dessus de la porte absent');
+ const backWalls=room.walls.filter(w=>w.side==='back-left'||w.side==='back-right'||w.side==='back-lintel');
+ assert(backWalls.length===3,'le mur du fond doit être séparé en deux côtés et un linteau');
+ assert(backWalls.some(w=>w.to<0)&&backWalls.some(w=>w.from>0),'les segments latéraux ne préservent pas le passage central');
  assert(room.bounds.left===-.88&&room.bounds.right===.88,'limites de pièce incorrectes');
 });
 test('les meubles sont des volumes bornés et adaptés à chaque pièce',()=>{
