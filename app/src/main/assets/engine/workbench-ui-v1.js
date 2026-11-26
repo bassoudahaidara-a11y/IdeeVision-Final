@@ -1,0 +1,56 @@
+(function(){
+'use strict';
+const W=window.IdeeVisionWorld;if(!W)return;
+const $=id=>document.getElementById(id);
+const css="#studioLaunch{display:block;width:100%;margin:12px 0;padding:15px;border:1px solid #ffb84d;border-radius:16px;background:#172544;color:#fff6e5;font:700 16px system-ui}#studio{position:fixed;inset:0;z-index:50;background:#090f20;color:#fff6e5;display:none;flex-direction:column;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);font:14px system-ui}#studio.open{display:flex}#studio header,.tools,.footer{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:7px 0}#studio header strong{flex:1;font-size:17px}#studio button{background:#192849;color:#fff;border:1px solid #52658b;border-radius:10px;padding:10px;font:600 13px system-ui}#studio canvas{width:100%;flex:1;min-height:220px;background:#111c31;border:1px solid #52658b;border-radius:14px;touch-action:none}#studio .status{color:#c5d2e9;padding:7px;min-height:30px}#studio .selected{border-color:#ffb84d;background:#5b421e}#studio .footer button{flex:1}";
+const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+const launch=document.createElement('button');launch.id='studioLaunch';launch.textContent='🧊 Ouvrir l’atelier 2D / 3D';document.querySelector('#home .chips')?.insertAdjacentElement('afterend',launch);
+const panel=document.createElement('section');panel.id='studio';panel.innerHTML='<header><button id="studioClose">←</button><strong>Atelier de modélisation</strong><span id="studioCount">0 objet</span></header><div class="tools" id="studioModes"><button data-mode="3D" class="selected">Vue 3D</button><button data-mode="2D">Vue 2D</button><button id="studioWire">Filaire</button></div><div class="tools" id="studioShapes"><button data-shape="airplane">✈ Avion</button><button data-shape="house">🏠 Maison + escaliers</button><button data-shape="cube">Cube</button><button data-shape="sphere">Sphère</button><button data-shape="robot">Robot</button><button data-shape="bridge">Pont</button><button data-shape="cylinder">Cylindre</button></div><canvas id="studioCanvas"></canvas><div class="tools"><button id="studioLeft">↶ Tourner</button><button id="studioRight">↷ Tourner</button><button id="studioZoomIn">＋ Zoom</button><button id="studioZoomOut">－ Zoom</button><button id="studioDelete">Supprimer</button></div><div class="status" id="studioStatus">Choisis un objet. Fais glisser sur la scène pour tourner la caméra.</div><div class="footer"><button id="studioSave">Enregistrer</button><button id="studioExport">Exporter JSON</button><button id="studioReset">Nouvelle scène</button></div>';
+document.body.appendChild(panel);
+let mode='3D',wire=false,yaw=.55,pitch=-.32,zoom=1,objects=[],selected=-1,raf=0,drag=null;
+const canvas=$('studioCanvas'),ctx=canvas.getContext('2d');
+function status(t){$('studioStatus').textContent=t}
+function box(w,h,d,c,p){return W.transformGeometryMesh(W.createBoxGeometry(w,h,d,c),{position:p||{}})}
+function cyl(r,h,c,p,rot){return W.transformGeometryMesh(W.createCylinderGeometry(r,h,20,c),{position:p||{},rotation:rot||{}})}
+function sph(r,c,p){return W.transformGeometryMesh(W.createSphereGeometry(r,20,12,c),{position:p||{}})}
+function build(type){
+ let a=[],name=type;
+ if(type==='airplane'){name='Avion';a=[box(.48,.48,3.7,'#DCE8F8'),box(5.2,.16,1.05,'#3C9BD8',{y:-.05,z:-.1}),box(1.85,.14,.62,'#3C9BD8',{y:.04,z:1.42}),box(.16,1.05,.58,'#E9B84F',{y:.48,z:1.48}),box(.42,.34,.55,'#DCE8F8',{y:.12,z:-1.5}),cyl(.15,.68,'#697D99',{x:-1.05,y:-.27,z:.05},{x:Math.PI/2}),cyl(.15,.68,'#697D99',{x:1.05,y:-.27,z:.05},{x:Math.PI/2})]}
+ else if(type==='house'){name='Maison à étages avec escaliers';a=[box(4,.22,3.4,'#9B8A78',{y:-.1}),box(4,.18,3.4,'#9B8A78',{y:2.5}),box(.18,2.6,3.4,'#D5D0C7',{x:-1.9,y:1.2}),box(.18,2.6,3.4,'#D5D0C7',{x:1.9,y:1.2}),box(4,2.6,.18,'#D5D0C7',{z:1.6,y:1.2}),box(4,2.6,.18,'#D5D0C7',{z:-1.6,y:1.2}),box(.85,1.7,.12,'#805B3C',{z:-1.69,y:.78})];for(let i=0;i<10;i++)a.push(box(.78,.13,.28,'#C59A69',{x:-.95+i*.19,y:.12+i*.19,z:.65-i*.12}))}
+ else if(type==='cube'){name='Cube';a=[box(1.8,1.8,1.8,'#58A6FF')]}
+ else if(type==='sphere'){name='Sphère';a=[sph(1,'#58D68D')]}
+ else if(type==='cylinder'){name='Cylindre';a=[cyl(.8,2,'#B892FF')]}
+ else if(type==='robot'){name='Robot';a=[box(.9,1,.65,'#5D9CEC',{y:-.35}),box(1,.8,.7,'#A8C8E8',{y:.65}),sph(.1,'#FFFFFF',{x:-.22,y:.72,z:.36}),sph(.1,'#FFFFFF',{x:.22,y:.72,z:.36}),cyl(.12,.9,'#A8C8E8',{x:-.62,y:-.25}),cyl(.12,.9,'#A8C8E8',{x:.62,y:-.25}),cyl(.13,.9,'#30384D',{x:-.25,y:-1.15}),cyl(.13,.9,'#30384D',{x:.25,y:-1.15})]}
+ else if(type==='bridge'){name='Pont';a=[box(5,.3,1.2,'#AAB6C4'),box(.35,2,.35,'#D6B44E',{x:-1.8,y:-.9}),box(.35,2,.35,'#D6B44E',{x:1.8,y:-.9}),box(.18,1.5,.18,'#D6B44E',{x:-1.8,y:.2}),box(.18,1.5,.18,'#D6B44E',{x:1.8,y:.2})]}
+ const mesh=W.mergeGeometryMeshes(a);if(!W.validateGeometryMesh(mesh).valid)throw Error('Géométrie invalide');
+ return {id:'obj-'+Date.now()+'-'+objects.length,name,type,mesh,visible:true};
+}
+function add(type){try{objects.push(build(type));selected=objects.length-1;$('studioCount').textContent=objects.length+' objet(s)';status(objects[selected].name+' ajouté : '+objects[selected].mesh.vertices.length+' sommets et '+objects[selected].mesh.faces.length+' faces.');draw()}catch(e){status('Erreur : '+e.message)}}
+function size(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(300,canvas.clientWidth),h=Math.max(230,canvas.clientHeight);if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)) {canvas.width=Math.round(w*d);canvas.height=Math.round(h*d)}ctx.setTransform(d,0,0,d,0,0);return {w,h}}
+function draw(){
+ if(!panel.classList.contains('open'))return;const q=size(),w=q.w,h=q.h;
+ if(mode==='2D'){ctx.fillStyle='#101a2d';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(255,255,255,.12)';for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=0;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const o=objects[selected];if(o){const v=o.mesh.vertices;let m=1;v.forEach(p=>m=Math.max(m,Math.abs(p[0]),Math.abs(p[2])));const s=Math.min(w,h)*.34/m;ctx.save();ctx.translate(w/2,h/2);ctx.strokeStyle='#F5C66A';ctx.lineWidth=2;o.mesh.faces.forEach(f=>{ctx.beginPath();f.forEach((i,k)=>{const p=v[i];k?ctx.lineTo(p[0]*s,p[2]*s):ctx.moveTo(p[0]*s,p[2]*s)});ctx.closePath();ctx.stroke()});ctx.restore()}else{ctx.fillStyle='white';ctx.fillText('Ajoute un objet.',20,30)}return}
+ W.drawEnvironmentBackground(ctx,w,h,{skyTop:'#101b35',skyHorizon:'#293B58',groundColor:'#111A2B',ambient:.48});
+ if(!objects.length){ctx.fillStyle='white';ctx.fillText('Choisis Avion, Maison + escaliers ou un autre objet.',18,28);return}
+ const mesh=W.mergeGeometryMeshes(objects.filter(o=>o.visible).map(o=>o.mesh));
+ const cam=W.createCameraState({position:{x:Math.sin(yaw)*9/zoom,y:4.5/zoom,z:Math.cos(yaw)*9/zoom},target:{x:0,y:0,z:0},yaw:yaw+Math.PI,pitch:pitch,distance:9/zoom});
+ W.renderMeshToCanvas(ctx,mesh,cam,{width:w,height:h,wireframe:wire,wireframeColor:'#D8E8FF',lineWidth:1.1,environment:{ambient:.48,lights:[{type:'directional',direction:{x:-.4,y:1,z:.3},intensity:.85,color:'#FFFFFF'}]}});
+ ctx.fillStyle='#FFFFFF';ctx.font='12px system-ui';ctx.fillText('Jarvis • '+objects.length+' objet(s) • '+mesh.vertices.length+' sommets • '+mesh.faces.length+' faces',12,h-14);
+}
+function open(){panel.classList.add('open');if(!objects.length)add('airplane');cancelAnimationFrame(raf);const loop=()=>{if(!panel.classList.contains('open'))return;draw();raf=requestAnimationFrame(loop)};loop()}
+function close(){panel.classList.remove('open');cancelAnimationFrame(raf)}
+launch.onclick=open;$('studioClose').onclick=close;
+$('studioModes').onclick=e=>{const b=e.target.closest('[data-mode]');if(b){mode=b.dataset.mode;document.querySelectorAll('#studioModes [data-mode]').forEach(x=>x.classList.toggle('selected',x===b));draw()}};
+$('studioShapes').onclick=e=>{const b=e.target.closest('[data-shape]');if(b)add(b.dataset.shape)};
+$('studioWire').onclick=()=>{wire=!wire;$('studioWire').classList.toggle('selected',wire);draw()};
+$('studioLeft').onclick=()=>{yaw-=.25;draw()};$('studioRight').onclick=()=>{yaw+=.25;draw()};$('studioZoomIn').onclick=()=>{zoom=Math.min(2.5,zoom*1.15);draw()};$('studioZoomOut').onclick=()=>{zoom=Math.max(.4,zoom/1.15);draw()};
+$('studioDelete').onclick=()=>{if(selected>=0&&objects.length){objects.splice(selected,1);selected=Math.min(objects.length-1,selected);$('studioCount').textContent=objects.length+' objet(s)';draw()}};
+$('studioReset').onclick=()=>{objects=[];selected=-1;$('studioCount').textContent='0 objet';status('Scène réinitialisée.');draw()};
+function project(){const p=W.create3DProject('Projet Jarvis Scientifique');objects.forEach(o=>{const r=W.addSceneObject(p.scene,{id:o.id,name:o.name,type:o.type,mesh:o.mesh});if(r.ok)p.scene=r.document});return p}
+$('studioSave').onclick=()=>{try{const p=project(),v=W.validate3DProject(p);if(!v.valid)throw Error(v.errors.join(', '));localStorage.setItem('jarvis.studio.project.v1',W.export3DProjectJSON(p));status('Projet enregistré sur ce téléphone : '+v.objectCount+' objet(s).')}catch(e){status('Sauvegarde impossible : '+e.message)}};
+$('studioExport').onclick=()=>{try{const blob=new Blob([W.export3DProjectJSON(project())],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jarvis-projet-3d.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Export JSON préparé.')}catch(e){status('Export impossible : '+e.message)}};
+canvas.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture?.(e.pointerId)};
+canvas.onpointermove=e=>{if(!drag||mode!=='3D')return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};yaw+=dx*.008;pitch=Math.max(-1.1,Math.min(.4,pitch+dy*.006));draw()};
+canvas.onpointerup=()=>drag=null;canvas.onpointercancel=()=>drag=null;
+window.JarvisStudio={version:1,add,open,close,project,diagnostics:()=>({engine:!!W,objects:objects.length,mode,geometry:objects.map(o=>({name:o.name,vertices:o.mesh.vertices.length,faces:o.mesh.faces.length,valid:W.validateGeometryMesh(o.mesh).valid}))})};
+})();
