@@ -84,3 +84,40 @@ Chaque groupe contient au minimum 15 tâches. Le travail est livré progressivem
 La mémoire est conservée uniquement en mémoire vive pendant la session. Aucun stockage persistant n'est activé automatiquement. L'export et l'import sont explicites. La résolution des pronoms est heuristique : si plusieurs objets sont possibles, le moteur devra demander une précision au lieu d'inventer le référent.
 
 Le pipeline de conception reçoit désormais le contexte des échanges précédents avant de préparer les plans. Le module ne rend pas encore l'application autonome : le générateur de scène utilise toujours le service de conversation déjà présent.
+
+
+## Groupe 1.3 — Raisonnement logique et résolution de problèmes (25 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Détecter le domaine général du problème | Développé, heuristique |
+| 2 | Extraire les nombres fournis | Développé |
+| 3 | Extraire les unités connues | Développé |
+| 4 | Décomposer une demande en sous-problèmes | Développé |
+| 5 | Repérer les résultats inconnus | Développé, heuristique |
+| 6 | Distinguer les faits chiffrés des éléments à trouver | Développé |
+| 7 | Extraire les contraintes hors ligne | Développé |
+| 8 | Extraire les contraintes de langue | Développé |
+| 9 | Repérer certaines restrictions explicites | Développé |
+| 10 | Détecter un conflit hors ligne / recherche web | Développé |
+| 11 | Détecter un conflit gratuit / paiement obligatoire | Développé |
+| 12 | Détecter un conflit sur l'utilisation des données | Développé |
+| 13 | Identifier les hypothèses liées aux unités | Développé |
+| 14 | Repérer les valeurs approximatives | Développé |
+| 15 | Choisir une stratégie mathématique | Développé |
+| 16 | Choisir une stratégie physique | Développé |
+| 17 | Choisir une stratégie de programmation | Développé |
+| 18 | Choisir une stratégie de conception | Développé |
+| 19 | Choisir une stratégie biologique | Développé |
+| 20 | Construire un plan de résolution ordonné | Développé |
+| 21 | Déclarer les dépendances entre étapes | Développé |
+| 22 | Vérifier les dépendances et étapes obligatoires | Développé |
+| 23 | Comparer deux plans de résolution | Développé |
+| 24 | Générer un contexte de raisonnement pour le modèle | Développé |
+| 25 | Ajouter 25 tests automatisés | Écrit, exécution CI à confirmer |
+
+### Limites du groupe 1.3
+
+Ce moteur est une aide de structuration heuristique : il ne prouve pas mathématiquement une solution, ne remplace pas un solveur spécialisé et ne constitue pas une intelligence générale. La détection des domaines, hypothèses et conflits peut manquer des formulations. Les données absentes ne doivent pas être inventées : le générateur doit demander une précision lorsque celle-ci est indispensable. Le contexte transmis au modèle contient un résumé de méthode vérifiable, pas un raisonnement privé détaillé.
+
+Le pipeline ajoute maintenant le plan logique au contexte de conception avant de demander la génération de la scène.
