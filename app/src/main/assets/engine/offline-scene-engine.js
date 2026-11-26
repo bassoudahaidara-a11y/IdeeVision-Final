@@ -125,7 +125,7 @@ function drawModel3D(ctx,o,s,time){
 function drawObject(ctx,o,cx,cy,s,time,mode){
  s*=o.props.scale||1;const x=cx+((o.props.x||0)-(o.props.z||0)*.55)*s,y=cy-(o.props.y||0)*s;
  ctx.save();ctx.translate(x,y);ctx.fillStyle=o.color;ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;
- if(mode==='3D'){drawModel3D(ctx,o,s,time)}else{
+ if(mode==='3D'){if(window.IdeeVisionWireframeEnabled)drawWireframe3D(ctx,o,s,time);else drawModel3D(ctx,o,s,time)}else{
  const depth=0;
  if(o.type==='house'){
   ctx.fillStyle='#E8B66A';rounded(ctx,-s*.75,-s*.2,s*1.5,s*.95,5);
@@ -167,6 +167,27 @@ function drawObject(ctx,o,cx,cy,s,time,mode){
  ctx.restore();
  ctx.fillStyle='#F4F7FF';ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillText(o.label,x,y+s*.82);
 }
+
+function drawWireframe3D(ctx,o,s,time){
+ const parts=modelParts(o.type,o.color),rot=time*.22;
+ ctx.save();ctx.strokeStyle=o.color||'#F4F7FF';ctx.globalAlpha=.96;ctx.lineWidth=1.7;ctx.lineJoin='round';
+ parts.forEach(part=>{
+  const edges=new Set();
+  part.faces.forEach(face=>{
+   for(let i=0;i<face.length;i++){
+    const a=face[i],b=face[(i+1)%face.length],key=a<b?a+':'+b:b+':'+a;
+    edges.add(key);
+   }
+  });
+  edges.forEach(key=>{
+   const pair=key.split(':').map(Number);
+   const a=project3D(part.vertices[pair[0]],s,rot),b=project3D(part.vertices[pair[1]],s,rot);
+   ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  });
+ });
+ ctx.restore();
+}
+
 function create(idea){return detect(idea)}
 function geometryInfo(type,color){const parts=modelParts(type,color||'#58A6FF');return {parts:parts.length,vertices:parts.reduce((n,p)=>n+p.vertices.length,0),faces:parts.reduce((n,p)=>n+p.faces.length,0),valid:parts.every(p=>p.faces.every(f=>f.length>=3&&f.every(i=>Number.isInteger(i)&&i>=0&&i<p.vertices.length)))}}
 function play(canvas,scene,onCaption,onDone){
