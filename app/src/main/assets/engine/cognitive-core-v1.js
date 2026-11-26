@@ -54,7 +54,7 @@
     const numberPattern = /[-+]?\d+(?:[.,]\d+)?/g;
     const numbers = (source.match(numberPattern) || []).map(v => Number(v.replace(",", "."))).filter(Number.isFinite);
     const lower = fold(source);
-    const units = UNITS.filter(unit => lower.includes(unit));
+    const unitTokens = lower.split(/[^a-z0-9°]+/).filter(Boolean);\n    const units = UNITS.filter(unit => unit === "%" ? lower.includes("%") : unitTokens.includes(unit));
     const dimensions = [];
     const dimRe = /([-+]?\d+(?:[.,]\d+)?)\s*(mm|cm|km|m)\s*[x×]\s*([-+]?\d+(?:[.,]\d+)?)\s*(mm|cm|km|m)(?:\s*[x×]\s*([-+]?\d+(?:[.,]\d+)?)\s*(mm|cm|km|m))?/gi;
     let match;
