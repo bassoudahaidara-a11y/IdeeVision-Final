@@ -8,8 +8,8 @@
   m:{dimension:"length",factor:1,symbol:"m"},km:{dimension:"length",factor:1000,symbol:"km"},cm:{dimension:"length",factor:.01,symbol:"cm"},mm:{dimension:"length",factor:.001,symbol:"mm"},
   s:{dimension:"time",factor:1,symbol:"s"},min:{dimension:"time",factor:60,symbol:"min"},h:{dimension:"time",factor:3600,symbol:"h"},
   kg:{dimension:"mass",factor:1,symbol:"kg"},g:{dimension:"mass",factor:.001,symbol:"g"},mg:{dimension:"mass",factor:.000001,symbol:"mg"},
-  mps:{dimension:"speed",factor:1,symbol:"m/s"},"km/h":{dimension:"speed",factor:1/3.6,symbol:"km/h"},
-  n:{dimension:"force",factor:1,symbol:"N"},j:{dimension:"energy",factor:1,symbol:"J"},w:{dimension:"power",factor:1,symbol:"W"},
+  mps:{dimension:"speed",factor:1,symbol:"m/s"},"m/s":{dimension:"speed",factor:1,symbol:"m/s"},"km/h":{dimension:"speed",factor:1/3.6,symbol:"km/h"},
+  n:{dimension:"force",factor:1,symbol:"N"},j:{dimension:"energy",factor:1,symbol:"J"},w:{dimension:"power",factor:1,symbol:"W"},kw:{dimension:"power",factor:1000,symbol:"kW"},
   pa:{dimension:"pressure",factor:1,symbol:"Pa"},kpa:{dimension:"pressure",factor:1000,symbol:"kPa"},v:{dimension:"voltage",factor:1,symbol:"V"},a:{dimension:"current",factor:1,symbol:"A"},hz:{dimension:"frequency",factor:1,symbol:"Hz"},
   l:{dimension:"volume",factor:.001,symbol:"L"},ml:{dimension:"volume",factor:.000001,symbol:"mL"}
  };
