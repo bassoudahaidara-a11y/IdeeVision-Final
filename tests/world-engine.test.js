@@ -180,6 +180,18 @@ test('la navigation des étages indique les accès disponibles et les limites',(
  const invalid=World.getInteriorFloorNavigation(99,3,true);
  assert(invalid.level===3&&!invalid.canGoUp&&invalid.canGoDown,'niveau hors limites non normalisé');
 });
+test('le palier indique le niveau cible et respecte les limites',()=>{
+ const up=World.getInteriorStairLanding(0,3,true,'up');
+ assert(up.visible&&up.accessible&&up.targetLevel===2&&up.label==='PALIER ÉTAGE 3'&&up.marker==='▲','palier supérieur incorrect');
+ const down=World.getInteriorStairLanding(1,3,true,'down');
+ assert(down.accessible&&down.targetLevel===1&&down.label==='PALIER ÉTAGE 1'&&down.marker==='▼','palier inférieur incorrect');
+ const top=World.getInteriorStairLanding(2,3,true,'up');
+ assert(!top.accessible&&top.targetLevel===3&&top.label==='PALIER INACCESSIBLE','limite supérieure incorrecte');
+ const ground=World.getInteriorStairLanding(0,3,true,'down');
+ assert(!ground.accessible&&ground.targetLevel===1,'limite inférieure incorrecte');
+ const noStairs=World.getInteriorStairLanding(0,1,false,'up');
+ assert(!noStairs.visible&&!noStairs.accessible&&noStairs.label==='AUCUN PALIER','absence de palier incorrecte');
+});
 test('l’animation des marches suit la progression de montée et descente',()=>{
  const idle=World.getInteriorStairAnimation(null,10);
  assert(!idle.active&&idle.currentStep===-1&&idle.totalSteps===10,'état inactif incorrect');
