@@ -27,3 +27,8 @@ jobs:
         run: node --check app/src/main/assets/engine/scientific-validation-v1.js
       - name: Tester le contrôle scientifique
         run: node --test tests/scientific-validation-v1.test.js
+
+      - name: Vérifier la syntaxe du moteur mathématique
+        run: node --check app/src/main/assets/engine/math-engine-v1.js
+      - name: Tester le moteur mathématique
+        run: node --test tests/math-engine-v1.test.js
