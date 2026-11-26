@@ -30,23 +30,41 @@ function terrainHeight(world,x,z){
  const peaks=world.biome==='mountain'?(Math.exp(-((x+3)*(x+3)+(z+1)*(z+1))/8)*a+Math.exp(-((x-3)*(x-3)+(z-2)*(z-2))/6)*a*.8):0;
  return rolling+peaks;
 }
+function getInteriorRoomModel(roomName){
+ const name=String(roomName||'séjour').toLowerCase();
+ const furniture=/cuisine/.test(name)
+  ?[{id:'plan-de-travail',left:.12,right:.72,top:-.22,bottom:.14,height:.34,color:'#927052'},{id:'ilot',left:-.58,right:-.22,top:.25,bottom:.58,height:.28,color:'#B5A58C'}]
+  :/chambre/.test(name)
+   ?[{id:'lit',left:-.62,right:-.06,top:-.24,bottom:.22,height:.24,color:'#7D9DBB'},{id:'armoire',left:.43,right:.72,top:.25,bottom:.68,height:.62,color:'#76513C'}]
+   :[{id:'canape',left:-.38,right:.34,top:-.18,bottom:.12,height:.3,color:'#6D4937'},{id:'table-basse',left:-.22,right:.22,top:.35,bottom:.57,height:.16,color:'#A68A6D'}];
+ return {
+  name:roomName||'séjour',
+  bounds:{left:-.88,right:.88,top:-.88,bottom:.88},
+  walls:[
+   {side:'left',from:-.88,to:.88,height:.9},
+   {side:'right',from:-.88,to:.88,height:.9},
+   {side:'back-left',from:-.88,to:-.22,height:.9},
+   {side:'back-right',from:.22,to:.88,height:.9},
+   {side:'back-lintel',from:-.22,to:.22,height:.28}
+  ],
+  doorway:{side:'back',left:-.22,right:.22,width:.44},
+  furniture
+ };
+}
 function resolveInteriorMovement(x,z,dx,dz,roomName,doorOpen){
- const radius=.085,min=-.88,max=.88;
- const obstacles=[];
- if(/séjour|entree|entrée/i.test(roomName||''))obstacles.push({left:-.38,right:.34,top:-.18,bottom:.12});
- if(/cuisine/i.test(roomName||''))obstacles.push({left:.12,right:.72,top:-.22,bottom:.14});
- if(/chambre/i.test(roomName||''))obstacles.push({left:-.62,right:-.06,top:-.24,bottom:.22});
+ const radius=.085,model=getInteriorRoomModel(roomName),b=model.bounds;
+ const obstacles=model.furniture;
  const blocked=(px,pz)=>{
-  if(Math.abs(px)<.22&&pz<-.68&&doorOpen<.7)return true;
+  if(Math.abs(px)<model.doorway.width/2&&pz<b.top+.2&&doorOpen<.7)return true;
   return obstacles.some(o=>{
    const qx=Math.max(o.left,Math.min(o.right,px));
    const qz=Math.max(o.top,Math.min(o.bottom,pz));
    return Math.hypot(px-qx,pz-qz)<radius;
   });
  };
- let nx=Math.max(min,Math.min(max,x+dx));
+ let nx=Math.max(b.left,Math.min(b.right,x+dx));
  if(blocked(nx,z))nx=x;
- let nz=Math.max(min,Math.min(max,z+dz));
+ let nz=Math.max(b.top,Math.min(b.bottom,z+dz));
  if(blocked(nx,nz))nz=z;
  return {x:nx,z:nz,blockedX:nx!==x+dx,blockedZ:nz!==z+dz};
 }
@@ -144,14 +162,17 @@ function play(canvas,world,onCaption){
   ctx.save();ctx.translate(doorX+doorW,doorY+doorH*.5);ctx.rotate(-inside.doorOpen*.95);ctx.fillStyle='#95613F';ctx.fillRect(-doorW,-doorH*.5,doorW,doorH);ctx.restore();
   // Fenêtre et mobilier schématique en volume.
   ctx.fillStyle='#75B6D5';ctx.fillRect(left+half*.18,back+45,half*.27,doorH*.35);ctx.strokeStyle='#E5E9E7';ctx.lineWidth=4;ctx.strokeRect(left+half*.18,back+45,half*.27,doorH*.35);
-  const furnitureY=floorY-65;
-  if(/cuisine/i.test(roomName)){
-   ctx.fillStyle='#76533B';ctx.fillRect(cx+half*.12,furnitureY,half*.48,38);ctx.fillStyle='#D8D4C8';ctx.fillRect(cx+half*.12,furnitureY-9,half*.48,10);ctx.fillStyle='#424D5A';ctx.fillRect(cx+half*.3,furnitureY-30,half*.16,22);
-  }else if(/chambre/i.test(roomName)){
-   ctx.fillStyle='#76513C';ctx.fillRect(cx-half*.5,furnitureY,half*.58,28);ctx.fillStyle='#D8D9E1';ctx.fillRect(cx-half*.48,furnitureY-18,half*.2,20);ctx.fillStyle='#7D9DBB';ctx.fillRect(cx-half*.28,furnitureY-13,half*.34,24);
-  }else{
-   ctx.fillStyle='#6D4937';ctx.fillRect(cx-half*.38,furnitureY,half*.72,32);ctx.fillStyle='#B6A28A';ctx.fillRect(cx-half*.35,furnitureY-13,half*.66,15);ctx.fillStyle='#6B8B72';ctx.fillRect(cx+half*.2,furnitureY-40,half*.12,28);
-  }
+  // Meubles en volumes bas-poly : dessus, face avant et côté.
+  const roomModel=getInteriorRoomModel(roomName);
+  const floorDepth=(floorY-back)*.52;
+  roomModel.furniture.forEach(item=>{
+   const sx=cx+item.left*half*.72,ex=cx+item.right*half*.72;
+   const sy=floorY-(item.bottom+.88)*floorDepth,ey=floorY-(item.top+.88)*floorDepth;
+   const lift=item.height*(floorY-back)*.48;
+   ctx.fillStyle=item.color;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,sy);ctx.lineTo(ex,ey);ctx.lineTo(sx,ey);ctx.closePath();ctx.fill();
+   ctx.fillStyle='rgba(20,25,32,.28)';ctx.beginPath();ctx.moveTo(sx,ey);ctx.lineTo(ex,ey);ctx.lineTo(ex,ey-lift);ctx.lineTo(sx,ey-lift);ctx.closePath();ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(sx,ey-lift);ctx.lineTo(ex,ey-lift);ctx.lineTo(ex-7,ey-lift-7);ctx.lineTo(sx-7,ey-lift-7);ctx.closePath();ctx.fill();
+  });
   ctx.fillStyle='#FFFFFF';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.fillText(roomName.toLocaleUpperCase('fr'),cx,34);
   ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • Étage '+(inside.level+1)+'/'+inside.building.interior.levels,cx,54);
   ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(8,8,Math.min(w-16,300),38);ctx.fillStyle='#FFF';ctx.textAlign='left';ctx.font='12px system-ui';ctx.fillText('Gauche : porte • Centre : pièce suivante',18,32);
@@ -196,5 +217,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,resolveInteriorMovement,play});
 })(window);
