@@ -7,6 +7,7 @@
 <script src="engine/cognitive-core-v1.js"></script>
 <script src="engine/context-memory-v1.js"></script>
 <script src="engine/logical-reasoning-v1.js"></script>
+<script src="engine/knowledge-base-v1.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -60,7 +61,7 @@ textarea::placeholder{color:#7C7EA3}
 .panel label{display:block;font-weight:600;font-size:14.5px;margin:16px 4px 7px}
 .panel label small{display:block;font-weight:400;color:var(--mut);margin-top:2px}
 .panel input{width:100%;border:1px solid var(--line);background:rgba(10,13,31,.7);color:var(--paper);border-radius:999px;padding:14px 18px;font:400 15px system-ui,sans-serif;outline:0}
-.panel .cta{width:100%;margin-top:22px}
+.panel .cta{width:100%;margin-top:22px}.panel .ghost{width:100%;margin-top:10px}.knowledge-list{display:grid;gap:8px;margin-top:10px}.knowledge-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:14px;font-size:13px}.knowledge-item span{flex:1;overflow-wrap:anywhere}.knowledge-item button{border:0;background:transparent;color:var(--coral);font-size:18px;padding:4px 8px}
 @media (prefers-reduced-motion:reduce){.beam,.ring{animation:none!important}}
 </style></head>
 <body>
@@ -99,6 +100,15 @@ textarea::placeholder{color:#7C7EA3}
   <p>Elle reste seulement sur ton téléphone.</p>
   <label>Clé Groq<small>Gratuite sur console.groq.com. Elle sert à comprendre ton idée et à écrire l'animation.</small></label><input id="kq" type="password" autocomplete="off" placeholder="gsk_…">
   <button class="cta" id="save">Enregistrer</button>
+  <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+  <h3>Ma base de connaissances</h3>
+  <p>Ajoute des cours et des notes. Idée Vision recherchera les passages utiles localement pour mieux comprendre tes demandes.</p>
+  <label>Importer des documents<small>TXT, MD, CSV, JSON, LOG et XML — maximum 3 Mo par fichier. Les PDF et DOCX ne sont pas encore pris en charge.</small></label>
+  <input id="knowledgeFiles" type="file" multiple accept=".txt,.md,.markdown,.csv,.json,.log,.xml,text/plain,text/markdown,text/csv,application/json,application/xml">
+  <button class="ghost" id="knowledgeImport">Ajouter à ma base</button>
+  <div id="knowledgeStatus" class="msg" role="status">Les documents restent enregistrés sur cet appareil.</div>
+  <div id="knowledgeList" class="knowledge-list"></div>
+  <button class="ghost" id="knowledgeClear">Effacer toute ma base</button>
 </div></div>
 
 <script>
@@ -310,7 +320,7 @@ function setW(t,s,p){$('wt').textContent=t;$('ws').textContent=s||'';$('wb').sty
 function cnt(){const n=$('idea').value.length;$('cnt').textContent=n+(n>1?' caractères':' caractère')}
 $('idea').addEventListener('input',cnt);
 
-function openSheet(){$('kq').value=LS.get('k_groq');$('sheet').classList.add('on')}
+function openSheet(){$('kq').value=LS.get('k_groq');$('sheet').classList.add('on');refreshKnowledgeList().catch(e=>{$('knowledgeStatus').textContent=e.message})}
 $('gear').onclick=openSheet;
 $('save').onclick=()=>{LS.set('k_groq',$('kq').value.trim());MODELS=null;$('sheet').classList.remove('on');msg('')};
 $('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('sheet').classList.remove('on')});
@@ -422,6 +432,32 @@ function stopLive(){
 /* pipeline */
 const cognitionSession = window.IdeeVisionCognitive ? window.IdeeVisionCognitive.createSession({maxTurns:12}) : null;
 const contextMemory = window.IdeeVisionContextMemory ? window.IdeeVisionContextMemory.create({maxTurns:24,maxChars:24000}) : null;
+const knowledgeBase = window.IdeeVisionKnowledge ? window.IdeeVisionKnowledge.create({maxDocs:40,maxTotalChars:1200000}) : null;
+async function refreshKnowledgeList(){
+ const list=$('knowledgeList');if(!list||!knowledgeBase)return;
+ const docs=await knowledgeBase.list();list.replaceChildren();
+ if(!docs.length){const p=document.createElement('p');p.textContent='Aucun document ajouté pour le moment.';list.appendChild(p);return}
+ docs.forEach(doc=>{
+  const item=document.createElement('div');item.className='knowledge-item';
+  const label=document.createElement('span');label.textContent=doc.name+' · '+doc.chunks+' extrait(s)';
+  const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','Supprimer '+doc.name);
+  remove.onclick=async()=>{try{await knowledgeBase.remove(doc.id);$('knowledgeStatus').textContent='Document supprimé.';await refreshKnowledgeList()}catch(e){$('knowledgeStatus').textContent=e.message}};
+  item.append(label,remove);list.appendChild(item);
+ });
+}
+$('knowledgeImport').onclick=()=>$('knowledgeFiles').click();
+$('knowledgeFiles').addEventListener('change',async e=>{
+ const files=Array.from(e.target.files||[]);if(!files.length)return;
+ let added=0;const errors=[];
+ for(const file of files){try{await knowledgeBase.addFile(file);added++}catch(err){errors.push(file.name+': '+err.message)}}
+ $('knowledgeStatus').textContent=added+' document(s) ajouté(s).'+(errors.length?' Erreurs : '+errors.join(' | '):'');
+ e.target.value='';await refreshKnowledgeList();
+});
+$('knowledgeClear').onclick=async()=>{
+ if(!knowledgeBase)return;
+ if(!confirm('Effacer tous les documents de la base locale ?'))return;
+ try{await knowledgeBase.clear();$('knowledgeStatus').textContent='Base locale effacée.';await refreshKnowledgeList()}catch(e){$('knowledgeStatus').textContent=e.message}
+};
 async function start(){
  const idea=$('idea').value.trim();
  if(idea.length<10){msg('Écris un peu plus, pour que je comprenne bien ton idée.');return}
@@ -454,7 +490,9 @@ async function start(){
   setW('Je prépare les plans…','Je choisis les tailles et les positions.',25);
   const cognitiveContext = cognitive ? window.IdeeVisionCognitive.makePromptContext(cognitive) : 'Analyse cognitive locale indisponible.';
   const recentIntentions = cognitionSession ? cognitionSession.recent().slice(-4).map(x=>x.intent).join(', ') : '';
-  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
+  let knowledgeContext='Base de connaissances locale non disponible.';
+  if(knowledgeBase){try{const knowledge=await knowledgeBase.buildContext(idea,{limit:5,maxChars:6500});knowledgeContext=knowledge.context;window.lastKnowledgeHits=knowledge.hits;}catch(e){knowledgeContext='Base locale indisponible : '+e.message;}}
+  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\n'+knowledgeContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
   const bp=await chat([{role:'system',content:BLUEPRINT_SYS},{role:'user',content:base}],{max:1100,temp:.3});
   if(my!==run)return;
 
