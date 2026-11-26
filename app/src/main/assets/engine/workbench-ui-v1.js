@@ -22,7 +22,7 @@ function build(type){
  else if(type==='cylinder'){name='Cylindre';a=[cyl(.8,2,'#B892FF')]}
  else if(type==='robot'){name='Robot';a=[box(.9,1,.65,'#5D9CEC',{y:-.35}),box(1,.8,.7,'#A8C8E8',{y:.65}),sph(.1,'#FFFFFF',{x:-.22,y:.72,z:.36}),sph(.1,'#FFFFFF',{x:.22,y:.72,z:.36}),cyl(.12,.9,'#A8C8E8',{x:-.62,y:-.25}),cyl(.12,.9,'#A8C8E8',{x:.62,y:-.25}),cyl(.13,.9,'#30384D',{x:-.25,y:-1.15}),cyl(.13,.9,'#30384D',{x:.25,y:-1.15})]}
  else if(type==='bridge'){name='Pont';a=[box(5,.3,1.2,'#AAB6C4'),box(.35,2,.35,'#D6B44E',{x:-1.8,y:-.9}),box(.35,2,.35,'#D6B44E',{x:1.8,y:-.9}),box(.18,1.5,.18,'#D6B44E',{x:-1.8,y:.2}),box(.18,1.5,.18,'#D6B44E',{x:1.8,y:.2})]}
- const mesh=W.mergeGeometryMeshes(a);if(!W.validateGeometryMesh(mesh).valid)throw Error('Géométrie invalide');
+ const mesh=merge(a);if(!W.validateGeometryMesh(mesh).valid)throw Error('Géométrie invalide');
  return {id:'obj-'+Date.now()+'-'+objects.length,name,type,mesh,visible:true};
 }
 function add(type){try{objects.push(build(type));selected=objects.length-1;$('studioCount').textContent=objects.length+' objet(s)';status(objects[selected].name+' ajouté : '+objects[selected].mesh.vertices.length+' sommets et '+objects[selected].mesh.faces.length+' faces.');draw()}catch(e){status('Erreur : '+e.message)}}
@@ -32,7 +32,7 @@ function draw(){
  if(mode==='2D'){ctx.fillStyle='#101a2d';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(255,255,255,.12)';for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=0;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const o=objects[selected];if(o){const v=o.mesh.vertices;let m=1;v.forEach(p=>m=Math.max(m,Math.abs(p[0]),Math.abs(p[2])));const s=Math.min(w,h)*.34/m;ctx.save();ctx.translate(w/2,h/2);ctx.strokeStyle='#F5C66A';ctx.lineWidth=2;o.mesh.faces.forEach(f=>{ctx.beginPath();f.forEach((i,k)=>{const p=v[i];k?ctx.lineTo(p[0]*s,p[2]*s):ctx.moveTo(p[0]*s,p[2]*s)});ctx.closePath();ctx.stroke()});ctx.restore()}else{ctx.fillStyle='white';ctx.fillText('Ajoute un objet.',20,30)}return}
  W.drawEnvironmentBackground(ctx,w,h,{skyTop:'#101b35',skyHorizon:'#293B58',groundColor:'#111A2B',ambient:.48});
  if(!objects.length){ctx.fillStyle='white';ctx.fillText('Choisis Avion, Maison + escaliers ou un autre objet.',18,28);return}
- const mesh=W.mergeGeometryMeshes(objects.filter(o=>o.visible).map(o=>o.mesh));
+ const mesh=merge(objects.filter(o=>o.visible).flatMap(o=>{const groups=[];const m=o.mesh;const mats=m.materials||[];const map=new Map();m.faces.forEach((face,i)=>{const id=Array.isArray(m.faceMaterials)?m.faceMaterials[i]:m.material||'#AAB6C4';const color=typeof id==='number'?(mats[id]||m.material||'#AAB6C4'):id;const key=String(color);if(!map.has(key))map.set(key,{type:'mesh',vertices:m.vertices,faces:[],material:key});map.get(key).faces.push(face)});return Array.from(map.values())}));
  const cam=W.createCameraState({position:{x:Math.sin(yaw)*9/zoom,y:4.5/zoom,z:Math.cos(yaw)*9/zoom},target:{x:0,y:0,z:0},yaw:yaw+Math.PI,pitch:pitch,distance:9/zoom});
  W.renderMeshToCanvas(ctx,mesh,cam,{width:w,height:h,wireframe:wire,wireframeColor:'#D8E8FF',lineWidth:1.1,environment:{ambient:.48,lights:[{type:'directional',direction:{x:-.4,y:1,z:.3},intensity:.85,color:'#FFFFFF'}]}});
  ctx.fillStyle='#FFFFFF';ctx.font='12px system-ui';ctx.fillText('Jarvis • '+objects.length+' objet(s) • '+mesh.vertices.length+' sommets • '+mesh.faces.length+' faces',12,h-14);
