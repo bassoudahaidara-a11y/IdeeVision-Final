@@ -44,7 +44,7 @@ Réserve obligatoire : les chiffres de performance publiés sur des téléphones
 - JSON limité par schéma, taille, nombre d'objets, profondeur et durée.
 - Pas d'affirmation qu'une simulation est physiquement exacte sans modèle et paramètres appropriés.
 - Le modèle doit signaler l'incertitude et demander une précision au lieu d'inventer des propriétés.
-- Fonctionnement hors ligne après installation du runtime et sélection du modèle.
+- Fonctionnement hors ligne après installation/initialisation interne du modèle ; aucune importation manuelle par l'utilisateur.
 - Prévoir un mode de secours sans LLM, clairement identifié comme limité.
 
 ## Sous-étapes de réalisation
