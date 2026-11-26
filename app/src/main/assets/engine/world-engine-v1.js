@@ -277,12 +277,17 @@ function createInteriorLevelTransition(targetLevel,direction){
  const level=Math.max(0,Math.floor(Number(targetLevel)||0));
  return {active:true,targetLevel:level,direction:direction==='down'?'down':'up',progress:0,switched:false,complete:false};
 }
+function getInteriorTransitionOpacity(progress){
+ const p=Math.max(0,Math.min(1,Number(progress)||0));
+ const phase=p<.5?p*2:(1-p)*2;
+ return phase*phase*(3-2*phase);
+}
 function advanceInteriorLevelTransition(transition,step){
  if(!transition||!transition.active)return {transition:null,switchLevel:false,complete:true,opacity:0};
  const amount=Number.isFinite(Number(step))?Math.max(0,Math.min(.25,Number(step))):.05;
  const progress=Math.min(1,transition.progress+amount),switchLevel=!transition.switched&&transition.progress<.5&&progress>=.5;
  const next={...transition,progress,switched:transition.switched||switchLevel,complete:progress>=1,active:progress<1};
- return {transition:next.active?next:null,switchLevel,complete:progress>=1,opacity:progress<.5?progress*2:(1-progress)*2};
+ return {transition:next.active?next:null,switchLevel,complete:progress>=1,opacity:getInteriorTransitionOpacity(progress)};
 }
 function changeInteriorLevel(level,levels,direction,hasStairs){
  const max=Math.max(1,Math.floor(Number(levels)||1)),current=Math.max(0,Math.min(max-1,Math.floor(Number(level)||0)));
@@ -522,5 +527,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
