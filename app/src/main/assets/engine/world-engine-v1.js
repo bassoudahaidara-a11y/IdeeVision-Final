@@ -14,7 +14,7 @@ function create(text){
   for(let z=-5;z<=5;z+=3)for(let x=-5;x<=5;x+=3){if((x+z)%2===0)add('tree',x,z,.9);else add('house',x,z,.8+(Math.abs(x-z)%3)*.12)}
  }else{
   const blocks=[[-4,-4],[-1,-4],[2,-4],[5,-4],[-4,-1],[2,-1],[5,-1],[-4,2],[-1,2],[2,2],[5,2],[-4,5],[-1,5],[2,5],[5,5]];
-  blocks.forEach(([x,z],i)=>{if(i%4===0)add('park',x,z,1);else add('building',x,z,.8+(i%3)*.18,i%4)});
+  blocks.forEach(([x,z],i)=>{if(i%4===0)add('park',x,z,1);else{add('building',x,z,.8+(i%3)*.18,i%4);elements[elements.length-1].floors=2+(i%4)}});
   for(let z=-5;z<=5;z+=2){add('tree',-6,z,.8);add('tree',6,z,.8)}
   for(let x=-5;x<=5;x+=2){add('tree',x,-6,.8);add('tree',x,6,.8)}
   add('car',-2,-.6,1,0);add('car',2,.7,1,1);add('car',-1,3,1,2);
@@ -61,6 +61,45 @@ function play(canvas,world,onCaption){
    if(yy<hei){const a=project(xx,yy,z-dep/2-.006,w,h),b=project(xx+.16,yy,z-dep/2-.006,w,h),c=project(xx+.16,yy+.2,z-dep/2-.006,w,h),d=project(xx,yy+.2,z-dep/2-.006,w,h);poly([a,b,c,d],'#83B7D0')}
   }
  }
+ function faceRect(x,z,y,wid,hei,color){
+  const a=project(x-wid/2,y,z,w,h),b=project(x+wid/2,y,z,w,h),c=project(x+wid/2,y+hei,z,w,h),d=project(x-wid/2,y+hei,z,w,h);
+  poly([a,b,c,d],color,'#344252');
+ }
+ function drawHouse(x,z,scale,base){
+  const wid=1.35*scale,dep=1.18*scale,hei=1.05*scale,roof=.48*scale;
+  box(x,z,wid,dep,hei,'#D6B58B',base);
+  faceRect(x,z-dep/2-.012,base+.08*scale,.25*scale,.57*scale,'#654C3A');
+  faceRect(x-.38*scale,z-dep/2-.016,base+.48*scale,.27*scale,.28*scale,'#79B9D6');
+  faceRect(x+.38*scale,z-dep/2-.016,base+.48*scale,.27*scale,.28*scale,'#79B9D6');
+  const frontL=project(x-wid/2,base+hei,z-dep/2,w,h),frontR=project(x+wid/2,base+hei,z-dep/2,w,h);
+  const backL=project(x-wid/2,base+hei,z+dep/2,w,h),backR=project(x+wid/2,base+hei,z+dep/2,w,h);
+  const ridgeF=project(x,base+hei+roof,z-dep/2,w,h),ridgeB=project(x,base+hei+roof,z+dep/2,w,h);
+  poly([frontL,frontR,ridgeF],'#9B5546','#603B36');
+  poly([backL,backR,ridgeB],'#A95F4D','#603B36');
+  poly([frontL,ridgeF,ridgeB,backL],'#B86A57','#603B36');
+  poly([frontR,ridgeF,ridgeB,backR],'#8F493F','#603B36');
+ }
+ function drawBuilding(e,base){
+  const wid=1.35*e.scale,dep=1.2*e.scale,hei=2.1+e.floors*.48;
+  box(e.x,e.z,wid,dep,hei,'#AAB6C4',base);
+  const floors=e.floors||3;
+  for(let floor=0;floor<floors;floor++){
+   const y=base+.32+floor*.48;
+   for(let col=0;col<2;col++){
+    const xx=e.x+(col===0?-.34:.34)*e.scale;
+    faceRect(xx,e.z-dep/2-.018,y,.22*e.scale,.25,'#76AFCF');
+   }
+   if(floor>0){
+    const left=project(e.x-wid/2,y-.06,e.z-dep/2-.022,w,h),right=project(e.x+wid/2,y-.06,e.z-dep/2-.022,w,h);
+    ctx.strokeStyle='#E0E5E9';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(left.x,left.y);ctx.lineTo(right.x,right.y);ctx.stroke();
+   }
+  }
+  faceRect(e.x,e.z-dep/2-.024,base,.28,.42,'#47566A');
+  const roofL=project(e.x-wid/2,base+hei,e.z-dep/2,w,h),roofR=project(e.x+wid/2,base+hei,e.z-dep/2,w,h);
+  const roofBackR=project(e.x+wid/2,base+hei,e.z+dep/2,w,h),roofBackL=project(e.x-wid/2,base+hei,e.z+dep/2,w,h);
+  const capL=project(e.x-wid/2,base+hei+.12,e.z-dep/2,w,h),capR=project(e.x+wid/2,base+hei+.12,e.z-dep/2,w,h),capBR=project(e.x+wid/2,base+hei+.12,e.z+dep/2,w,h),capBL=project(e.x-wid/2,base+hei+.12,e.z+dep/2,w,h);
+  poly([roofL,roofR,capR,capL],'#8795A5');poly([roofR,roofBackR,capBR,capR],'#778697');poly([capL,capR,capBR,capBL],'#C4CED8');
+ }
  function tree(x,z,k,base=0){
   const b=project(x,base,z,w,h),top=project(x,base+1.4*k,z,w,h),r=9*k*zoom;
   ctx.strokeStyle='#65452F';ctx.lineWidth=4*k;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(top.x,top.y+4);ctx.stroke();
@@ -83,8 +122,8 @@ function play(canvas,world,onCaption){
   const sorted=world.elements.slice().sort((a,b)=>b.z-a.z);
   sorted.forEach(e=>{
    const base=terrainHeight(world,e.x,e.z);
-   if(e.type==='building')box(e.x,e.z,1.35*e.scale,1.2*e.scale,2.2+e.variant*.7,'#AAB6C4',base);
-   else if(e.type==='house')box(e.x,e.z,1.25,1.1,1.05,'#D6B58B',base);
+   if(e.type==='building')drawBuilding(e,base);
+   else if(e.type==='house')drawHouse(e.x,e.z,e.scale,base);
    else if(e.type==='park'){const p=project(e.x,base,e.z,w,h);ctx.fillStyle='#6D9560';ctx.beginPath();ctx.ellipse(p.x,p.y,19,11,0,0,Math.PI*2);ctx.fill();tree(e.x,e.z,.8,base)}
    else if(e.type==='tree')tree(e.x,e.z,e.scale,base);
    else if(e.type==='car'){const p=project(e.x,base+.15,e.z,w,h);ctx.fillStyle=e.variant===1?'#4D8BC5':e.variant===2?'#D7B44E':'#C75B4D';ctx.fillRect(p.x-12,p.y-6,24,11);ctx.fillStyle='#1C2837';ctx.fillRect(p.x-8,p.y-9,14,5)}
