@@ -118,6 +118,35 @@ function findInteriorRoute(rooms,connections,fromRoom,toRoom){
  }
  return {reachable:true,from,to,rooms:route,doorIds,steps:Math.max(0,route.length-1),message:route.length===1?'Tu es déjà dans cette pièce.':'Itinéraire trouvé : '+route.join(' → ')};
 }
+function findInteriorRouteAlternatives(rooms,connections,fromRoom,toRoom,maxRoutes){
+ const names=Array.isArray(rooms)?Array.from(new Set(rooms.map(v=>String(v||'').trim()).filter(Boolean))):[];
+ const from=String(fromRoom||''),to=String(toRoom||'');
+ const limit=Math.max(1,Math.min(10,Math.floor(Number(maxRoutes)||3)));
+ if(!names.includes(from)||!names.includes(to))return {reachable:false,from,to,shortestSteps:null,routes:[],message:'Pièce de départ ou destination inconnue.'};
+ if(from===to)return {reachable:true,from,to,shortestSteps:0,routes:[{rooms:[from],doorIds:[],steps:0}],message:'Tu es déjà dans cette pièce.'};
+ const links=getInteriorRoomConnections(names,connections).filter(link=>link.openable!==false);
+ const adjacency=new Map(names.map(name=>[name,[]]));
+ links.forEach(link=>{
+  if(!adjacency.has(link.from)||!adjacency.has(link.to))return;
+  adjacency.get(link.from).push({room:link.to,doorId:link.doorId});
+  adjacency.get(link.to).push({room:link.from,doorId:link.doorId});
+ });
+ const queue=[{rooms:[from],doorIds:[]}],routes=[];let shortest=null;
+ while(queue.length&&routes.length<limit){
+  const current=queue.shift();
+  if(shortest!==null&&current.doorIds.length>=shortest)continue;
+  const last=current.rooms[current.rooms.length-1];
+  adjacency.get(last).forEach(edge=>{
+   if(current.rooms.includes(edge.room))return;
+   const next={rooms:current.rooms.concat(edge.room),doorIds:current.doorIds.concat(edge.doorId)};
+   if(edge.room===to){
+    if(shortest===null)shortest=next.doorIds.length;
+    if(next.doorIds.length===shortest)routes.push({rooms:next.rooms,doorIds:next.doorIds,steps:next.doorIds.length});
+   }else if(shortest===null||next.doorIds.length<shortest)queue.push(next);
+  });
+ }
+ return {reachable:routes.length>0,from,to,shortestSteps:shortest,routes,message:routes.length?'Plusieurs itinéraires courts disponibles.':'Aucun passage accessible vers cette pièce.'};
+}
 function analyzeInteriorCirculation(rooms,connections){
  const names=Array.isArray(rooms)?Array.from(new Set(rooms.map(v=>String(v||'').trim()).filter(Boolean))):[];
  const links=getInteriorRoomConnections(names,connections).filter(link=>link.openable!==false);
@@ -617,5 +646,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
