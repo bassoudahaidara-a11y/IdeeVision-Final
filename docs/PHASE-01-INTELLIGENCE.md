@@ -133,3 +133,8 @@ Les maisons et immeubles possèdent désormais une disposition déclarative de p
 ### Navigation intérieure par pièces — première version
 
 Le mode intérieur présente maintenant une pièce à la fois dans une vue en perspective, avec sol, murs, porte animée, fenêtre et mobilier schématique variant selon le type de pièce. Les pièces prévues dans les métadonnées (entrée, séjour, cuisine, chambre) sont parcourues dans l'ordre : le joueur ouvre la porte puis sélectionne la zone centrale pour accéder à la pièce suivante. Les immeubles conservent une commande tactile pour changer de niveau. Cette étape améliore l'illusion d'espaces visitables, mais ne constitue pas encore une géométrie 3D indépendante avec collisions, navigation libre entre portes placées dans le monde, ni véritable escalier parcourable. Validation sur téléphone et compilation APK non réalisées.
+
+
+### Déplacements intérieurs et collisions — première protection
+
+Le déplacement intérieur passe maintenant par une fonction de résolution qui limite le joueur à la pièce, empêche de traverser les meubles schématiques du séjour, de la cuisine et de la chambre, et bloque le seuil lorsque la porte est fermée. Le déplacement sur un axe est résolu séparément pour autoriser le glissement le long d'un obstacle. Les tests couvrent les limites, les meubles, le seuil de porte et le glissement. Il s'agit de collisions 2D simplifiées sur coordonnées locales, pas encore d'un moteur physique 3D ni d'une détection de collision sur des maillages réels. La touche E ignore les répétitions automatiques du clavier pour éviter les basculements multiples de la porte.
