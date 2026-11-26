@@ -6,7 +6,7 @@
     { type: 'house', words: ['maison', 'villa', 'batiment', 'habitation'] },
     { type: 'tree', words: ['arbre', 'arbres'] },
     { type: 'car', words: ['voiture', 'auto', 'vehicule'] },
-    { type: 'robot', words: ['robot', 'automate'] },
+    { type: 'robot', words: ['robot', 'robots', 'automate', 'automates'] },
     { type: 'dragon', words: ['dragon'] },
     { type: 'ball', words: ['ballon', 'balle', 'sphere'] },
     { type: 'cube', words: ['cube', 'boite', 'bloc'] },
