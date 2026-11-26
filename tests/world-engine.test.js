@@ -78,6 +78,21 @@ test('les intérieurs possèdent un plan de pièces et des emplacements de mobil
  const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
  for(const item of [house,building]){assert(item.interior.layout.length>=3,'plan intérieur incomplet');item.interior.layout.forEach(room=>{assert(typeof room.name==='string'&&Number.isFinite(room.x)&&Number.isFinite(room.z),'position de pièce invalide')})}
 });
+test('les pièces sont reliées par des portes explicites dans l’ordre du plan',()=>{
+ const rooms=['entrée','séjour','cuisine','chambre'];
+ const links=World.getInteriorRoomConnections(rooms);
+ assert(links.length===3,'nombre de portes incorrect');
+ assert(links[0].from==='entrée'&&links[0].to==='séjour','liaison entrée-séjour absente');
+ assert(links[2].from==='cuisine'&&links[2].to==='chambre','liaison cuisine-chambre absente');
+ assert(links.every(link=>link.openable&&link.width>0),'porte non franchissable');
+});
+test('le passage suit les pièces reliées et permet de revenir',()=>{
+ const rooms=['entrée','séjour','cuisine','chambre'];
+ assert(World.getNextConnectedRoomIndex(rooms,0)===1,'entrée ne mène pas au séjour');
+ assert(World.getNextConnectedRoomIndex(rooms,1)===2,'séjour ne mène pas à la cuisine');
+ assert(World.getNextConnectedRoomIndex(rooms,2)===3,'cuisine ne mène pas à la chambre');
+ assert(World.getNextConnectedRoomIndex(rooms,3)===2,'retour depuis la dernière pièce impossible');
+});
 test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
  const room=World.getInteriorRoomModel('séjour');
  assert(room.walls.length>=5,'segments de murs insuffisants');
