@@ -10,9 +10,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Installer le support de test IndexedDB
+        run: npm install --no-save fake-indexeddb@6
       - name: Tester le moteur cognitif
         run: node --test tests/cognitive-core-v1.test.js
       - name: Tester la mémoire de contexte
         run: node --test tests/context-memory-v1.test.js
       - name: Tester le raisonnement logique
         run: node --test tests/logical-reasoning-v1.test.js
+      - name: Tester la base de connaissances locale
+        run: node --test tests/knowledge-base-v1.test.js
