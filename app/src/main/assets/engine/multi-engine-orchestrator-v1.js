@@ -117,4 +117,5 @@
  }
  function diagnostics(){return {name:"Idée Vision Multi-engine Orchestrator",version:VERSION,planningOffline:true,executesEngines:false,capabilities:["domain_routing","task_graph","dependency_validation","cycle_detection","topological_order","parallel_layers","capability_matching","missing_engine_detection","output_validation","numeric_conflict_flags","bounded_retry_tracking","status_summary","prompt_context"]}}
  root.IdeeVisionOrchestrator=Object.freeze({version:VERSION,defaultEngines:DEFAULT_ENGINES,inferDomains,topological,plan,validateOutput,compareResults,recordAttempt,summarize,toPromptContext,diagnostics});
+ if(typeof module!=="undefined"&&module.exports)module.exports=root.IdeeVisionOrchestrator;
 })(typeof window!=="undefined"?window:globalThis);
