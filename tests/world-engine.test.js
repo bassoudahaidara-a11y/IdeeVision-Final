@@ -179,6 +179,36 @@ test('retourne un itinéraire vide lorsque le joueur est déjà dans la destinat
  const route=World.findInteriorRoute(['Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Salon','Salon');
  assert(route.reachable&&route.steps===0&&route.rooms.length===1,'itinéraire sur place incorrect');
 });
+test('gère les portes verrouillées avec une clé et les niveaux d’accès',()=>{
+ const door={openable:true,locked:true,requiredKey:'cle-bureau',requiredAccessLevel:2};
+ const denied=World.resolveInteriorDoorAccess(door,{keys:[],accessLevel:3});
+ const keyOnly=World.resolveInteriorDoorAccess(door,{keys:['cle-bureau'],accessLevel:1});
+ const allowed=World.resolveInteriorDoorAccess(door,{keys:['cle-bureau'],accessLevel:2});
+ assert(!denied.allowed&&denied.reason==='locked','porte verrouillée accessible sans clé');
+ assert(!keyOnly.allowed&&keyOnly.reason==='access-level','niveau d’accès insuffisant ignoré');
+ assert(allowed.allowed&&allowed.canOpen,'accès valide refusé');
+});
+test('analyse les accès réellement disponibles et les portes bloquées',()=>{
+ const result=World.analyzeInteriorAccessNetwork(['Hall','Couloir','Bureau','Archives'],[
+  {from:'Hall',to:'Couloir',doorId:'hall-couloir'},
+  {from:'Couloir',to:'Bureau',doorId:'bureau',locked:true,requiredKey:'badge-bureau'},
+  {from:'Bureau',to:'Archives',doorId:'archives',requiredAccessLevel:3}
+ ],'Hall',{keys:[],accessLevel:1});
+ assert(result.reachableRooms.join(',')==='Hall,Couloir','réseau accessible incorrect');
+ assert(result.unreachableRooms.includes('Bureau')&&result.unreachableRooms.includes('Archives'),'pièces protégées non détectées');
+ assert(result.lockedDoorCount===1&&result.accessLevelBlockedCount===1,'motifs de refus incorrects');
+});
+test('respecte les portes à sens unique dans la navigation',()=>{
+ const result=World.analyzeInteriorAccessNetwork(['Hall','Zone','Sortie'],[
+  {from:'Hall',to:'Zone',doorId:'entrée-zone',oneWay:true},
+  {from:'Sortie',to:'Zone',doorId:'sortie-zone'}
+ ],'Hall',{});
+ assert(result.reachableRooms.includes('Zone')&&!result.reachableRooms.includes('Sortie'),'sens unique non respecté');
+});
+test('refuse toujours une porte déclarée non ouvrable',()=>{
+ const result=World.resolveInteriorDoorAccess({openable:false},{keys:['master'],accessLevel:99});
+ assert(!result.allowed&&result.reason==='unavailable','porte indisponible autorisée');
+});
 test('propose plusieurs itinéraires courts alternatifs entre deux pièces',()=>{
  const result=World.findInteriorRouteAlternatives(['Hall','Salon','Cuisine','Bureau'],[
   {from:'Hall',to:'Salon',doorId:'hs'},
