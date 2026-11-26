@@ -244,6 +244,24 @@ test('les commandes tactiles s’adaptent aux petites et grandes largeurs',()=>{
  }
 });
 
+test('le statut intérieur explique l’état de la porte et les possibilités d’action',()=>{
+ const door={target:'cuisine',side:'right'};
+ const closed=World.getInteriorInteractionStatus(0,0,door,false,null);
+ assert(closed.doorState==='FERMÉE','porte fermée mal signalée');
+ assert(closed.passage==='OUVRE LA PORTE'&&!closed.canPass,'passage possible avec porte fermée');
+ assert(!closed.canExamine&&closed.furniture==='AUCUN MEUBLE PROCHE','meuble absent mal signalé');
+ const openFar=World.getInteriorInteractionStatus(.9,1,door,false,{id:'canape'});
+ assert(openFar.doorState==='OUVERTE','porte ouverte mal signalée');
+ assert(openFar.passage==='APPROCHE-TOI DE LA PORTE'&&!openFar.canPass,'passage annoncé trop tôt');
+ assert(openFar.canExamine&&openFar.furniture==='MEUBLE À EXAMINER','meuble proche non signalé');
+ const ready=World.getInteriorInteractionStatus(.9,1,door,true,{id:'canape'});
+ assert(ready.canPass&&ready.passage==='PASSAGE ACCESSIBLE','passage accessible non reconnu');
+ const noDoor=World.getInteriorInteractionStatus(0,0,null,false,null);
+ assert(noDoor.passage==='AUCUNE ISSUE'&&!noDoor.canPass,'absence de sortie mal signalée');
+ const opening=World.getInteriorInteractionStatus(.3,1,door,false,null);
+ assert(opening.doorState==='OUVERTURE','animation d’ouverture mal signalée');
+});
+
 test('l’indicateur de porte affiche la sélection et gère les indices circulaires',()=>{
  const doors=[{target:'séjour',side:'back'},{target:'cuisine',side:'right'},{target:'chambre',side:'left'}];
  const first=World.getInteriorDoorIndicator(doors,0);
