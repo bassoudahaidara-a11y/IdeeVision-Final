@@ -199,6 +199,13 @@ function getInteriorLevelEntryState(level){
  const value=Number.isFinite(Number(level))?Math.max(0,Math.floor(Number(level))):0;
  return {level:value,roomIndex:0,selectedDoorIndex:0,x:0,z:.55,doorOpen:0,doorTarget:0};
 }
+function getInteriorLevelIndicator(level,levels,hasStairs){
+ const max=Math.max(1,Math.floor(Number(levels)||1));
+ const current=Math.max(0,Math.min(max-1,Math.floor(Number(level)||0)));
+ const floorName=current===0?'REZ-DE-CHAUSSÉE':'ÉTAGE '+(current+1);
+ const stairs=!!hasStairs&&max>1;
+ return {level:current+1,total:max,floorName,stairs,up:stairs&&current<max-1,down:stairs&&current>0,label:floorName+' • '+(current+1)+'/'+max,action:!stairs?'AUCUN ESCALIER':current===0?'MONTER':current===max-1?'DESCENDRE':'MONTER / DESCENDRE'};
+}
 function changeInteriorLevel(level,levels,direction,hasStairs){
  const max=Math.max(1,Math.floor(Number(levels)||1)),current=Math.max(0,Math.min(max-1,Math.floor(Number(level)||0)));
  if(!hasStairs||max<2)return {level:current,changed:false,reason:'no-stairs'};
@@ -373,7 +380,7 @@ function play(canvas,world,onCaption){
   // Éclairage ambiant simulé par un voile léger, sans calcul physique lourd.
   ctx.fillStyle='rgba(255,224,166,'+(Math.max(0,.16-roomModel.lighting.brightness*.1))+')';ctx.fillRect(left,back,right-left,floorY-back);
   ctx.fillStyle='#FFFFFF';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.fillText(roomName.toLocaleUpperCase('fr'),cx,34);
-  ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • Étage '+(inside.level+1)+'/'+inside.building.interior.levels,cx,54);
+  ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';const levelIndicator=getInteriorLevelIndicator(inside.level,inside.building.interior.levels,inside.building.interior.stairs);ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • '+levelIndicator.label,cx,54);
   const interactionStatus=getInteriorInteractionStatus(inside.doorOpen,inside.doorTarget,selectedDoor,selectedDoor&&isNearInteriorDoor(inside.x,inside.z,selectedDoor.side,.34),nearbyFurniture);const statusWidth=Math.min(w-16,320);ctx.fillStyle='rgba(10,16,24,.82)';ctx.fillRect(8,8,statusWidth,54);ctx.fillStyle='#F4D27A';ctx.textAlign='left';ctx.font='bold 11px system-ui';ctx.fillText('PORTE : '+interactionStatus.doorState,18,27);ctx.fillStyle='#FFF';ctx.font='11px system-ui';ctx.fillText(interactionStatus.passage,18,44);ctx.fillText(interactionStatus.furniture,18,57);
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   const doorIndicator=getInteriorDoorIndicator(doorOptions,inside.selectedDoorIndex);ctx.fillText(doorIndicator.available?doorIndicator.label+' • mur '+doorIndicator.side.toLocaleUpperCase('fr'):doorIndicator.label,cx,h-30);
@@ -419,5 +426,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
