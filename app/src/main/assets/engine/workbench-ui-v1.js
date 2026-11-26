@@ -25,7 +25,8 @@ function build(type){
  const mesh=W.transformGeometryMesh(merge(a),{position:{x:(objects.length%3)*3,z:Math.floor(objects.length/3)*3}});if(!W.validateGeometryMesh(mesh).valid)throw Error('Géométrie invalide');
  return {id:'obj-'+Date.now()+'-'+objects.length,name,type,mesh,visible:true};
 }
-function updateSelector(){const q=$('studioSelect');q.innerHTML='';objects.forEach((o,i)=>{const op=document.createElement('option');op.value=String(i);op.textContent=o.name;q.appendChild(op)});q.value=String(selected);$('studioCount').textContent=objects.length+' objet(s)'}\nfunction add(type){try{objects.push(build(type));selected=objects.length-1;updateSelector();status(objects[selected].name+' ajouté : '+objects[selected].mesh.vertices.length+' sommets et '+objects[selected].mesh.faces.length+' faces.');draw()}catch(e){status('Erreur : '+e.message)}}
+function updateSelector(){const q=$('studioSelect');q.innerHTML='';objects.forEach((o,i)=>{const op=document.createElement('option');op.value=String(i);op.textContent=o.name;q.appendChild(op)});q.value=String(selected);$('studioCount').textContent=objects.length+' objet(s)'}
+function add(type){try{objects.push(build(type));selected=objects.length-1;updateSelector();status(objects[selected].name+' ajouté : '+objects[selected].mesh.vertices.length+' sommets et '+objects[selected].mesh.faces.length+' faces.');draw()}catch(e){status('Erreur : '+e.message)}}
 function size(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(300,canvas.clientWidth),h=Math.max(230,canvas.clientHeight);if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)) {canvas.width=Math.round(w*d);canvas.height=Math.round(h*d)}ctx.setTransform(d,0,0,d,0,0);return {w,h}}
 function draw(){
  if(!panel.classList.contains('open'))return;const q=size(),w=q.w,h=q.h;
