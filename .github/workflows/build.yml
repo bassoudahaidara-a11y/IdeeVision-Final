@@ -24,6 +24,7 @@ jobs:
       - run: node tests/scientific-knowledge-engine.test.js
       - run: node tests/scientific-proof-engine.test.js
       - run: node tests/scientific-multidomain-engine.test.js
+      - run: node tests/scientific-explanation-engine.test.js
       - run: node tests/world-engine.test.js
       - run: node tests/french-corpus.test.js
       - run: node tests/french-corpus-splits.test.js
