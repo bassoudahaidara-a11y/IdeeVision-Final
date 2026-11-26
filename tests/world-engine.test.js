@@ -208,7 +208,7 @@ test('l’éclairage intérieur fournit une ambiance et une lumière de fenêtre
 });
 test('le moteur détecte les meubles proches sans traverser leurs limites',()=>{
  const room=World.getInteriorRoomModel('séjour'),sofa=room.furniture.find(f=>f.id==='canape');
- const near=World.getNearbyFurniture((sofa.left+sofa.right)/2,sofa.bottom+.2,'séjour',.3);
+ const near=World.getNearbyFurniture((sofa.left+sofa.right)/2,(sofa.top+sofa.bottom)/2,'séjour',.3);
  assert(near&&near.id==='canape','canapé proche non détecté');
  const far=World.getNearbyFurniture(.8,.8,'séjour',.2);
  assert(far===null,'meuble éloigné détecté à tort');
