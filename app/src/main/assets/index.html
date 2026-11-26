@@ -5,6 +5,7 @@
 
 <script src="engine/idea-understanding-contract-v1.js"></script>
 <script src="engine/french-understanding-v1.js"></script>
+<script src="engine/knowledge-manager-v1.js"></script>
 <script src="engine/offline-scene-engine.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
@@ -58,6 +59,19 @@ textarea::placeholder{color:#7C7EA3}
 .panel label small{display:block;font-weight:400;color:var(--mut);margin-top:2px}
 .panel input{width:100%;border:1px solid var(--line);background:rgba(10,13,31,.7);color:var(--paper);border-radius:999px;padding:14px 18px;font:400 15px system-ui,sans-serif;outline:0}
 .panel .cta{width:100%;margin-top:22px}
+.settings-wrap{width:100%;max-width:620px;margin:22px auto 0}
+.settings-card{border:1px solid var(--line);border-radius:20px;background:rgba(10,13,31,.55);padding:16px;margin:14px 0}
+.settings-card h4{margin:0 0 8px;font-size:16px}
+.settings-card p{margin:0 0 10px}
+.settings-card input[type=file]{width:100%;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--paper);background:rgba(10,13,31,.5)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0}
+.setting-row label{margin:0}
+.knowledge-item{border-top:1px solid var(--line);padding:12px 0}
+.knowledge-item strong{display:block;font-size:14px}
+.knowledge-item small{display:block;color:var(--mut);margin:4px 0 9px}
+.knowledge-actions{display:flex;gap:8px;flex-wrap:wrap}
+.knowledge-actions button{border:1px solid var(--line);border-radius:99px;padding:8px 13px;background:transparent;color:var(--paper);font-size:13px}
+#knowledgeStatus{white-space:pre-wrap;color:var(--mut);font-size:13px;line-height:1.45;margin-top:10px}
 @media (prefers-reduced-motion:reduce){.beam,.ring{animation:none!important}}
 </style></head>
 <body>
@@ -84,6 +98,29 @@ textarea::placeholder{color:#7C7EA3}
   </div>
 </section>
 
+<section id="settings" class="screen">
+  <header class="top"><button class="round" id="backHome" aria-label="Retour">‹</button><div><b>Paramètres</b><small>Évolution hors ligne</small></div></header>
+  <div class="settings-wrap">
+    <h1 style="margin-top:24px">Faire évoluer Idée Vision</h1>
+    <div class="settings-card">
+      <h4>Affichage 3D en traits</h4>
+      <p>Affiche les arêtes des objets 3D sans remplir leurs surfaces.</p>
+      <div class="setting-row"><label for="wireframeToggle">Activer le mode filaire</label><input id="wireframeToggle" type="checkbox" style="width:24px;height:24px;accent-color:var(--amber)"></div>
+    </div>
+    <div class="settings-card">
+      <h4>Importer des connaissances</h4>
+      <p>Choisis un paquet JSON Idée Vision. Les nouvelles entrées seront d'abord enregistrées en brouillon pour vérification.</p>
+      <input id="knowledgeFile" type="file" accept=".json,application/json">
+      <div id="knowledgeStatus">Aucun fichier analysé.</div>
+    </div>
+    <div class="settings-card">
+      <h4>Bibliothèque interne</h4>
+      <p id="knowledgeStats">Chargement…</p>
+      <div id="knowledgeList"></div>
+    </div>
+  </div>
+</section>
+
 <section id="play" class="screen">
   <canvas id="cv"></canvas><div class="shade"></div>
   <button class="round xbtn" id="close" aria-label="Fermer">✕</button>
@@ -101,7 +138,44 @@ function setW(t,sub,p){$('wt').textContent=t;$('ws').textContent=sub||'';$('wb')
 function cnt(){const n=$('idea').value.length;$('cnt').textContent=n+(n>1?' caractères':' caractère')}
 $('idea').addEventListener('input',cnt);
 ['Une maison avec deux fenêtres et une porte','Un dragon en 3D','Un ballon qui tombe et rebondit','Un robot qui tourne'].forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('idea').value=t;cnt()};$('chips').appendChild(b)});
-$('gear').onclick=()=>msg('Mode hors ligne : aucune clé API et aucune connexion Internet.');
+$('gear').onclick=()=>{renderKnowledge();show('settings')};
+$('backHome').onclick=()=>show('home');
+const WIRE_KEY='ideevision.render.wireframe';
+function wireframeEnabled(){try{return localStorage.getItem(WIRE_KEY)==='1'}catch(e){return false}}
+window.IdeeVisionWireframeEnabled=wireframeEnabled();
+$('wireframeToggle').checked=window.IdeeVisionWireframeEnabled;
+$('wireframeToggle').onchange=()=>{window.IdeeVisionWireframeEnabled=$('wireframeToggle').checked;try{localStorage.setItem(WIRE_KEY,window.IdeeVisionWireframeEnabled?'1':'0')}catch(e){}};
+function renderKnowledge(){
+ if(!window.IdeeVisionKnowledge)return;
+ const stats=window.IdeeVisionKnowledge.stats();
+ $('knowledgeStats').textContent=stats.total+' connaissance(s) • '+stats.active+' active(s) • '+stats.draft+' à vérifier • '+stats.disabled+' désactivée(s)';
+ const list=$('knowledgeList');list.innerHTML='';
+ window.IdeeVisionKnowledge.list().forEach(item=>{
+  const row=document.createElement('div');row.className='knowledge-item';
+  const title=document.createElement('strong');title.textContent=item.title;row.appendChild(title);
+  const meta=document.createElement('small');meta.textContent=item.domain+' • '+item.kind+' • '+item.status;row.appendChild(meta);
+  const actions=document.createElement('div');actions.className='knowledge-actions';
+  const action=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.onclick=fn;actions.appendChild(b)};
+  if(item.status!=='active')action('Activer',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'active');$('knowledgeStatus').textContent=r.ok?'Connaissance activée.':r.error;renderKnowledge()});
+  if(item.status==='active')action('Désactiver',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'disabled');$('knowledgeStatus').textContent=r.ok?'Connaissance désactivée.':r.error;renderKnowledge()});
+  action('Supprimer',()=>{if(confirm('Supprimer cette connaissance de la bibliothèque ?')){window.IdeeVisionKnowledge.remove(item.id);renderKnowledge()}});
+  row.appendChild(actions);list.appendChild(row);
+ });
+}
+$('knowledgeFile').onchange=()=>{
+ const file=$('knowledgeFile').files&&$('knowledgeFile').files[0];if(!file)return;
+ if(file.size>window.IdeeVisionKnowledge.maxFileBytes){$('knowledgeStatus').textContent='Fichier trop volumineux (maximum 2 Mio).';return}
+ const reader=new FileReader();
+ reader.onload=()=>{try{const pkg=JSON.parse(String(reader.result||''));const result=window.IdeeVisionKnowledge.importPackage(pkg);
+  if(!result.ok){$('knowledgeStatus').textContent='Import refusé : '+result.error;return}
+  const details=['Import terminé : '+result.accepted+' connaissance(s) enregistrée(s) en brouillon.'];
+  if(result.rejected.length)details.push(result.rejected.length+' entrée(s) refusée(s) : '+result.rejected.map(x=>(x.id||'entrée '+(x.index+1))+ ' — '+x.errors.join(', ')).join(' ; '));
+  details.push('Examine les entrées ci-dessous avant de les activer.');
+  $('knowledgeStatus').textContent=details.join('\n');renderKnowledge();
+ }catch(e){$('knowledgeStatus').textContent='JSON illisible : '+e.message}};
+ reader.onerror=()=>$('knowledgeStatus').textContent='Impossible de lire ce fichier.';
+ reader.readAsText(file,'UTF-8');
+};
 
 /* voix */
 function stopSpeech(){try{if(window.Android)Android.stop();else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}}
