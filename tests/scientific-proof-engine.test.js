@@ -8,7 +8,7 @@ test('vérifie un calcul numérique exact',()=>{const r=P.verifyCalculation('m*a
 test('rejette une valeur annoncée incorrecte',()=>{const r=P.verifyCalculation('m*a',{m:4,a:2},9);assert(r.ok&&!r.verified&&r.status==='rejected','valeur fausse acceptée')});
 test('refuse une variable absente',()=>assert(!P.verifyCalculation('m*a',{m:4},8).ok,'variable manquante acceptée'));
 test('vérifie les dimensions d’une formule physique',()=>{const r=P.verifyCalculation('m*a',{m:4,a:2},8,{expectedUnit:'N',variableDimensions:{m:[0,1,0,0,0],a:[1,0,-2,0,0]}});assert(r.ok&&r.verified&&r.dimensions.valid,'contrôle dimensionnel incorrect')});
-test('refuse une formule de dimensions incompatibles',()=>{const r=P.verifyCalculation('m+a',{m:4,a:2},6,{expectedUnit:'N',variableDimensions:{m:[1,0,0,0,0],a:[1,0,-2,0,0]}});assert(!r.ok&&r.error==='dimension-mismatch','dimensions incompatibles acceptées')});
+test('refuse une formule de dimensions incompatibles',()=>{const r=P.verifyCalculation('m+a',{m:4,a:2},6,{expectedUnit:'N',variableDimensions:{m:[1,0,0,0,0],a:[1,0,-2,0,0]}});assert(!r.ok&&r.error==='dimension-mismatch-addition','dimensions incompatibles acceptées')});
 test('résout et vérifie toutes les racines d’une équation quadratique',()=>{const r=P.proveEquation('x^2-5*x+6=0','x');assert(r.ok&&r.verified&&r.solutions.length===2&&r.checks.every(x=>x.valid),'racines non vérifiées')});
 test('reconnaît une équation sans solution',()=>{const r=P.proveEquation('x^2+1=0','x');assert(r.ok&&r.verified&&r.status==='no-solution'&&r.solutions.length===0,'absence de racines incorrecte')});
 test('reconnaît une identité',()=>{const r=P.proveEquation('x+2=x+2','x');assert(r.ok&&r.verified&&r.status==='identity','identité non reconnue')});
