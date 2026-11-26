@@ -65,7 +65,7 @@
 
   function quantityBefore(text, mention) {
     const before = text.slice(Math.max(0, mention.index - 22), mention.index).trim();
-    const match = before.match(/(?:^|\\s)(un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|[1-9][0-9]?)(?:\\s+[a-z]+){0,2}$/);
+    const match = before.match(/(?:^|\s)(un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|[1-9][0-9]?)(?:\s+[a-z]+){0,2}$/);
     if (!match) return 1;
     const token = match[1];
     return NUMBERS[token] || Number(token) || 1;
@@ -116,19 +116,19 @@
       };
     });
 
-    const mode = /\b(2d|deux dimensions|dessin a plat|schema)\\b/.test(text)
+    const mode = /\b(2d|deux dimensions|dessin a plat|schema)\b/.test(text)
       ? '2D' : '3D';
     const actions = [];
-    if (/\b(tombe|tomber|chute|chuter|gravite|rebondit|rebondir)\\b/.test(text)) actions.push('fall');
-    if (/\b(tourne|tourner|rotation|pivote|pivoter)\\b/.test(text)) actions.push('rotate');
-    if (/\b(ouvre|ouvrir|s ouvre)\\b/.test(text)) actions.push('open');
-    if (/\b(avance|avancer|recule|reculer|deplace|deplacer)\\b/.test(text)) actions.push('move');
+    if (/\b(tombe|tomber|chute|chuter|gravite|rebondit|rebondir)\b/.test(text)) actions.push('fall');
+    if (/\b(tourne|tourner|rotation|pivote|pivoter)\b/.test(text)) actions.push('rotate');
+    if (/\b(ouvre|ouvrir|s ouvre)\b/.test(text)) actions.push('open');
+    if (/\b(avance|avancer|recule|reculer|deplace|deplacer)\b/.test(text)) actions.push('move');
 
-    const intent = /\b(explique|expliquer|comment fonctionne|pourquoi)\\b/.test(text)
+    const intent = /\b(explique|expliquer|comment fonctionne|pourquoi)\b/.test(text)
       ? 'explain'
-      : /\b(simule|simuler|simulation|experience|experimente)\\b/.test(text)
+      : /\b(simule|simuler|simulation|experience|experimente)\b/.test(text)
         ? 'simulate'
-        : /\b(dessine|dessiner|construis|construire|cree|creer|montre|representer|represente)\\b/.test(text)
+        : /\b(dessine|dessiner|construis|construire|cree|creer|montre|representer|represente)\b/.test(text)
           ? 'create' : 'describe';
 
     const clarifications = [];
