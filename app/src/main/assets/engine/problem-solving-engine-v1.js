@@ -34,7 +34,7 @@ function solveProblem(base,problem,options){
  if(!inferred.ok)return {ok:false,error:'inference-failed',details:inferred};
  let visitedNodes=0,limited=false;
  function plan(goal,depth,stack){
-  visitedNodes++;if(visitedNodes>maxNodes){limited=true;return {status:'limit',goal:clone(goal),reason:'Limite de recherche atteinte.',subgoals:[],proof:[]};}
+  if(visitedNodes>=maxNodes){limited=true;return {status:'limit',goal:clone(goal),reason:'Limite de recherche atteinte.',subgoals:[],proof:[]};}visitedNodes++;
   const direct=inferred.facts.find(f=>factMatches(goal,f));
   if(direct){const derived=String(direct.source||'').indexOf('rule:')===0;return {status:derived?'derivable':'known',goal:clone(goal),factId:direct.id,source:direct.source||'unknown',subgoals:[],proof:[{type:derived?'rule':'fact',factId:direct.id,ruleId:derived?String(direct.source).slice(5):undefined}]};}
   const key=JSON.stringify([goal.subject,goal.predicate,goal.object]);
