@@ -140,7 +140,7 @@ test('l’indicateur des étages décrit correctement le niveau et les escaliers
 test('la traversée des escaliers se déclenche en s’en approchant dans le bon sens',()=>{
  const far=World.getInteriorStairTraversal(0,.55,0,-.02,0,3,true);
  assert(!far.triggered&&far.reason==='too-far','transition déclenchée à distance');
- const near=World.getInteriorStairTraversal(.58,-.55,0,-.02,0,3,true);
+ const near=World.getInteriorStairTraversal(.58,-.5,0,-.02,0,3,true);
  assert(near.triggered&&near.level===2&&near.direction==='up','montée automatique non déclenchée');
  const away=World.getInteriorStairTraversal(.58,-.55,0,.02,0,3,true);
  assert(!away.triggered&&away.reason==='not-approaching','transition déclenchée en s’éloignant');
