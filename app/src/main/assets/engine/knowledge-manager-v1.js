@@ -9,7 +9,7 @@ function validId(v){return typeof v==='string'&&/^[a-z0-9][a-z0-9._-]{2,79}$/i.t
 function validFormula(v){
  if(v==null||v==='')return true;
  if(typeof v!=='string'||v.length>500)return false;
- return /^[a-zA-Z0-9_+\-*/^().,\s=<>≤≥√π%]+$/.test(v);
+ return /^[a-zA-Z0-9_+\-*/^().,\s=<>≤≥√π%]+$/.test(v) && !/[A-Za-z_][A-Za-z0-9_]*\s*\(/.test(v);
 }
 function validateEntry(e){
  const errors=[];
