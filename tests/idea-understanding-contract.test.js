@@ -25,6 +25,8 @@ test('refuse une quantité hors limites', () => { const x=validBase(); x.objects
 test('refuse une propriété inconnue', () => { const x=validBase(); x.objects[0].properties.script='alert(1)'; assert(!Contract.validate(x).valid, 'propriété inconnue acceptée'); });
 test('refuse une relation vers un objet absent', () => { const x=validBase(); x.relations=[{from:'objet_1',to:'absent',type:'near'}]; assert(!Contract.validate(x).valid, 'référence absente acceptée'); });
 test('refuse une action inconnue', () => { const x=validBase(); x.actions=[{type:'execute_code'}]; assert(!Contract.validate(x).valid, 'action inconnue acceptée'); });
+test('refuse une cible d’action absente', () => { const x=validBase(); x.actions=[{type:'rotate',target:'fantome'}]; assert(!Contract.validate(x).valid, 'cible absente acceptée'); });
+test('refuse des paramètres imbriqués non primitifs', () => { const x=validBase(); x.actions=[{type:'move',target:'objet_1',parameters:{direction:{x:1}}}]; assert(!Contract.validate(x).valid, 'paramètre imbriqué accepté'); });
 test('exige une question si une clarification est nécessaire', () => { const x=validBase(); x.needsClarification=true; assert(!Contract.validate(x).valid, 'question manquante acceptée'); });
 test('accepte une clarification correctement formulée', () => { const x=validBase(); x.needsClarification=true; x.clarificationQuestion='Quelle taille souhaites-tu ?'; assert(Contract.validate(x).valid, 'clarification valide refusée'); });
 test('convertit un résultat lexical en contrat contrôlable', () => {
@@ -32,5 +34,6 @@ test('convertit un résultat lexical en contrat contrôlable', () => {
   assert(Contract.validate(x).valid, 'conversion invalide');
 });
 test('ne permet pas au modèle de fournir du code exécutable', () => { const x=validBase(); x.generatedCode='console.log(1)'; assert(!Contract.validate(x).valid, 'code arbitraire accepté'); });
+test('accepte une demande inconnue seulement avec clarification', () => { const x=Contract.fromLexical({intent:'describe',mode:'3D',status:'needs_clarification',objects:[],clarifications:['Que veux-tu construire ?'],actions:[]}); assert(Contract.validate(x).valid, 'demande inconnue non clarifiée refusée'); });
 console.log('Résultat : ' + passed + ' réussis, ' + failed + ' échoués.');
 if (failed) process.exitCode = 1;
