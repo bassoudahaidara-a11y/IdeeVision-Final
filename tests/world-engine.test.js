@@ -78,6 +78,25 @@ test('les intérieurs possèdent un plan de pièces et des emplacements de mobil
  const building=World.create('Crée une ville').elements.find(e=>e.type==='building');
  for(const item of [house,building]){assert(item.interior.layout.length>=3,'plan intérieur incomplet');item.interior.layout.forEach(room=>{assert(typeof room.name==='string'&&Number.isFinite(room.x)&&Number.isFinite(room.z),'position de pièce invalide')})}
 });
+test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
+ const room=World.getInteriorRoomModel('séjour');
+ assert(room.walls.length>=5,'segments de murs insuffisants');
+ assert(room.doorway&&room.doorway.width>0,'ouverture de porte absente');
+ assert(room.bounds.left===-.88&&room.bounds.right===.88,'limites de pièce incorrectes');
+});
+test('les meubles sont des volumes bornés et adaptés à chaque pièce',()=>{
+ const living=World.getInteriorRoomModel('séjour');
+ const kitchen=World.getInteriorRoomModel('cuisine');
+ const bedroom=World.getInteriorRoomModel('chambre');
+ for(const room of [living,kitchen,bedroom]){
+  assert(room.furniture.length>=2,'mobilier insuffisant');
+  room.furniture.forEach(item=>{
+   assert(item.left<item.right&&item.top<item.bottom,'volume de meuble invalide');
+   assert(item.height>0&&typeof item.color==='string','dimensions ou couleur invalides');
+  });
+ }
+ assert(living.furniture[0].id!==kitchen.furniture[0].id,'mobilier identique entre pièces');
+});
 test('le déplacement intérieur reste dans les limites de la pièce',()=>{
  const a=World.resolveInteriorMovement(0,.87,0,.5,'entrée',1);
  const b=World.resolveInteriorMovement(0,-.87,0,-.5,'entrée',1);
