@@ -106,7 +106,8 @@
       return {
         id: 'objet_' + (index + 1),
         type: mention.type,
-        quantity: Math.min(20, amount),\n        quantityClamped: amount > 20,
+        quantity: Math.min(20, amount),
+        quantityClamped: amount > 20,
         attributes: {
           color: color ? color.value : null,
           size: size ? size.value : null,
