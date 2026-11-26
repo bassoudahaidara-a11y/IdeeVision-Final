@@ -11,10 +11,10 @@ function create(text){
  }else if(biome==='forest'){
   for(let z=-5;z<=5;z+=2)for(let x=-5;x<=5;x+=2)if(Math.abs(x)+Math.abs(z)>2)add('tree',x,z,.8+(Math.abs(x*z)%4)*.1);
  }else if(biome==='countryside'){
-  for(let z=-5;z<=5;z+=3)for(let x=-5;x<=5;x+=3){if((x+z)%2===0)add('tree',x,z,.9);else add('house',x,z,.8+(Math.abs(x-z)%3)*.12)}
+  for(let z=-5;z<=5;z+=3)for(let x=-5;x<=5;x+=3){if((x+z)%2===0)add('tree',x,z,.9);else{add('house',x,z,.8+(Math.abs(x-z)%3)*.12);elements[elements.length-1].door={side:'south',width:.25,height:.57};elements[elements.length-1].interior={rooms:['entrée','séjour','cuisine','chambre'],stairs:false,levels:1}}}
  }else{
   const blocks=[[-4,-4],[-1,-4],[2,-4],[5,-4],[-4,-1],[2,-1],[5,-1],[-4,2],[-1,2],[2,2],[5,2],[-4,5],[-1,5],[2,5],[5,5]];
-  blocks.forEach(([x,z],i)=>{if(i%4===0)add('park',x,z,1);else{add('building',x,z,.8+(i%3)*.18,i%4);elements[elements.length-1].floors=2+(i%4)}});
+  blocks.forEach(([x,z],i)=>{if(i%4===0)add('park',x,z,1);else{add('building',x,z,.8+(i%3)*.18,i%4);const b=elements[elements.length-1];b.floors=2+(i%4);b.door={side:'south',width:.28,height:.42};b.interior={rooms:['entrée','séjour','cuisine'],stairs:true,levels:b.floors}}});
   for(let z=-5;z<=5;z+=2){add('tree',-6,z,.8);add('tree',6,z,.8)}
   for(let x=-5;x<=5;x+=2){add('tree',x,-6,.8);add('tree',x,6,.8)}
   add('car',-2,-.6,1,0);add('car',2,.7,1,1);add('car',-1,3,1,2);
@@ -31,12 +31,12 @@ function terrainHeight(world,x,z){
  return rolling+peaks;
 }
 function play(canvas,world,onCaption){
- const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0;
+ const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0,inside=null,pointerStart=null;
  const resize=()=>{const d=Math.min(root.devicePixelRatio||1,2);canvas.width=canvas.clientWidth*d;canvas.height=canvas.clientHeight*d;ctx.setTransform(d,0,0,d,0,0)};
  resize();root.addEventListener('resize',resize);
- const pointerDown=e=>{const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x<118&&y>h-132){drag=true;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else{drag=true;moveX=0;moveZ=0;lastX=e.clientX;lastY=e.clientY;drag='camera'}if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId)};
+ const pointerDown=e=>{const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;pointerStart={x:e.clientX,y:e.clientY};if(inside){drag=false;return}if(x<118&&y>h-132){drag=true;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else{drag=true;moveX=0;moveZ=0;lastX=e.clientX;lastY=e.clientY;drag='camera'}if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId)};
  const pointerMove=e=>{if(drag==='camera'){yaw+=(e.clientX-lastX)*.008;pitch=Math.max(.12,Math.min(.72,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY}else if(drag){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}};
- const pointerUp=()=>{drag=false;moveX=0;moveZ=0};
+ const pointerUp=e=>{const wasCamera=drag==='camera',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){inside=null;onCaption('Tu es ressorti du bâtiment.');return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside=nearby;onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Touche l’écran pour ressortir.')}};
  const keys=new Set();
  const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys.add(k);e.preventDefault()}};
  const keyUp=e=>keys.delete(e.key.toLowerCase());
@@ -105,8 +105,21 @@ function play(canvas,world,onCaption){
   ctx.strokeStyle='#65452F';ctx.lineWidth=4*k;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(top.x,top.y+4);ctx.stroke();
   ctx.fillStyle='#477B4E';ctx.beginPath();ctx.arc(top.x,top.y,r*1.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#65945D';ctx.beginPath();ctx.arc(top.x-r*.4,top.y-r*.4,r,0,Math.PI*2);ctx.fill();
  }
+ function drawInterior(){
+  const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#29364A');sky.addColorStop(1,'#101827');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  const cx=w*.5,cy=h*.52,roomW=Math.min(w*.72,420),roomH=Math.min(h*.58,330),left=cx-roomW/2,right=cx+roomW/2,top=cy-roomH/2,bottom=cy+roomH/2;
+  poly([{x:left,y:top},{x:cx,y:top+roomH*.22},{x:right,y:top},{x:right,y:bottom},{x:cx,y:bottom-roomH*.18},{x:left,y:bottom}],'#A9A18F','#4C4B4A');
+  poly([{x:left,y:top},{x:cx,y:top+roomH*.22},{x:cx,y:bottom-roomH*.18},{x:left,y:bottom}],'#D5C7A9','#514B43');
+  poly([{x:cx,y:top+roomH*.22},{x:right,y:top},{x:right,y:bottom},{x:cx,y:bottom-roomH*.18}],'#B8AE99','#514B43');
+  poly([{x:left,y:bottom},{x:cx,y:bottom-roomH*.18},{x:right,y:bottom},{x:cx,y:bottom+roomH*.34}],'#776C5C','#514B43');
+  const doorX=cx-roomW*.28,doorY=bottom-roomH*.34;ctx.fillStyle='#654633';ctx.fillRect(doorX,doorY,roomW*.14,roomH*.34);ctx.fillStyle='#E4B85D';ctx.beginPath();ctx.arc(doorX+roomW*.115,doorY+roomH*.18,3,0,Math.PI*2);ctx.fill();
+  const sx=cx+roomW*.18,sy=bottom-roomH*.2;ctx.strokeStyle='#6A4933';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(sx,sy);for(let i=0;i<6;i++)ctx.lineTo(sx+roomW*.065*i,sy-roomH*.045*i);ctx.stroke();
+  ctx.fillStyle='#FFFFFF';ctx.font='700 16px system-ui';ctx.textAlign='center';ctx.fillText(inside.type==='house'?'INTÉRIEUR DE LA MAISON':'INTÉRIEUR DE L’IMMEUBLE',cx,32);
+  ctx.font='13px system-ui';ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillText((inside.interior.rooms||[]).join(' • '),cx,h-34);ctx.fillText(inside.interior.stairs?'Escalier vers les étages • Touchez pour sortir':'Pièce principale • Touchez pour sortir',cx,h-14);
+ }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
+  if(inside){drawInterior();raf=root.requestAnimationFrame(frame);return}
   const forward=(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0)-moveZ;
   const sideways=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+moveX;
   cameraX+=((sideways*Math.cos(yaw))-(forward*Math.sin(yaw)))*.055;
@@ -134,6 +147,8 @@ function play(canvas,world,onCaption){
   ctx.fillStyle='#FFFFFF';ctx.font='700 14px system-ui';ctx.textAlign='left';ctx.fillText('IDÉE VISION • MONDE PROCÉDURAL',16,28);
   ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillText(world.title+' • '+world.elements.length+' éléments',16,48);
   ctx.fillText('Glisse : caméra • Pavé en bas à gauche : avancer • WASD : clavier',16,h-20);
+  const near=world.elements.find(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65);
+  if(near){ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(w*.5-116,h-92,232,34);ctx.fillStyle='#FFFFFF';ctx.textAlign='center';ctx.font='bold 13px system-ui';ctx.fillText('Touchez pour entrer',w*.5,h-70)}
   ctx.fillStyle='rgba(10,16,24,.5)';ctx.beginPath();ctx.arc(62,h-72,48,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(62,h-110);ctx.lineTo(62,h-34);ctx.moveTo(24,h-72);ctx.lineTo(100,h-72);ctx.stroke();ctx.fillStyle='#FFFFFF';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText('▲',62,h-92);ctx.fillText('▼',62,h-45);ctx.fillText('◀',42,h-68);ctx.fillText('▶',82,h-68);
   raf=root.requestAnimationFrame(frame);
  }
