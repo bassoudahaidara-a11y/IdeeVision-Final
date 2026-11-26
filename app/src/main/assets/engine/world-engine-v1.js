@@ -1078,7 +1078,7 @@ function analyzeGeometryTopology(mesh){
  return {valid:true,errors:[],edgeCount:edges.size,boundaryEdges:counts.filter(n=>n===1).length,manifoldEdges:counts.filter(n=>n===2).length,nonManifoldEdges:counts.filter(n=>n>2).length,connectedComponents:new Set(Array.from(used,i=>find(i))).size,duplicateFaces,isolatedVertices:mesh.vertices.length-used.size};
 }
 function optimizeGeometryMesh(mesh,options){
- const validation=validateGeometryMesh(mesh);if(!validation.valid)return {ok:false,mesh:null,error:'invalid-mesh',validation,stats:null};
+ const validation=validateGeometryMesh(mesh),structuralErrors=validation.errors.filter(error=>!error.startsWith('degenerate-face-'));if(structuralErrors.length)return {ok:false,mesh:null,error:'invalid-mesh',validation:{...validation,valid:false,errors:structuralErrors},stats:null};
  const o=options&&typeof options==='object'?options:{},epsilon=Math.max(0,Number(o.weldEpsilon===undefined?1e-7:o.weldEpsilon)||0),weld=o.weldVertices!==false,source=mesh.vertices,vertices=[],faces=[],faceSource=[],map=new Array(source.length);
  const keyFor=(v,i)=>{const uv=Array.isArray(mesh.uvs)&&mesh.uvs[i]?mesh.uvs[i].map(n=>Number(n).toFixed(8)).join(','):'';const q=epsilon>0?v.map(n=>Math.round(n/epsilon)).join(','):v.join(',');return q+'|'+uv;};
  const lookup=new Map();source.forEach((v,i)=>{const key=keyFor(v,i);let id=weld?lookup.get(key):undefined;if(id===undefined){id=vertices.length;vertices.push(v.slice(0,3));if(weld)lookup.set(key,id);}map[i]=id;});
