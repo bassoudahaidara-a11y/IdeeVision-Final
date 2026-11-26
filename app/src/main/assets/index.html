@@ -476,7 +476,7 @@ async function start(){
  const scientificContext = scientificAudit ? window.IdeeVisionScientific.toPromptContext(scientificAudit) : 'Contrôle scientifique indisponible.';
  window.lastScientificAudit = scientificAudit;
  const mathAudit = window.IdeeVisionMath ? window.IdeeVisionMath.buildAudit(idea) : null;
- const mathContext = mathAudit ? window.IdeeVisionMath.toPromptContext(mathAudit).join('\\n') : 'Moteur mathématique indisponible.';
+ const mathContext = mathAudit ? window.IdeeVisionMath.toPromptContext(mathAudit) : 'Moteur mathématique indisponible.';
  window.lastMathAudit = mathAudit;
  window.lastReasoningPlan = reasoningPlan;
  const referenceContext = contextMemory ? contextMemory.resolveReference(idea) : null;
