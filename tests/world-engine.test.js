@@ -633,5 +633,92 @@ test('les libellés tactiles suivent l’état de la porte et les possibilités'
  assert(opened.selectDoor==='SANS PORTE'&&!opened.selectDoorEnabled,'absence de porte non signalée');
 });
 
+
+test('les primitives géométriques produisent des maillages valides',()=>{
+ const box=World.createBoxGeometry(2,3,4),cylinder=World.createCylinderGeometry(1,2,12),sphere=World.createSphereGeometry(1,16,8);
+ for(const mesh of [box,cylinder,sphere]){
+  const result=World.validateGeometryMesh(mesh);
+  assert(result.valid&&result.vertexCount>=8&&result.faceCount>=6,'primitive invalide : '+mesh.primitive);
+  assert(mesh.vertices.every(v=>v.length===3&&v.every(Number.isFinite)),'coordonnée de sommet invalide');
+ }
+ assert(box.vertices.length===8&&box.faces.length===6,'boîte géométrique incorrecte');
+ assert(cylinder.faces.length===36,'cylindre mal segmenté');
+});
+test('la validation détecte les faces dégénérées et les indices hors limites',()=>{
+ const invalid={type:'mesh',vertices:[[0,0,0],[1,0,0],[2,0,0]],faces:[[0,1,2],[0,1,8],[0,0,2]]};
+ const result=World.validateGeometryMesh(invalid);
+ assert(!result.valid,'maillage invalide accepté');
+ assert(result.errors.some(e=>e.indexOf('degenerate-face')===0),'face dégénérée non détectée');
+ assert(result.errors.some(e=>e.indexOf('out-of-range-face')===0),'indice hors limites non détecté');
+ assert(result.errors.some(e=>e.indexOf('duplicate-index-face')===0),'indice dupliqué non détecté');
+});
+test('les transformations appliquent échelle, rotations et translation sans modifier la source',()=>{
+ const source=World.createBoxGeometry(2,2,2),copy=JSON.stringify(source);
+ const moved=World.transformGeometryMesh(source,{position:{x:5,y:2,z:-1},scale:{x:2,y:1,z:1}});
+ const metrics=World.measureGeometryMesh(moved);
+ assert(metrics.bounds.min[0]===3&&metrics.bounds.max[0]===7,'échelle ou translation X incorrecte');
+ assert(metrics.bounds.min[1]===1&&metrics.bounds.max[1]===3,'translation Y incorrecte');
+ assert(metrics.bounds.min[2]===-2&&metrics.bounds.max[2]===0,'translation Z incorrecte');
+ assert(JSON.stringify(source)===copy,'la transformation a modifié le maillage source');
+ const rotated=World.transformGeometryMesh(source,{rotation:{y:Math.PI/2}});
+ const rotatedBounds=World.measureGeometryMesh(rotated).bounds;
+ assert(Math.abs(rotatedBounds.size[0]-2)<1e-9&&Math.abs(rotatedBounds.size[2]-2)<1e-9,'rotation géométrique incorrecte');
+});
+test('la fusion des maillages recalcule les indices et conserve les matériaux',()=>{
+ const a=World.createBoxGeometry(1,1,1,'#111111'),b=World.transformGeometryMesh(World.createBoxGeometry(2,2,2,'#222222'),{position:{x:3}});
+ const merged=World.mergeGeometryMeshes([a,b]),validation=World.validateGeometryMesh(merged);
+ assert(validation.valid&&merged.vertices.length===16&&merged.faces.length===12,'fusion des géométries incorrecte');
+ assert(merged.faces.slice(6).every(face=>face.every(i=>i>=8)),'indices du second composant non décalés');
+ assert(merged.faceMaterials[0]==='#111111'&&merged.faceMaterials[6]==='#222222','matériaux perdus pendant la fusion');
+});
+test('les mesures calculent les dimensions, la surface, le volume et la fermeture',()=>{
+ const box=World.measureGeometryMesh(World.createBoxGeometry(2,3,4));
+ assert(box.valid&&box.isClosed,'boîte fermée non reconnue');
+ assert(box.bounds.size[0]===2&&box.bounds.size[1]===3&&box.bounds.size[2]===4,'dimensions incorrectes');
+ assert(Math.abs(box.surfaceArea-52)<1e-9,'surface de boîte incorrecte');
+ assert(Math.abs(box.volume-24)<1e-9,'volume de boîte incorrect');
+ const open=World.measureGeometryMesh({type:'mesh',vertices:[[0,0,0],[1,0,0],[0,1,0]],faces:[[0,1,2]]});
+ assert(!open.isClosed&&open.volume===null&&Math.abs(open.surfaceArea-.5)<1e-9,'surface ouverte mal mesurée');
+});
+test('un assemblage applique les transformations et valide chaque composant',()=>{
+ const model=World.assembleGeometryModel('Assemblage test',[
+  {id:'base',mesh:World.createBoxGeometry(2,.5,2),transform:{position:{y:.25}}},
+  {id:'poteau',mesh:World.createBoxGeometry(.3,2,.3),transform:{position:{x:.5,y:1.5}}}
+ ]);
+ assert(model.validation.valid&&model.validation.componentCount===2,'assemblage valide rejeté');
+ assert(model.components[0].id==='base'&&model.components[1].id==='poteau','identifiants de composants perdus');
+ assert(model.mesh.vertices.length===16&&model.mesh.faces.length===12,'maillage assemblé incomplet');
+ assert(model.metrics.bounds.max[1]===2.5,'position des composants incorrecte');
+});
+test('le générateur de bâtiment crée une structure multi-étages modulaire',()=>{
+ const building=World.createBuildingGeometry({name:'Immeuble scientifique',width:12,depth:9,floors:4,floorHeight:3.2});
+ assert(building.kind==='geometry-model'&&building.validation.valid,'bâtiment géométrique invalide');
+ assert(building.components.some(c=>c.id==='door-panel'),'porte géométrique absente');
+ assert(building.components.some(c=>c.id==='roof-slab'),'toiture absente');
+ assert(building.components.filter(c=>c.id.indexOf('floor-slab-')===0).length===4,'dalles des étages absentes');
+ assert(building.components.filter(c=>c.id.indexOf('front-wall-')===0).length>=5,'murs de façade insuffisants');
+ assert(building.mesh.vertices.length>100&&building.metrics.bounds.size[1]>12,'bâtiment trop incomplet');
+});
+test('le générateur de bâtiment borne les paramètres extrêmes',()=>{
+ const small=World.createBuildingGeometry({width:-10,depth:0,floors:0,floorHeight:1});
+ const large=World.createBuildingGeometry({width:500,depth:500,floors:99,floorHeight:99});
+ assert(small.validation.valid&&large.validation.valid,'dimensions bornées invalides');
+ assert(small.metrics.bounds.size[0]>=3&&small.components.filter(c=>c.id.indexOf('floor-slab-')===0).length===2,'bornes minimales incorrectes');
+ assert(large.components.filter(c=>c.id.indexOf('floor-slab-')===0).length===20,'borne maximale des étages incorrecte');
+});
+test('les meubles 3D sont assemblés en composants réutilisables',()=>{
+ for(const type of ['table','chair','bed','cabinet','sofa']){
+  const model=World.createFurnitureGeometry(type);
+  assert(model.validation.valid&&model.components.length>=3,'meuble invalide : '+type);
+  assert(model.metrics.bounds.size.every(v=>v>0),'dimensions du meuble incorrectes : '+type);
+ }
+ const unknown=World.createFurnitureGeometry('inconnu');
+ assert(!unknown.validation.valid&&unknown.validation.errors.includes('unsupported-furniture-type'),'type de meuble inconnu accepté');
+});
+test('les composants géométriques restent isolés entre deux créations',()=>{
+ const first=World.createFurnitureGeometry('table'),second=World.createFurnitureGeometry('table');
+ first.mesh.vertices[0][0]=999;
+ assert(second.mesh.vertices[0][0]!==999,'les modèles partagent leurs sommets');
+});
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
