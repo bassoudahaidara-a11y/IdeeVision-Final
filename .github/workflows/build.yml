@@ -20,3 +20,5 @@ jobs:
         run: node --test tests/logical-reasoning-v1.test.js
       - name: Tester la base de connaissances locale
         run: node --test tests/knowledge-base-v1.test.js
+      - name: Tester le planificateur multi-moteurs
+        run: node --test tests/multi-engine-orchestrator-v1.test.js
