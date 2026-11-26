@@ -473,6 +473,157 @@ function resolveInteriorMovement(x,z,dx,dz,roomName,doorOpen,doorSide){
  if(blocked(nx,nz))nz=z;
  return {x:nx,z:nz,blockedX:nx!==x+dx,blockedZ:nz!==z+dz,nearDoor:isNearInteriorDoor(nx,nz,side)};
 }
+
+function createBoxGeometry(width,height,depth,material){
+ const w=Math.max(.001,Math.abs(Number(width)||1))/2,h=Math.max(.001,Math.abs(Number(height)||1))/2,d=Math.max(.001,Math.abs(Number(depth)||1))/2;
+ return {type:'mesh',primitive:'box',vertices:[[-w,-h,-d],[w,-h,-d],[w,-h,d],[-w,-h,d],[-w,h,-d],[w,h,-d],[w,h,d],[-w,h,d]],faces:[[0,3,2,1],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]],material:material||'#AAB6C4'};
+}
+function createCylinderGeometry(radius,height,segments,material){
+ const r=Math.max(.001,Math.abs(Number(radius)||.5)),h=Math.max(.001,Math.abs(Number(height)||1)),count=Math.max(3,Math.min(128,Math.floor(Number(segments)||16))),vertices=[],faces=[];
+ for(let y of [-h/2,h/2])for(let i=0;i<count;i++){const a=2*Math.PI*i/count;vertices.push([Math.cos(a)*r,y,Math.sin(a)*r]);}
+ const bottom=count*2,top=bottom+1;vertices.push([0,-h/2,0],[0,h/2,0]);
+ for(let i=0;i<count;i++){const next=(i+1)%count;faces.push([i,next,count+next,count+i]);faces.push([bottom,next,i]);faces.push([top,count+i,count+next]);}
+ return {type:'mesh',primitive:'cylinder',vertices,faces,material:material||'#AAB6C4'};
+}
+function createSphereGeometry(radius,segments,rings,material){
+ const r=Math.max(.001,Math.abs(Number(radius)||.5)),s=Math.max(3,Math.min(64,Math.floor(Number(segments)||16))),lat=Math.max(2,Math.min(32,Math.floor(Number(rings)||10))),vertices=[[0,r,0]],faces=[];
+ for(let ring=1;ring<lat;ring++){const phi=Math.PI*ring/lat;for(let i=0;i<s;i++){const theta=2*Math.PI*i/s;vertices.push([r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta)]);}}
+ const bottom=vertices.length;vertices.push([0,-r,0]);
+ for(let i=0;i<s;i++)faces.push([0,1+i,1+(i+1)%s]);
+ for(let ring=0;ring<lat-2;ring++)for(let i=0;i<s;i++){const a=1+ring*s+i,b=1+ring*s+(i+1)%s,c=b+s,d=a+s;faces.push([a,d,c,b]);}
+ const last=1+(lat-2)*s;for(let i=0;i<s;i++)faces.push([last+i,bottom,last+(i+1)%s]);
+ return {type:'mesh',primitive:'sphere',vertices,faces,material:material||'#AAB6C4'};
+}
+function transformGeometryMesh(mesh,transform){
+ if(!mesh||!Array.isArray(mesh.vertices))return null;
+ const t=transform&&typeof transform==='object'?transform:{},position=t.position||{},rotation=t.rotation||{},scale=t.scale||{};
+ const px=Number(position.x)||0,py=Number(position.y)||0,pz=Number(position.z)||0;
+ const rx=Number(rotation.x)||0,ry=Number(rotation.y)||0,rz=Number(rotation.z)||0;
+ const sx=scale.x===undefined?1:Number(scale.x),sy=scale.y===undefined?1:Number(scale.y),sz=scale.z===undefined?1:Number(scale.z);
+ const vertices=mesh.vertices.map(v=>{
+  let x=v[0]*sx,y=v[1]*sy,z=v[2]*sz;
+  let qy=y*Math.cos(rx)-z*Math.sin(rx),qz=y*Math.sin(rx)+z*Math.cos(rx);y=qy;z=qz;
+  let qx=x*Math.cos(ry)+z*Math.sin(ry);qz=-x*Math.sin(ry)+z*Math.cos(ry);x=qx;z=qz;
+  qx=x*Math.cos(rz)-y*Math.sin(rz);qy=x*Math.sin(rz)+y*Math.cos(rz);x=qx;y=qy;
+  return [x+px,y+py,z+pz];
+ });
+ return Object.assign({},mesh,{vertices,faces:mesh.faces.map(face=>face.slice())});
+}
+function mergeGeometryMeshes(meshes){
+ const list=Array.isArray(meshes)?meshes:[],vertices=[],faces=[],materials=[];
+ list.forEach((mesh,index)=>{
+  if(!mesh||!Array.isArray(mesh.vertices)||!Array.isArray(mesh.faces))return;
+  const offset=vertices.length;mesh.vertices.forEach(v=>vertices.push(v.slice()));
+  mesh.faces.forEach(face=>{faces.push(face.map(i=>i+offset));materials.push(mesh.material||'#AAB6C4');});
+ });
+ return {type:'mesh',primitive:'merged',vertices,faces,faceMaterials:materials,material:'#AAB6C4'};
+}
+function validateGeometryMesh(mesh){
+ const errors=[],vertices=mesh&&mesh.vertices,faces=mesh&&mesh.faces;
+ if(!mesh||mesh.type!=='mesh')errors.push('type-mesh-required');
+ if(!Array.isArray(vertices)||vertices.length<3)errors.push('vertices-required');
+ if(!Array.isArray(faces)||faces.length<1)errors.push('faces-required');
+ if(!Array.isArray(vertices)||!Array.isArray(faces))return {valid:false,errors,vertexCount:0,faceCount:0};
+ vertices.forEach((v,i)=>{if(!Array.isArray(v)||v.length<3||!v.slice(0,3).every(Number.isFinite))errors.push('invalid-vertex-'+i);});
+ faces.forEach((face,i)=>{
+  if(!Array.isArray(face)||face.length<3){errors.push('invalid-face-'+i);return;}
+  if(new Set(face).size!==face.length)errors.push('duplicate-index-face-'+i);
+  if(face.some(index=>!Number.isInteger(index)||index<0||index>=vertices.length))errors.push('out-of-range-face-'+i);
+  if(face.every(index=>Number.isInteger(index)&&index>=0&&index<vertices.length)&&face.length>=3){
+   const a=vertices[face[0]],b=vertices[face[1]],c=vertices[face[2]];
+   if([a,b,c].every(v=>Array.isArray(v)&&v.slice(0,3).every(Number.isFinite))){
+    const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+    const cross=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]];
+    if(Math.hypot(...cross)<1e-10)errors.push('degenerate-face-'+i);
+   }
+  }
+ });
+ return {valid:errors.length===0,errors,vertexCount:vertices.length,faceCount:faces.length};
+}
+function measureGeometryMesh(mesh){
+ const validation=validateGeometryMesh(mesh),vertices=mesh&&Array.isArray(mesh.vertices)?mesh.vertices:[],faces=mesh&&Array.isArray(mesh.faces)?mesh.faces:[];
+ if(!vertices.length)return {valid:false,bounds:null,surfaceArea:0,signedVolume:0,volume:0,isClosed:false,validation};
+ const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+ vertices.forEach(v=>{for(let i=0;i<3;i++){min[i]=Math.min(min[i],v[i]);max[i]=Math.max(max[i],v[i]);}});
+ let area=0,volume=0;const edges=new Map();
+ faces.forEach(face=>{
+  if(!Array.isArray(face)||face.length<3||face.some(i=>!vertices[i]))return;
+  for(let i=1;i<face.length-1;i++){
+   const a=vertices[face[0]],b=vertices[face[i]],c=vertices[face[i+1]];
+   const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+   const cross=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]];
+   area+=Math.hypot(...cross)/2;
+   volume+=(a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0]))/6;
+  }
+  for(let i=0;i<face.length;i++){const a=face[i],b=face[(i+1)%face.length],key=a<b?a+':'+b:b+':'+a;edges.set(key,(edges.get(key)||0)+1);}
+ });
+ const isClosed=edges.size>0&&Array.from(edges.values()).every(count=>count===2);
+ return {valid:validation.valid,bounds:{min,max,size:max.map((v,i)=>v-min[i]),center:max.map((v,i)=>(v+min[i])/2)},surfaceArea:area,signedVolume:volume,volume:isClosed?Math.abs(volume):null,isClosed,validation};
+}
+function assembleGeometryModel(name,parts){
+ const components=(Array.isArray(parts)?parts:[]).map((part,index)=>{
+  const source=part&&part.mesh,mesh=transformGeometryMesh(source,part&&part.transform);
+  return {id:String(part&&part.id||'component-'+index),mesh,validation:validateGeometryMesh(mesh)};
+ });
+ const mesh=mergeGeometryMeshes(components.filter(c=>c.mesh).map(c=>c.mesh)),metrics=measureGeometryMesh(mesh);
+ const errors=components.flatMap(c=>c.validation.errors.map(error=>c.id+':'+error));
+ return {kind:'geometry-model',name:String(name||'Modèle 3D'),components,mesh,metrics,validation:{valid:errors.length===0&&components.length>0,errors,componentCount:components.length}};
+}
+function createBuildingGeometry(options){
+ const o=options&&typeof options==='object'?options:{},width=Math.max(3,Math.min(80,Number(o.width)||10)),depth=Math.max(3,Math.min(80,Number(o.depth)||8)),floors=Math.max(1,Math.min(20,Math.floor(Number(o.floors)||2))),floorHeight=Math.max(2.2,Math.min(6,Number(o.floorHeight)||3)),wall=Math.max(.12,Math.min(.5,Number(o.wallThickness)||.22)),slab=.18,parts=[];
+ const add=(id,w,h,d,x,y,z,material)=>parts.push({id,mesh:createBoxGeometry(w,h,d,material),transform:{position:{x,y,z}}});
+ for(let level=0;level<floors;level++){
+  const base=level*floorHeight;
+  add('floor-slab-'+level,width,slab,depth,0,base+slab/2,0,'#8B8174');
+  add('back-wall-'+level,width,floorHeight,wall,0,base+floorHeight/2,depth/2-wall/2,'#D5D0C7');
+  add('left-wall-'+level,wall,floorHeight,depth-2*wall,-width/2+wall/2,base+floorHeight/2,0,'#C8C2B8');
+  add('right-wall-'+level,wall,floorHeight,depth-2*wall,width/2-wall/2,base+floorHeight/2,0,'#C8C2B8');
+  const frontZ=-depth/2+wall/2;
+  if(level===0){
+   const doorWidth=Math.min(1.5,width*.22),doorHeight=Math.min(2.15,floorHeight*.78),sideWidth=(width-doorWidth)/2;
+   add('front-wall-left-'+level,sideWidth,floorHeight,wall,-(doorWidth+sideWidth)/2,base+floorHeight/2,frontZ,'#D5D0C7');
+   add('front-wall-right-'+level,sideWidth,floorHeight,wall,(doorWidth+sideWidth)/2,base+floorHeight/2,frontZ,'#D5D0C7');
+   add('door-lintel-'+level,doorWidth,floorHeight-doorHeight,wall,0,base+doorHeight+(floorHeight-doorHeight)/2,frontZ,'#D5D0C7');
+   add('door-panel',doorWidth*.9,doorHeight*.96,.06,0,base+doorHeight/2,frontZ-wall/2,'#79563D');
+  }else add('front-wall-'+level,width,floorHeight,wall,0,base+floorHeight/2,frontZ,'#D5D0C7');
+  const windowY=base+floorHeight*.58,windowW=Math.min(1.25,width*.18),windowH=Math.min(1.05,floorHeight*.38);
+  [-width*.27,width*.27].forEach((x,index)=>{
+   add('window-glass-'+level+'-'+index,windowW,windowH,.045,x,windowY,frontZ-wall*.35,'#78B9D7');
+   add('window-frame-top-'+level+'-'+index,windowW+.12,.07,.08,x,windowY+windowH/2,frontZ-wall*.3,'#F0E8D9');
+   add('window-frame-bottom-'+level+'-'+index,windowW+.12,.07,.08,x,windowY-windowH/2,frontZ-wall*.3,'#F0E8D9');
+   add('window-frame-left-'+level+'-'+index,.07,windowH,.08,x-windowW/2,windowY,frontZ-wall*.3,'#F0E8D9');
+   add('window-frame-right-'+level+'-'+index,.07,windowH,.08,x+windowW/2,windowY,frontZ-wall*.3,'#F0E8D9');
+  });
+ }
+ add('roof-slab',width+wall,.22,depth+wall,0,floors*floorHeight+.11,0,'#68798A');
+ return assembleGeometryModel(o.name||'Bâtiment modulaire',parts);
+}
+function createFurnitureGeometry(type,options){
+ const kind=String(type||'table').toLowerCase(),o=options&&typeof options==='object'?options:{},w=Math.max(.4,Math.min(5,Number(o.width)||1.4)),h=Math.max(.35,Math.min(3,Number(o.height)||.8)),d=Math.max(.4,Math.min(5,Number(o.depth)||.8)),parts=[];
+ const add=(id,bw,bh,bd,x,y,z,material)=>parts.push({id,mesh:createBoxGeometry(bw,bh,bd,material),transform:{position:{x,y,z}}});
+ if(kind==='table'){
+  add('table-top',w,.1,d,0,h-.05,0,'#9B7654');
+  for(const x of [-1,1])for(const z of [-1,1])add('table-leg-'+x+'-'+z,.09,h-.1,.09,x*(w/2-.1),(h-.1)/2,z*(d/2-.1),'#76543A');
+ }else if(kind==='chair'){
+  add('seat',w,.12,d,0,h*.48,0,'#9B7654');
+  for(const x of [-1,1])for(const z of [-1,1])add('chair-leg-'+x+'-'+z,.07,h*.48,.07,x*(w/2-.06),h*.24,z*(d/2-.06),'#76543A');
+  add('backrest',w,.12,.1,0,h*.78,d/2-.05,'#9B7654');
+ }else if(kind==='bed'){
+  add('bed-frame',w,.22,d,0,.11,0,'#76543A');
+  add('mattress',w*.96,.2,d*.94,0,.32,0,'#D5DCE5');
+  add('headboard',w,.85,.12,0,.52,d/2-.06,'#79563D');
+ }else if(kind==='cabinet'){
+  add('cabinet-body',w,h,d,0,h/2,0,'#8B654A');
+  add('cabinet-door',w*.86,h*.82,.045,0,h/2,-d/2-.03,'#B18A66');
+  add('cabinet-handle',.045,.16,.06,w*.28,h/2,-d/2-.07,'#D7BD85');
+ }else if(kind==='sofa'){
+  add('sofa-base',w,h*.35,d,0,h*.18,0,'#6D849B');
+  add('sofa-back',w,h*.55,.18,0,h*.58,d/2-.09,'#7896B0');
+  for(const x of [-1,1])add('sofa-arm-'+x,.18,h*.55,d,x*(w/2-.09),h*.45,0,'#607B94');
+ }else return {kind:'geometry-model',name:'Meuble inconnu',components:[],mesh:mergeGeometryMeshes([]),metrics:measureGeometryMesh(null),validation:{valid:false,errors:['unsupported-furniture-type'],componentCount:0}};
+ return assembleGeometryModel(String(o.name||kind),parts);
+}
+
 function play(canvas,world,onCaption){
  const ctx=canvas.getContext('2d');let raf=0,stopped=false,yaw=.65,zoom=1,drag=false,lastX=0,lastY=0,pitch=.35,w=0,h=0,cameraX=0,cameraZ=0,moveX=0,moveZ=0,inside=null,pointerStart=null;
  const resize=()=>{const d=Math.min(root.devicePixelRatio||1,2);canvas.width=canvas.clientWidth*d;canvas.height=canvas.clientHeight*d;ctx.setTransform(d,0,0,d,0,0)};
@@ -684,5 +835,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
