@@ -163,6 +163,7 @@ function play(canvas,world,onCaption){
   const cx=w*.5,top=h*.19,bottom=h*.82,half=Math.min(w*.43,250),floorY=bottom;
   const speed=.018;inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
   const roomNames=inside.building.interior.rooms||['séjour'],roomName=roomNames[inside.roomIndex]||roomNames[0];
+  const roomModel=getInteriorRoomModel(roomName);
   const dx=(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
   const dz=(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
   const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen);inside.x=moved.x;inside.z=moved.z;
@@ -184,7 +185,6 @@ function play(canvas,world,onCaption){
   // Fenêtre et mobilier schématique en volume.
   ctx.fillStyle='#75B6D5';ctx.fillRect(left+half*.18,back+45,half*.27,doorH*.35);ctx.strokeStyle='#E5E9E7';ctx.lineWidth=4;ctx.strokeRect(left+half*.18,back+45,half*.27,doorH*.35);
   // Meubles en volumes bas-poly : dessus, face avant et côté.
-  const roomModel=getInteriorRoomModel(roomName);
   const floorDepth=(floorY-back)*.52;
   roomModel.furniture.forEach(item=>{
    const sx=cx+item.left*half*.72,ex=cx+item.right*half*.72;
