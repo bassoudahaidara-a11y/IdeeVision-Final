@@ -310,3 +310,63 @@ Le moteur est chargé avant la génération. Il repère certains sujets mathéma
 Le parseur accepte uniquement les opérations arithmétiques élémentaires, les parenthèses et la variable x. Il ne prend pas encore en charge les fonctions trigonométriques, logarithmiques, exponentielles, les matrices générales, les nombres complexes, ni les intégrales définies. La résolution exacte est limitée aux équations polynomiales de degrés 1 et 2 et aux systèmes linéaires 2×2. Les primitives sont calculées pour les polynômes seulement. Ce moteur n'est pas un logiciel de calcul formel complet.
 
 Aucun APK n'est compilé à cette étape ; les vérifications restent automatisées sur GitHub.
+
+
+## Groupe 1.8 — Intelligence géométrique et géométrie analytique (46 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Valider les coordonnées finies | Développé |
+| 2 | Valider les listes de points et leurs limites | Développé |
+| 3 | Calculer la distance euclidienne | Développé |
+| 4 | Calculer le milieu d'un segment | Développé |
+| 5 | Construire un vecteur entre deux points | Développé |
+| 6 | Calculer produit scalaire et produit vectoriel | Développé |
+| 7 | Calculer la norme d'un vecteur | Développé |
+| 8 | Déterminer une pente et reconnaître les droites verticales | Développé |
+| 9 | Construire l'équation normalisée d'une droite | Développé |
+| 10 | Calculer l'intersection de deux droites | Développé |
+| 11 | Distinguer droites parallèles ou confondues | Développé |
+| 12 | Projeter un point sur une droite | Développé |
+| 13 | Calculer la distance point-droite | Développé |
+| 14 | Calculer l'aire d'un cercle | Développé |
+| 15 | Calculer la circonférence d'un cercle | Développé |
+| 16 | Déterminer la position d'un point par rapport à un cercle | Développé |
+| 17 | Calculer l'aire d'un triangle par coordonnées | Développé |
+| 18 | Calculer aire et périmètre par la formule de Héron | Développé |
+| 19 | Refuser les triangles impossibles | Développé |
+| 20 | Classifier un triangle par ses côtés et ses angles | Développé |
+| 21 | Calculer un angle par produit scalaire | Développé, radians |
+| 22 | Convertir degrés et radians | Développé |
+| 23 | Calculer l'aire d'un polygone (formule du lacet) | Développé |
+| 24 | Calculer l'aire orientée | Développé |
+| 25 | Calculer le périmètre d'un polygone | Développé |
+| 26 | Calculer le centroïde d'un polygone | Développé |
+| 27 | Tester si un point est dans un polygone | Développé |
+| 28 | Détecter un point sur la frontière d'un polygone | Développé |
+| 29 | Détecter l'intersection de segments | Développé |
+| 30 | Reconnaître des segments colinéaires | Développé |
+| 31 | Calculer les intersections cercle-droite | Développé |
+| 32 | Détecter la tangence cercle-droite | Développé |
+| 33 | Calculer les intersections de deux cercles | Développé |
+| 34 | Détecter la tangence de deux cercles | Développé |
+| 35 | Effectuer une translation | Développé |
+| 36 | Effectuer une rotation autour d'un centre | Développé, angle en radians |
+| 37 | Effectuer une homothétie | Développé |
+| 38 | Effectuer une symétrie axiale | Développé |
+| 39 | Calculer le centre du cercle circonscrit | Développé |
+| 40 | Détecter trois points alignés pour le cercle circonscrit | Développé |
+| 41 | Calculer une boîte englobante | Développé |
+| 42 | Rejeter les coordonnées non finies | Développé |
+| 43 | Rejeter les rayons négatifs | Développé |
+| 44 | Détecter les sujets géométriques dans une demande | Développé |
+| 45 | Générer des consignes de vérification géométrique | Développé |
+| 46 | Ajouter 46 tests automatisés | Développé |
+
+### Intégration et limites du groupe 1.8
+
+Le moteur est chargé dans l'application et son audit ajoute des consignes géométriques au contexte de génération. Les fonctions de calcul sont accessibles sous `window.IdeeVisionGeometry`.
+
+Cette version traite la géométrie plane en 2D. Elle ne crée pas encore de figures interactives à l'écran et ne constitue pas un moteur de géométrie 3D. Les cas de segments colinéaires sont signalés comme tels, sans calculer leur éventuelle zone de recouvrement. Les rotations utilisent les radians. Les calculs numériques utilisent une tolérance pour les approximations.
+
+Aucun APK n'est compilé à ce groupe ; le workflow exécute uniquement les contrôles et tests.
