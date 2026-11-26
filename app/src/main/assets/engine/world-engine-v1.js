@@ -75,7 +75,7 @@ function getNextConnectedRoomIndex(rooms,currentIndex,selectedOptionIndex,connec
  const selected=Math.max(0,Math.min(options.length-1,Number(selectedOptionIndex)||0));
  return options[selected].targetIndex;
 }
-function getInteriorRoomModel(roomName){
+function getInteriorRoomModel(roomName,doorways){
  const name=String(roomName||'séjour').toLowerCase();
  const furniture=/cuisine/.test(name)
   ?[{id:'plan-de-travail',left:.12,right:.72,top:-.22,bottom:.14,height:.34,color:'#927052'},{id:'ilot',left:-.58,right:-.22,top:.25,bottom:.58,height:.28,color:'#B5A58C'}]
@@ -93,6 +93,7 @@ function getInteriorRoomModel(roomName){
    {side:'back-lintel',from:-.22,to:.22,height:.28}
   ],
   doorway:{side:'back',left:-.22,right:.22,width:.44,headerHeight:.28,wallOpening:true},
+  doorways:Array.isArray(doorways)?doorways.map(d=>({doorId:d.doorId,target:d.target,side:d.side,width:d.width})):[],
   furniture
  };
 }
@@ -119,7 +120,7 @@ function play(canvas,world,onCaption){
  resize();root.addEventListener('resize',resize);
  const pointerDown=e=>{const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;pointerStart={x:e.clientX,y:e.clientY};if(inside){drag=false;if(x<118&&y>h-132){moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));drag='interior-pad'}return}if(x<118&&y>h-132){drag=true;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else{drag=true;moveX=0;moveZ=0;lastX=e.clientX;lastY=e.clientY;drag='camera'}if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId)};
  const pointerMove=e=>{if(drag==='camera'){yaw+=(e.clientX-lastX)*.008;pitch=Math.max(.12,Math.min(.72,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY}else if(drag==='interior-pad'){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else if(drag){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}};
- const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.72&&inside.building.interior.stairs){inside.level=(inside.level+1)%inside.building.interior.levels;inside.roomIndex=0;onCaption('Tu es maintenant au niveau '+(inside.level+1)+'.')}else if(y>h*.78&&Math.abs(inside.x)<.35&&inside.z<-.45){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7&&x>w*.68){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){inside.selectedDoorIndex=((inside.selectedDoorIndex||0)+1)%options.length;const choice=options[inside.selectedDoorIndex];onCaption('Porte choisie : '+choice.target+' ('+choice.side+').')}else onCaption('Aucune autre pièce reliée.')}else if(inside.doorOpen>.7){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){const selected=Math.min(inside.selectedDoorIndex||0,options.length-1),choice=options[selected];inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex,selected,inside.building.interior.connections);inside.selectedDoorIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu passes par la porte vers : '+choice.target+'.')}else onCaption('Cette pièce ne possède pas de porte reliée.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,selectedDoorIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
+ const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.9&&inside.building.interior.stairs){inside.level=(inside.level+1)%inside.building.interior.levels;inside.roomIndex=0;onCaption('Tu es maintenant au niveau '+(inside.level+1)+'.')}else if(y>h*.78&&Math.abs(inside.x)<.35&&inside.z<-.45){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7&&x>w*.68){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){inside.selectedDoorIndex=((inside.selectedDoorIndex||0)+1)%options.length;const choice=options[inside.selectedDoorIndex];onCaption('Porte choisie : '+choice.target+' ('+choice.side+').')}else onCaption('Aucune autre pièce reliée.')}else if(inside.doorOpen>.7){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){const selected=Math.min(inside.selectedDoorIndex||0,options.length-1),choice=options[selected];inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex,selected,inside.building.interior.connections);inside.selectedDoorIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu passes par la porte vers : '+choice.target+'.')}else onCaption('Cette pièce ne possède pas de porte reliée.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,selectedDoorIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
  const keys=new Set();
  const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(k)){keys.add(k);if(k==='e'&&inside&&!e.repeat){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}e.preventDefault()}};
  const keyUp=e=>keys.delete(e.key.toLowerCase());
@@ -193,7 +194,9 @@ function play(canvas,world,onCaption){
   const cx=w*.5,top=h*.19,bottom=h*.82,half=Math.min(w*.43,250),floorY=bottom;
   const speed=.018;inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
   const roomNames=inside.building.interior.rooms||['séjour'],roomName=roomNames[inside.roomIndex]||roomNames[0];
-  const roomModel=getInteriorRoomModel(roomName);
+  const doorOptions=getConnectedRoomOptions(roomNames,inside.roomIndex,inside.building.interior.connections);
+  const selectedDoor=doorOptions[Math.min(inside.selectedDoorIndex||0,Math.max(0,doorOptions.length-1))];
+  const roomModel=getInteriorRoomModel(roomName,doorOptions);
   const dx=(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
   const dz=(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
   const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen);inside.x=moved.x;inside.z=moved.z;
@@ -212,6 +215,18 @@ function play(canvas,world,onCaption){
   // Porte en perspective, placée dans l'ouverture et animée sur ses gonds.
   ctx.fillStyle='#49382D';ctx.fillRect(doorX,doorY,doorW,doorH);
   ctx.save();ctx.translate(doorX+doorW,doorY+doorH*.5);ctx.rotate(-inside.doorOpen*.95);ctx.fillStyle='#95613F';ctx.fillRect(-doorW,-doorH*.5,doorW,doorH);ctx.restore();
+  // Une porte secondaire est dessinée sur le mur latéral choisi.
+  if(selectedDoor&&selectedDoor.side==='left'){
+   const sx=left+half*.20,sw=doorW*.72,sy=floorY-doorH*.82,sh=doorH*.82;
+   ctx.fillStyle='#5B4939';ctx.fillRect(sx-4,sy-4,sw+8,sh+4);
+   ctx.fillStyle='#95613F';ctx.fillRect(sx,sy,sw,sh);
+   ctx.strokeStyle='#D5B58A';ctx.lineWidth=2;ctx.strokeRect(sx,sy,sw,sh);
+  }else if(selectedDoor&&selectedDoor.side==='right'){
+   const sx=right-half*.43,sw=doorW*.72,sy=floorY-doorH*.82,sh=doorH*.82;
+   ctx.fillStyle='#51483E';ctx.fillRect(sx-4,sy-4,sw+8,sh+4);
+   ctx.fillStyle='#95613F';ctx.fillRect(sx,sy,sw,sh);
+   ctx.strokeStyle='#D5B58A';ctx.lineWidth=2;ctx.strokeRect(sx,sy,sw,sh);
+  }
   // Fenêtre et mobilier schématique en volume.
   ctx.fillStyle='#75B6D5';ctx.fillRect(left+half*.18,back+45,half*.27,doorH*.35);ctx.strokeStyle='#E5E9E7';ctx.lineWidth=4;ctx.strokeRect(left+half*.18,back+45,half*.27,doorH*.35);
   // Meubles en volumes bas-poly : dessus, face avant et côté.
@@ -227,8 +242,6 @@ function play(canvas,world,onCaption){
   ctx.fillStyle='#FFFFFF';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.fillText(roomName.toLocaleUpperCase('fr'),cx,34);
   ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • Étage '+(inside.level+1)+'/'+inside.building.interior.levels,cx,54);
   ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(8,8,Math.min(w-16,300),38);ctx.fillStyle='#FFF';ctx.textAlign='left';ctx.font='12px system-ui';ctx.fillText('Gauche : ouvrir • Droite : choisir une porte',18,32);
-  const doorOptions=getConnectedRoomOptions(roomNames,inside.roomIndex,inside.building.interior.connections);
-  const selectedDoor=doorOptions[Math.min(inside.selectedDoorIndex||0,Math.max(0,doorOptions.length-1))];
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   ctx.fillText(selectedDoor?'Porte : '+selectedDoor.target+' • mur '+selectedDoor.side:'Aucune porte reliée',cx,h-30);
   ctx.fillText('Ouvre la porte, choisis à droite, puis touche le centre',cx,h-12);
