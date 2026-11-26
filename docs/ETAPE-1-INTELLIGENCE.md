@@ -370,3 +370,69 @@ Le moteur est chargé dans l'application et son audit ajoute des consignes géom
 Cette version traite la géométrie plane en 2D. Elle ne crée pas encore de figures interactives à l'écran et ne constitue pas un moteur de géométrie 3D. Les cas de segments colinéaires sont signalés comme tels, sans calculer leur éventuelle zone de recouvrement. Les rotations utilisent les radians. Les calculs numériques utilisent une tolérance pour les approximations.
 
 Aucun APK n'est compilé à ce groupe ; le workflow exécute uniquement les contrôles et tests.
+
+
+## Groupe 1.9 — Physique avancée et mécanique (50 tâches)
+
+Le moteur `physics-mechanics-engine-v1.js` est chargé dans l'application. Son audit ajoute un contexte de vérification au prompt de génération.
+
+| # | Fonctionnalité | État |
+|---:|---|---|
+| 1 | Addition de vecteurs | Développé |
+| 2 | Soustraction de vecteurs | Développé |
+| 3 | Norme d'un vecteur 3D | Développé |
+| 4 | Produit scalaire | Développé |
+| 5 | Multiplication d'un vecteur par un scalaire | Développé |
+| 6 | Accélération résultant de F = ma | Développé |
+| 7 | Force résultante par la deuxième loi de Newton | Développé |
+| 8 | Poids avec gravité standard | Développé |
+| 9 | Mouvement rectiligne à accélération constante | Développé |
+| 10 | Vitesse moyenne | Développé |
+| 11 | Accélération moyenne | Développé |
+| 12 | Mouvement circulaire uniforme | Développé |
+| 13 | Force centripète | Développé |
+| 14 | Énergie cinétique | Développé |
+| 15 | Énergie potentielle de pesanteur | Développé |
+| 16 | Énergie mécanique | Développé |
+| 17 | Travail d'une force et angle | Développé |
+| 18 | Travail nul pour une force perpendiculaire | Développé |
+| 19 | Puissance mécanique moyenne | Développé |
+| 20 | Rendement énergétique en pourcentage | Développé |
+| 21 | Quantité de mouvement vectorielle | Développé |
+| 22 | Impulsion d'une force | Développé |
+| 23 | Variation de quantité de mouvement | Développé |
+| 24 | Loi de gravitation universelle | Développé |
+| 25 | Force de rappel d'un ressort (Hooke) | Développé |
+| 26 | Énergie potentielle élastique | Développé |
+| 27 | Force de frottement simple | Développé |
+| 28 | Décomposition du poids sur un plan incliné | Développé |
+| 29 | Moment d'une force (couple) | Développé |
+| 30 | Énergie cinétique de rotation | Développé |
+| 31 | Moment cinétique | Développé |
+| 32 | Masse volumique | Développé |
+| 33 | Pression mécanique | Développé |
+| 34 | Pression hydrostatique | Développé |
+| 35 | Poussée d'Archimède | Développé |
+| 36 | Période d'un oscillateur masse-ressort | Développé |
+| 37 | Période d'un pendule simple | Développé |
+| 38 | Fréquence d'un oscillateur masse-ressort | Développé |
+| 39 | Collision parfaitement inélastique en 1D | Développé |
+| 40 | Conversion d'unités de distance, temps, masse, vitesse, force, énergie, puissance et pression | Développé |
+| 41 | Conversion km/h vers m/s | Développé |
+| 42 | Refus des conversions entre grandeurs incompatibles | Développé |
+| 43 | Validation de masse non nulle dans F/m | Développé |
+| 44 | Validation des durées pour la puissance | Développé |
+| 45 | Validation de distance non nulle pour la gravitation | Développé |
+| 46 | Validation de volume non nul pour la masse volumique | Développé |
+| 47 | Détection des sujets physiques dans la demande | Développé |
+| 48 | Consignes sur unités SI, hypothèses et référentiels | Développé |
+| 49 | Diagnostics du moteur hors ligne | Développé |
+| 50 | Tests automatisés du moteur | 50 tests ajoutés |
+
+### Formules et limites du groupe 1.9
+
+Le moteur couvre notamment (F=ma), (P=mg), (E_c=\frac12mv^2), (E_p=mgh), (W=Fd\cos(\theta)), (P=W/\Delta t), la gravitation universelle, la loi de Hooke et la poussée d'Archimède.
+
+Les calculs utilisent les unités SI. Le mouvement cinématique suppose une accélération constante. Le pendule simple utilise l'approximation des petites oscillations. Le modèle de collision suppose une collision parfaitement inélastique sur une seule dimension. Les modèles ne remplacent pas une simulation numérique complète ni une validation expérimentale.
+
+Le moteur fournit des fonctions de calcul et des consignes au générateur ; il ne simule pas encore visuellement les mécanismes en temps réel. Aucun APK n'est compilé à ce groupe : le workflow GitHub exécute seulement les vérifications et tests.
