@@ -219,6 +219,18 @@ function getInteriorStairInteraction(x,z,level,levels,hasStairs,tolerance){
  const near=model.visible&&distance<=(Number.isFinite(Number(tolerance))?Math.max(.05,Number(tolerance)):.3);
  return {visible:model.visible,near,distance,canGoUp:near&&model.canGoUp,canGoDown:near&&model.canGoDown,position:point,message:!model.visible?'AUCUN ESCALIER':!near?'APPROCHE-TOI DES ESCALIERS':model.canGoUp&&model.canGoDown?'ESCALIER : MONTER / DESCENDRE':model.canGoUp?'ESCALIER : MONTER':'ESCALIER : DESCENDRE'};
 }
+function getInteriorStairTraversal(x,z,dx,dz,level,levels,hasStairs,tolerance){
+ const access=getInteriorStairInteraction(x,z,level,levels,hasStairs,tolerance);
+ const moving=Math.hypot(Number(dx)||0,Number(dz)||0)>.001;
+ const toward=((.58-(Number(x)||0))*(Number(dx)||0)+(-.55-(Number(z)||0))*(Number(dz)||0))>0;
+ if(!access.visible)return {triggered:false,reason:'no-stairs',level:access.visible?access.level:Math.max(1,Math.floor(Number(level)||0)+1)};
+ if(!access.near)return {triggered:false,reason:'too-far',level:access.level};
+ if(!moving||!toward)return {triggered:false,reason:'not-approaching',level:access.level};
+ const direction=access.canGoUp?1:access.canGoDown?-1:0;
+ if(!direction)return {triggered:false,reason:'limit',level:access.level};
+ const change=changeInteriorLevel(level,levels,direction,true);
+ return {triggered:change.changed,reason:change.reason,level:change.level+1,direction:direction>0?'up':'down'};
+}
 function changeInteriorLevel(level,levels,direction,hasStairs){
  const max=Math.max(1,Math.floor(Number(levels)||1)),current=Math.max(0,Math.min(max-1,Math.floor(Number(level)||0)));
  if(!hasStairs||max<2)return {level:current,changed:false,reason:'no-stairs'};
@@ -331,7 +343,7 @@ function play(canvas,world,onCaption){
   const roomModel=getInteriorRoomModel(roomName,doorOptions);
   const dx=(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
   const dz=(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
-  const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen,selectedDoor?selectedDoor.side:'back');inside.x=moved.x;inside.z=moved.z;
+  const previousX=inside.x,previousZ=inside.z;const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen,selectedDoor?selectedDoor.side:'back');inside.x=moved.x;inside.z=moved.z;const stairTraversal=getInteriorStairTraversal(inside.x,inside.z,inside.x-previousX,inside.z-previousZ,inside.level,inside.building.interior.levels,inside.building.interior.stairs,.18);if(stairTraversal.triggered){Object.assign(inside,getInteriorLevelEntryState(stairTraversal.level-1));onCaption(stairTraversal.direction==='up'?'Tu montes automatiquement par l’escalier.':'Tu descends automatiquement par l’escalier.');}
   const left=cx-half,right=cx+half,back=top+70;
   poly([{x:left,y:back},{x:cx,y:top},{x:right,y:back},{x:right,y:floorY},{x:left,y:floorY}],'#B9AD98','#45413B');
   poly([{x:left,y:back},{x:cx,y:top},{x:cx,y:floorY-45},{x:left,y:floorY}],'#D7C9AE','#5C5145');
@@ -455,5 +467,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorStairModel,getInteriorStairInteraction,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorStairModel,getInteriorStairInteraction,getInteriorStairTraversal,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
