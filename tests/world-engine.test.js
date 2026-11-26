@@ -189,5 +189,37 @@ test('chaque élément possède un identifiant et des coordonnées valides',()=>
  const ids=new Set();
  w.elements.forEach(e=>{assert(!ids.has(e.id),'identifiant dupliqué');ids.add(e.id);assert(Number.isFinite(e.x)&&Number.isFinite(e.z),'coordonnées invalides')});
 });
-console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
+
+test('les pièces possèdent des fenêtres et des détails architecturaux',()=>{
+ const room=World.getInteriorRoomModel('séjour');
+ assert(room.windows.length>=2,'fenêtres insuffisantes');
+ assert(room.windows.every(w=>['left','right'].includes(w.side)&&w.width>0&&w.height>0),'géométrie de fenêtre invalide');
+ assert(room.architecture.skirtingHeight>0&&room.architecture.trimWidth>0,'moulures architecturales absentes');
+ assert(['tiles','wood','planks'].includes(room.architecture.floorPattern),'motif de sol invalide');
+});
+test('l’éclairage intérieur fournit une ambiance et une lumière de fenêtre bornées',()=>{
+ for(const name of ['séjour','cuisine','chambre']){
+  const light=World.getInteriorLighting(name);
+  assert(light.ambient>0&&light.ambient<=1,'ambiance hors limites');
+  assert(light.windowLight>0&&light.windowLight<=.3,'lumière de fenêtre invalide');
+  assert(light.brightness>0&&light.brightness<=1,'luminosité hors limites');
+  assert(light.direction==='left-to-right','direction de lumière absente');
+ }
+});
+test('le moteur détecte les meubles proches sans traverser leurs limites',()=>{
+ const room=World.getInteriorRoomModel('séjour'),sofa=room.furniture.find(f=>f.id==='canape');
+ const near=World.getNearbyFurniture((sofa.left+sofa.right)/2,sofa.bottom+.2,'séjour',.3);
+ assert(near&&near.id==='canape','canapé proche non détecté');
+ const far=World.getNearbyFurniture(.8,.8,'séjour',.2);
+ assert(far===null,'meuble éloigné détecté à tort');
+});
+test('les interactions avec les meubles alternent un état simple et rejettent les identifiants inconnus',()=>{
+ const first=World.interactWithFurniture('chambre','armoire',{});
+ assert(first.ok&&first.state==='open'&&first.states.armoire==='open','ouverture du meuble impossible');
+ const second=World.interactWithFurniture('chambre','armoire',first.states);
+ assert(second.ok&&second.state==='closed','fermeture du meuble impossible');
+ const invalid=World.interactWithFurniture('chambre','meuble-inconnu',{});
+ assert(!invalid.ok,'meuble inconnu accepté');
+});
+\nconsole.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
