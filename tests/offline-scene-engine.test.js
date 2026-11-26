@@ -12,6 +12,7 @@ function test(name,fn){try{fn();passed++;console.log('✓ '+name)}catch(e){faile
 test('moteur local chargé',()=>{if(!Engine||Engine.version!==1)throw Error('version incorrecte')});
 test('reconnaît une maison',()=>{const s=Engine.create('Dessine une maison avec deux fenêtres');if(!s.objects.some(o=>o.type==='house'))throw Error('maison absente')});
 test('respecte une quantité en français',()=>{const s=Engine.create('Dessine trois arbres');if(s.objects.filter(o=>o.type==='tree').length!==3)throw Error('trois arbres attendus')});
+test('reconnaît un ordinateur et construit son maillage',()=>{const s=Engine.create('Dessine un ordinateur en 3D');if(!s.objects.some(o=>o.type==='computer'))throw Error('ordinateur absent');const g=Engine.geometryInfo('computer','#58A6FF');if(!g.valid||g.vertices<8)throw Error('maillage ordinateur invalide')});
 test('reconnaît un robot',()=>{const s=Engine.create('Un robot bleu');if(!s.objects.some(o=>o.type==='robot'))throw Error('robot absent')});
 test('reconnaît un dragon',()=>{const s=Engine.create('Un dragon');if(!s.objects.some(o=>o.type==='dragon'))throw Error('dragon absent')});
 test('comprend couleur, taille et position',()=>{const o=Engine.create('Un grand robot rouge à gauche').objects[0];if(o.color!=='#FF6B6B'||o.props.scale!==1.25||o.props.x!==-2)throw Error('attributs non reconnus')});
@@ -19,7 +20,7 @@ test('reconnaît une animation de chute',()=>{const s=Engine.create('Une balle t
 test('choisit le mode 2D',()=>{if(Engine.create('Un dessin 2D de cube').mode!=='2D')throw Error('mode incorrect')});
 test('choisit le mode 3D',()=>{if(Engine.create('Une maison en 3D').mode!=='3D')throw Error('mode incorrect')});
 test('reconnaît les objets scientifiques et quotidiens supplémentaires',()=>{for(const [idea,type] of [['Une planète','planet'],['Une fusée','rocket'],['Un avion','airplane'],['Un bateau','boat'],['Une fleur','flower'],['Une personne','person'],['Un pont','bridge']]){if(!Engine.create(idea).objects.some(o=>o.type===type))throw Error(type+' non reconnu')}});
-test('construit des maillages 3D valides',()=>{for(const type of ['cube','house','tree','car','robot','dragon','ball','planet','rocket','airplane','boat','flower','person','bridge']){const g=Engine.geometryInfo(type,'#58A6FF');if(!g.valid||g.vertices<8||g.faces<6)throw Error('maillage invalide: '+type)}});
+test('construit des maillages 3D valides',()=>{for(const type of ['cube','house','computer','tree','car','robot','dragon','ball','planet','rocket','airplane','boat','flower','person','bridge']){const g=Engine.geometryInfo(type,'#58A6FF');if(!g.valid||g.vertices<8||g.faces<6)throw Error('maillage invalide: '+type)}});
 test('dessine et termine une scène 2D et une scène 3D',()=>{
  const drawing={setTransform(){},clearRect(){},fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},fillText(){},save(){},translate(){},rotate(){},restore(){},closePath(){},fill(){},roundRect(){},arc(){},ellipse(){},createRadialGradient(){return {addColorStop(){}}}};
  function render(idea){
