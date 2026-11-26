@@ -30,20 +30,50 @@ function terrainHeight(world,x,z){
  const peaks=world.biome==='mountain'?(Math.exp(-((x+3)*(x+3)+(z+1)*(z+1))/8)*a+Math.exp(-((x-3)*(x-3)+(z-2)*(z-2))/6)*a*.8):0;
  return rolling+peaks;
 }
-function getInteriorRoomConnections(rooms){
- const names=Array.isArray(rooms)?rooms.map(v=>String(v)):[];
- const links=[];
- for(let i=0;i<names.length-1;i++)links.push({from:names[i],to:names[i+1],doorId:'door-'+i,width:.44,openable:true});
+function getInteriorRoomConnections(rooms,customConnections){
+ const names=Array.isArray(rooms)?rooms.map(v=>String(v)):[],links=[];
+ if(Array.isArray(customConnections)){
+  customConnections.forEach((item,i)=>{
+   if(!item||typeof item!=='object')return;
+   const from=String(item.from||''),to=String(item.to||'');
+   if(!names.includes(from)||!names.includes(to)||from===to)return;
+   const side=['back','left','right','front'].includes(item.side)?item.side:['back','left','right'][i%3];
+   links.push({from,to,doorId:String(item.doorId||'door-'+i),side,width:Math.max(.2,Math.min(.7,Number(item.width)||.44)),openable:item.openable!==false});
+  });
+  return links;
+ }
+ if(names.length<2)return links;
+ const find=(pattern)=>names.find(n=>pattern.test(n.toLowerCase()));
+ const entry=find(/entrée|entree|hall/),living=find(/séjour|sejour|salon/),kitchen=find(/cuisine/),bedroom=find(/chambre/);
+ if(entry&&living){
+  links.push({from:entry,to:living,doorId:'door-entry-living',side:'back',width:.44,openable:true});
+  if(kitchen)links.push({from:living,to:kitchen,doorId:'door-living-kitchen',side:'right',width:.42,openable:true});
+  if(bedroom)links.push({from:living,to:bedroom,doorId:'door-living-bedroom',side:'left',width:.42,openable:true});
+  const connected=new Set(links.flatMap(l=>[l.from,l.to]));
+  names.filter(n=>!connected.has(n)).forEach((n,i)=>{
+   const previous=names[names.indexOf(n)-1]||living;
+   links.push({from:previous,to:n,doorId:'door-extra-'+i,side:['back','right','left'][i%3],width:.4,openable:true});
+  });
+  return links;
+ }
+ for(let i=0;i<names.length-1;i++)links.push({from:names[i],to:names[i+1],doorId:'door-'+i,side:['back','right','left'][i%3],width:.44,openable:true});
  return links;
 }
-function getNextConnectedRoomIndex(rooms,currentIndex){
- if(!Array.isArray(rooms)||rooms.length<2)return currentIndex||0;
- const index=Math.max(0,Math.min(rooms.length-1,Number(currentIndex)||0));
- const links=getInteriorRoomConnections(rooms),current=rooms[index];
- const forward=links.find(link=>link.from===current);
- if(forward)return rooms.indexOf(forward.to);
- const backward=links.slice().reverse().find(link=>link.to===current);
- return backward?rooms.indexOf(backward.from):index;
+function getConnectedRoomOptions(rooms,currentIndex,connections){
+ if(!Array.isArray(rooms)||!rooms.length)return [];
+ const index=Math.max(0,Math.min(rooms.length-1,Number(currentIndex)||0)),current=rooms[index];
+ return getInteriorRoomConnections(rooms,connections).flatMap(link=>{
+  if(!link.openable)return [];
+  if(link.from===current)return [{target:link.to,targetIndex:rooms.indexOf(link.to),doorId:link.doorId,side:link.side,width:link.width,direction:'forward'}];
+  if(link.to===current)return [{target:link.from,targetIndex:rooms.indexOf(link.from),doorId:link.doorId,side:link.side,width:link.width,direction:'backward'}];
+  return [];
+ }).filter(option=>option.targetIndex>=0);
+}
+function getNextConnectedRoomIndex(rooms,currentIndex,selectedOptionIndex,connections){
+ const options=getConnectedRoomOptions(rooms,currentIndex,connections);
+ if(!options.length)return Math.max(0,Number(currentIndex)||0);
+ const selected=Math.max(0,Math.min(options.length-1,Number(selectedOptionIndex)||0));
+ return options[selected].targetIndex;
 }
 function getInteriorRoomModel(roomName){
  const name=String(roomName||'séjour').toLowerCase();
@@ -89,7 +119,7 @@ function play(canvas,world,onCaption){
  resize();root.addEventListener('resize',resize);
  const pointerDown=e=>{const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;pointerStart={x:e.clientX,y:e.clientY};if(inside){drag=false;if(x<118&&y>h-132){moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));drag='interior-pad'}return}if(x<118&&y>h-132){drag=true;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else{drag=true;moveX=0;moveZ=0;lastX=e.clientX;lastY=e.clientY;drag='camera'}if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId)};
  const pointerMove=e=>{if(drag==='camera'){yaw+=(e.clientX-lastX)*.008;pitch=Math.max(.12,Math.min(.72,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY}else if(drag==='interior-pad'){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else if(drag){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}};
- const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.72&&inside.building.interior.stairs){inside.level=(inside.level+1)%inside.building.interior.levels;inside.roomIndex=0;onCaption('Tu es maintenant au niveau '+(inside.level+1)+'.')}else if(y>h*.78&&Math.abs(inside.x)<.35&&inside.z<-.45){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7){inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex);inside.x=0;inside.z=.55;onCaption('Tu passes par la porte vers : '+inside.building.interior.rooms[inside.roomIndex]+'.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
+ const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.72&&inside.building.interior.stairs){inside.level=(inside.level+1)%inside.building.interior.levels;inside.roomIndex=0;onCaption('Tu es maintenant au niveau '+(inside.level+1)+'.')}else if(y>h*.78&&Math.abs(inside.x)<.35&&inside.z<-.45){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7&&x>w*.68){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){inside.selectedDoorIndex=((inside.selectedDoorIndex||0)+1)%options.length;const choice=options[inside.selectedDoorIndex];onCaption('Porte choisie : '+choice.target+' ('+choice.side+').')}else onCaption('Aucune autre pièce reliée.')}else if(inside.doorOpen>.7){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){const selected=Math.min(inside.selectedDoorIndex||0,options.length-1),choice=options[selected];inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex,selected,inside.building.interior.connections);inside.selectedDoorIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu passes par la porte vers : '+choice.target+'.')}else onCaption('Cette pièce ne possède pas de porte reliée.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,selectedDoorIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
  const keys=new Set();
  const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(k)){keys.add(k);if(k==='e'&&inside&&!e.repeat){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}e.preventDefault()}};
  const keyUp=e=>keys.delete(e.key.toLowerCase());
@@ -196,8 +226,12 @@ function play(canvas,world,onCaption){
   });
   ctx.fillStyle='#FFFFFF';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.fillText(roomName.toLocaleUpperCase('fr'),cx,34);
   ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • Étage '+(inside.level+1)+'/'+inside.building.interior.levels,cx,54);
-  ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(8,8,Math.min(w-16,300),38);ctx.fillStyle='#FFF';ctx.textAlign='left';ctx.font='12px system-ui';ctx.fillText('Gauche : porte • Centre : pièce reliée',18,32);
-  ctx.fillText('Ouvre la porte puis touche le centre pour passer',cx,h-12);
+  ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(8,8,Math.min(w-16,300),38);ctx.fillStyle='#FFF';ctx.textAlign='left';ctx.font='12px system-ui';ctx.fillText('Gauche : ouvrir • Droite : choisir une porte',18,32);
+  const doorOptions=getConnectedRoomOptions(roomNames,inside.roomIndex,inside.building.interior.connections);
+  const selectedDoor=doorOptions[Math.min(inside.selectedDoorIndex||0,Math.max(0,doorOptions.length-1))];
+  ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
+  ctx.fillText(selectedDoor?'Porte : '+selectedDoor.target+' • mur '+selectedDoor.side:'Aucune porte reliée',cx,h-30);
+  ctx.fillText('Ouvre la porte, choisis à droite, puis touche le centre',cx,h-12);
  }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
@@ -238,5 +272,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorRoomConnections,getNextConnectedRoomIndex,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,resolveInteriorMovement,play});
 })(window);
