@@ -16,6 +16,7 @@ jobs:
       - run: node tests/french-understanding.test.js
       - run: node tests/idea-understanding-contract.test.js
       - run: node tests/knowledge-manager.test.js
+      - run: node tests/reasoning-engine.test.js
       - run: node tests/world-engine.test.js
       - run: node tests/french-corpus.test.js
       - run: node tests/french-corpus-splits.test.js
