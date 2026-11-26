@@ -137,6 +137,20 @@ test('l’indicateur des étages décrit correctement le niveau et les escaliers
  const invalid=World.getInteriorLevelIndicator(-4,0,true);
  assert(invalid.level===1&&invalid.total===1,'niveau invalide non normalisé');
 });
+test('la traversée des escaliers se déclenche en s’en approchant dans le bon sens',()=>{
+ const far=World.getInteriorStairTraversal(0,.55,0,-.02,0,3,true);
+ assert(!far.triggered&&far.reason==='too-far','transition déclenchée à distance');
+ const near=World.getInteriorStairTraversal(.58,-.55,0,-.02,0,3,true);
+ assert(near.triggered&&near.level===2&&near.direction==='up','montée automatique non déclenchée');
+ const away=World.getInteriorStairTraversal(.58,-.55,0,.02,0,3,true);
+ assert(!away.triggered&&away.reason==='not-approaching','transition déclenchée en s’éloignant');
+ const top=World.getInteriorStairTraversal(.58,-.55,0,-.02,2,3,true);
+ assert(!top.triggered&&top.reason==='limit','montée au-delà du dernier étage');
+ const middleDown=World.getInteriorStairTraversal(.58,-.55,0,.02,1,3,true);
+ assert(middleDown.triggered&&middleDown.level===1&&middleDown.direction==='down','descente automatique incorrecte');
+ const noStairs=World.getInteriorStairTraversal(.58,-.55,0,-.02,0,1,false);
+ assert(!noStairs.triggered&&noStairs.reason==='no-stairs','transition sans escalier');
+});
 test('l’accès aux escaliers exige une proximité réelle et respecte le sens de circulation',()=>{
  const far=World.getInteriorStairInteraction(0,.55,0,3,true);
  assert(far.visible&&!far.near&&!far.canGoUp,'accès autorisé depuis le point de départ éloigné');
