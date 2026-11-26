@@ -59,6 +59,8 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - [x] Charger le contrat et la compréhension lexicale dans la WebView.
 - [x] Valider et conserver le résultat structuré à titre de diagnostic.
 - [x] Préserver l'interface et le moteur de scène existants.
+- [x] Ajouter un gestionnaire local de connaissances importées en JSON (brouillon, activation, désactivation, suppression).
+- [x] Ajouter un premier écran Paramètres pour gérer les connaissances et le mode filaire.
 - [ ] Intégrer progressivement les modules internes validés.
 - [ ] Vérifier le fonctionnement hors ligne sur le téléphone réel.
 
@@ -74,3 +76,12 @@ L'étape 01 ne sera terminée que lorsque le moteur interne interprète les dema
 ## Découpage expérimental du corpus
 
 Le script `training/phase01/split-corpus.js` génère trois ensembles déterministes : train (environ 70 %), validation (environ 15 %) et test (environ 15 %). Les exemples ayant la même signature sémantique sont regroupés avant répartition. Les fichiers générés sont dans `training/phase01/splits/`. Ce découpage réduit les fuites évidentes entre paraphrases, mais il ne remplace pas une revue humaine des étiquettes et ne constitue pas encore un benchmark représentatif. Le workflow vérifie la conformité des trois fichiers et l'absence de familles identiques entre ensembles.
+
+
+## Gestionnaire évolutif de connaissances — première version
+
+Le module `knowledge-manager-v1.js` importe des paquets JSON versionnés, vérifie leurs entrées et les conserve dans le stockage local du WebView. Les entrées importées sont des brouillons à examiner avant activation. Le fichier d'origine n'est pas nécessaire après l'importation. Les formules sont stockées comme données déclaratives ; aucun code importé n'est exécuté. Voir `docs/KNOWLEDGE-MANAGER.md`.
+
+## Rendu filaire 3D — première version
+
+Le rendu des maillages peut être basculé vers un affichage des arêtes uniquement. Le réglage est mémorisé localement dans les paramètres. Il s'agit d'une première visualisation filaire, pas encore d'une navigation 3D avec caméra tactile ni d'un outil de modélisation complet.
