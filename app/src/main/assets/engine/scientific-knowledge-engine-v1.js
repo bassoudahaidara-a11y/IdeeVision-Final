@@ -5,7 +5,7 @@ const K=root.IdeeVisionKnowledge,R=root.IdeeVisionReasoning,S=root.IdeeVisionSci
 function fail(error,message){return {ok:false,error,message};}
 function norm(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function activeEntries(api){const source=api||K;if(!source||typeof source.active!=='function')return fail('knowledge-manager-unavailable','La bibliothèque de connaissances est indisponible.');try{const list=source.active();if(!Array.isArray(list))return fail('knowledge-list-invalid','La bibliothèque a retourné une liste invalide.');return {ok:true,entries:list.slice(0,MAX_ENTRIES).filter(e=>e&&typeof e==='object'&&e.status==='active')};}catch(e){return fail('knowledge-read-failed','Impossible de lire les connaissances actives.');}}
-function tokens(s){return norm(s).split(/\s+/).filter(x=>x.length>1);}
+function tokens(s){const stop=new Set(['et','de','du','des','la','le','les','un','une','a','au','aux','en','par','pour','sur','avec','dans','est','qui','que','ce','ces','son','sa','the','of','to']);return norm(s).split(/\s+/).filter(x=>x.length>1&&!stop.has(x));}
 function search(query,options){
  const got=activeEntries(options&&options.knowledgeApi),limit=Math.max(1,Math.min(MAX_RESULTS,Number(options&&options.limit)||5));
  if(!got.ok)return got;
