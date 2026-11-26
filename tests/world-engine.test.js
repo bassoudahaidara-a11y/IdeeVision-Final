@@ -155,6 +155,19 @@ test('la transition d’étage progresse, change de niveau au milieu et se termi
  const down=World.createInteriorLevelTransition(0,'down');
  assert(down.direction==='down'&&down.targetLevel===0,'transition descendante incorrecte');
 });
+test('la navigation des étages indique les accès disponibles et les limites',()=>{
+ const ground=World.getInteriorFloorNavigation(0,3,true);
+ assert(ground.level===1&&ground.total===3,'niveau du rez-de-chaussée incorrect');
+ assert(ground.canGoUp&&!ground.canGoDown&&ground.nextAction==='MONTER','accès du rez-de-chaussée incorrect');
+ const middle=World.getInteriorFloorNavigation(1,3,true);
+ assert(middle.canGoUp&&middle.canGoDown&&middle.nextAction==='MONTER / DESCENDRE','accès de l’étage intermédiaire incorrect');
+ const top=World.getInteriorFloorNavigation(2,3,true);
+ assert(!top.canGoUp&&top.canGoDown&&top.nextAction==='DESCENDRE','limite du dernier étage incorrecte');
+ const noStairs=World.getInteriorFloorNavigation(0,2,false);
+ assert(!noStairs.hasStairs&&noStairs.nextAction==='AUCUN ACCÈS','bâtiment sans escalier mal indiqué');
+ const invalid=World.getInteriorFloorNavigation(99,3,true);
+ assert(invalid.level===3&&!invalid.canGoUp&&invalid.canGoDown,'niveau hors limites non normalisé');
+});
 test('l’indicateur de transition affiche la bonne direction et la progression',()=>{
  const up=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.35});
  assert(up.active&&up.direction==='up'&&up.label==='MONTÉE EN COURS','indicateur de montée incorrect');
