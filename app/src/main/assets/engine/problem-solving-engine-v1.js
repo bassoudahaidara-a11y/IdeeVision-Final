@@ -36,7 +36,7 @@ function solveProblem(base,problem,options){
  function plan(goal,depth,stack){
   visitedNodes++;if(visitedNodes>maxNodes){limited=true;return {status:'limit',goal:clone(goal),reason:'Limite de recherche atteinte.',subgoals:[],proof:[]};}
   const direct=inferred.facts.find(f=>factMatches(goal,f));
-  if(direct)return {status:'known',goal:clone(goal),factId:direct.id,source:direct.source||'unknown',subgoals:[],proof:[{type:'fact',factId:direct.id}]};
+  if(direct){const derived=String(direct.source||'').indexOf('rule:')===0;return {status:derived?'derivable':'known',goal:clone(goal),factId:direct.id,source:direct.source||'unknown',subgoals:[],proof:[{type:derived?'rule':'fact',factId:direct.id,ruleId:derived?String(direct.source).slice(5):undefined}]};}
   const key=JSON.stringify([goal.subject,goal.predicate,goal.object]);
   if(stack.has(key))return {status:'cycle',goal:clone(goal),reason:'Cycle logique détecté.',subgoals:[],proof:[]};
   if(depth>=maxDepth){limited=true;return {status:'limit',goal:clone(goal),reason:'Profondeur maximale atteinte.',subgoals:[],proof:[]};}
