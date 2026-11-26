@@ -128,3 +128,8 @@ Cette première version est une transition vers une vue intérieure illustrative
 ### Intérieurs procéduraux — première disposition des pièces
 
 Les maisons et immeubles possèdent désormais une disposition déclarative de pièces avec positions relatives. Le rendu intérieur affiche des séparations simplifiées et des emplacements de mobilier schématiques. Cette version reste une représentation 2D dans le canvas pendant le mode intérieur : les pièces ne sont pas encore des espaces 3D séparés et les meubles ne sont pas encore interactifs. La porte utilise une animation visuelle et les niveaux d'immeuble sont représentés par un changement d'étage logique. La compilation APK et la validation sur appareil restent à faire après autorisation explicite.
+
+
+### Navigation intérieure par pièces — première version
+
+Le mode intérieur présente maintenant une pièce à la fois dans une vue en perspective, avec sol, murs, porte animée, fenêtre et mobilier schématique variant selon le type de pièce. Les pièces prévues dans les métadonnées (entrée, séjour, cuisine, chambre) sont parcourues dans l'ordre : le joueur ouvre la porte puis sélectionne la zone centrale pour accéder à la pièce suivante. Les immeubles conservent une commande tactile pour changer de niveau. Cette étape améliore l'illusion d'espaces visitables, mais ne constitue pas encore une géométrie 3D indépendante avec collisions, navigation libre entre portes placées dans le monde, ni véritable escalier parcourable. Validation sur téléphone et compilation APK non réalisées.
