@@ -13,6 +13,7 @@
 <script src="engine/math-engine-v1.js"></script>
 <script src="engine/geometry-engine-v1.js"></script>
 <script src="engine/physics-mechanics-engine-v1.js"></script>
+<script src="engine/numerical-simulation-v1.js"></script>
 <style>
 :root{--ink:#0A0D1F;--ink2:#141838;--amber:#FFB84D;--paper:#FFF6E5;--mut:#A8A9C4;--coral:#FF6B5B;--line:rgba(255,184,77,.28)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -73,7 +74,7 @@ textarea::placeholder{color:#7C7EA3}
 <div class="beam"></div>
 
 <section id="home" class="screen on">
-  <header class="top"><div class="logo">BH</div><div><b>Idée Vision</b><small>Ton idée, en mouvement</small></div><div class="sp"></div><button class="round" id="gear" aria-label="Réglages">⚙</button></header>
+  <header class="top"><div class="logo" aria-label="Idée Vision">IV</div><div><b>Idée Vision</b><small>Ton idée, en mouvement</small></div><div class="sp"></div><button class="round" id="gear" aria-label="Réglages">⚙</button></header>
   <h1>Décris ton idée.<br>Elle devient un film.</h1>
   <div class="gate">
     <textarea id="idea" placeholder="Dis ce que tu penses, avec les nombres et ce qui bouge : une balance, une maison, une expérience…"></textarea>
@@ -486,6 +487,9 @@ async function start(){
  const physicsAudit = window.IdeeVisionPhysics ? window.IdeeVisionPhysics.buildAudit(idea) : null;
  const physicsContext = physicsAudit ? window.IdeeVisionPhysics.toPromptContext(physicsAudit) : 'Moteur physique indisponible.';
  window.lastPhysicsAudit = physicsAudit;
+ const simulationAudit = window.IdeeVisionSimulation ? window.IdeeVisionSimulation.buildAudit(idea) : null;
+ const simulationContext = simulationAudit ? window.IdeeVisionSimulation.toPromptContext(simulationAudit) : 'Moteur de simulation numérique indisponible.';
+ window.lastSimulationAudit = simulationAudit;
  window.lastReasoningPlan = reasoningPlan;
  const referenceContext = contextMemory ? contextMemory.resolveReference(idea) : null;
  const previousContext = contextMemory ? contextMemory.context(idea) : '';
@@ -512,7 +516,7 @@ async function start(){
   const recentIntentions = cognitionSession ? cognitionSession.recent().slice(-4).map(x=>x.intent).join(', ') : '';
   let knowledgeContext='Base de connaissances locale non disponible.';
   if(knowledgeBase){try{const knowledge=await knowledgeBase.buildContext(idea,{limit:5,maxChars:6500});knowledgeContext=knowledge.context;window.lastKnowledgeHits=knowledge.hits;}catch(e){knowledgeContext='Base locale indisponible : '+e.message;}}
-  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\n'+orchestrationContext+'\n'+scientificContext+'\n'+mathContext+'\n'+geometryContext+'\n'+physicsContext+'\n'+knowledgeContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
+  const base='User idea and drawing rules (French): '+idea+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\n'+orchestrationContext+'\n'+scientificContext+'\n'+mathContext+'\n'+geometryContext+'\n'+physicsContext+'\n'+simulationContext+'\n'+knowledgeContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
   const bp=await chat([{role:'system',content:BLUEPRINT_SYS},{role:'user',content:base}],{max:1100,temp:.3});
   if(my!==run)return;
 
