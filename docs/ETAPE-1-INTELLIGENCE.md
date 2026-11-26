@@ -51,3 +51,36 @@ Chaque groupe contient au minimum 15 tâches. Le travail est livré progressivem
 - Groupe 1.3 : raisonnement logique, décomposition et résolution de problèmes.
 - Groupe 1.4 : gestion des connaissances et sources.
 - Groupe 1.5 : planificateur multi-moteurs et vérification des résultats.
+
+## Groupe 1.2 — Mémoire de travail et contexte conversationnel (22 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Créer une mémoire de travail locale | Développé |
+| 2 | Séparer les messages utilisateur et assistant | Développé |
+| 3 | Nettoyer les messages avant stockage | Développé |
+| 4 | Limiter le nombre de tours conservés | Développé |
+| 5 | Limiter la taille totale de la mémoire | Développé |
+| 6 | Refuser les messages vides | Développé |
+| 7 | Extraire des mots-clés de contexte | Développé |
+| 8 | Construire une liste de sujets récents | Développé |
+| 9 | Détecter les demandes de continuation | Développé |
+| 10 | Détecter les pronoms et démonstratifs | Développé |
+| 11 | Résoudre les références avec les sujets précédents | Développé, heuristique |
+| 12 | Signaler les références impossibles à résoudre | Développé |
+| 13 | Distinguer une nouvelle demande d'un suivi | Développé |
+| 14 | Résumer les tours de conversation | Développé |
+| 15 | Construire un contexte lisible pour les moteurs | Développé |
+| 16 | Effacer la mémoire de session | Développé |
+| 17 | Exporter un historique structuré | Développé |
+| 18 | Importer un historique validé | Développé |
+| 19 | Refuser les formats d'import inconnus | Développé |
+| 20 | Afficher les diagnostics de mémoire | Développé |
+| 21 | Associer une intention à un tour | Développé |
+| 22 | Garder la mémoire volatile par défaut | Développé |
+
+### Confidentialité et limites
+
+La mémoire est conservée uniquement en mémoire vive pendant la session. Aucun stockage persistant n'est activé automatiquement. L'export et l'import sont explicites. La résolution des pronoms est heuristique : si plusieurs objets sont possibles, le moteur devra demander une précision au lieu d'inventer le référent.
+
+Le pipeline de conception reçoit désormais le contexte des échanges précédents avant de préparer les plans. Le module ne rend pas encore l'application autonome : le générateur de scène utilise toujours le service de conversation déjà présent.
