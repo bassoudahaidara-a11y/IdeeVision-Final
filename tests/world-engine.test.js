@@ -179,6 +179,32 @@ test('retourne un itinéraire vide lorsque le joueur est déjà dans la destinat
  const route=World.findInteriorRoute(['Hall','Salon'],[{from:'Hall',to:'Salon',doorId:'d1'}],'Salon','Salon');
  assert(route.reachable&&route.steps===0&&route.rooms.length===1,'itinéraire sur place incorrect');
 });
+test('détecte les pièces et portes critiques du réseau de circulation',()=>{
+ const result=World.analyzeInteriorCirculation(['Hall','Couloir','Cuisine','Chambre','Bureau'],[
+  {from:'Hall',to:'Couloir',doorId:'d1'},
+  {from:'Couloir',to:'Cuisine',doorId:'d2'},
+  {from:'Couloir',to:'Chambre',doorId:'d3'},
+  {from:'Couloir',to:'Bureau',doorId:'d4'}
+ ]);
+ assert(result.criticalRooms.includes('Couloir'),'couloir central non identifié comme pièce critique');
+ assert(result.criticalDoors.some(door=>door.doorId==='d1'),'porte-pont non identifiée');
+ assert(result.hasSinglePointOfFailure,'risque de circulation non signalé');
+});
+test('ne signale pas de pièce critique dans un circuit fermé',()=>{
+ const result=World.analyzeInteriorCirculation(['A','B','C'],[
+  {from:'A',to:'B',doorId:'ab'},
+  {from:'B',to:'C',doorId:'bc'},
+  {from:'C',to:'A',doorId:'ca'}
+ ]);
+ assert(result.criticalRooms.length===0&&result.criticalDoors.length===0,'circuit fermé déclaré critique');
+});
+test('ignore les portes fermées dans l’analyse des points critiques',()=>{
+ const result=World.analyzeInteriorCirculation(['A','B','C'],[
+  {from:'A',to:'B',doorId:'ab'},
+  {from:'B',to:'C',doorId:'bc',openable:false}
+ ]);
+ assert(result.openDoorCount===1&&result.criticalDoors.length===1,'porte fermée intégrée à la circulation');
+});
 test('chaque pièce expose une géométrie intérieure avec murs et ouverture de porte',()=>{
  const room=World.getInteriorRoomModel('séjour');
  assert(room.walls.length>=5,'segments de murs insuffisants');
