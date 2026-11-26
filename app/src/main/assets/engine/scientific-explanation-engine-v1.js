@@ -63,6 +63,7 @@ function explain(result,options){
  if(failures.length)warnings.push('Certaines étapes ont échoué; leurs résultats ne doivent pas être utilisés comme des faits établis.');
  if(!sources.length)warnings.push('Aucune source documentaire n’a été déclarée pour ce raisonnement.');
  warnings.push('La vérification des calculs ne prouve pas à elle seule que les hypothèses décrivent correctement la réalité.');
+ warnings.push('Les sources déclarées sont conservées comme références, mais elles ne sont pas automatiquement authentifiées.');
  if(level==='simple'){
   sections.splice(1,1,{kind:'method',title:'Explication simplifiée',items:details.map((d,i)=>({kind:'step-summary',text:'Étape '+(i+1)+' : '+(result.trace[i].ok?'opération réalisée.':'opération non résolue.'),details:d.filter(x=>['result','error','formula'].includes(x.kind))}))});
  }
