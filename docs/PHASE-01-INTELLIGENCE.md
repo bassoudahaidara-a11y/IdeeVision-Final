@@ -17,7 +17,7 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - `french-understanding-v1.js` : analyse lexicale initiale, limitée à un vocabulaire connu.
 - `idea-understanding-contract-v1.js` : contrat JSON strict et conversion du résultat lexical.
 - `index.html` : charge le contrat et le moteur lexical ; conserve le moteur de scène et l'apparence existants. Le résultat structuré est validé et conservé pour diagnostic, mais ne pilote pas encore la scène.
-- `training/phase01/examples-fr-v0.2.jsonl` : corpus français élargi (116 exemples : formulations standard, orales et variantes avec fautes courantes).
+- `training/phase01/examples-fr-v0.2.jsonl` : corpus français élargi (139 exemples : formulations standard, orales, fautes courantes et descriptions multi-objets).
 - `training/phase01/system-prompt-fr-v0.1.md` : consignes destinées au futur modèle.
 - `training/phase01/MODEL-SELECTION.md` : protocole de sélection et de mesure.
 - Aucun modèle neuronal ni runtime natif n'est intégré à ce stade.
@@ -30,7 +30,8 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - [x] Ajouter des paraphrases orales, des synonymes et quelques fautes courantes.
 - [ ] Ajouter des demandes longues, complexes et multi-étapes.
 - [ ] Faire vérifier les exemples ambigus et corriger les étiquettes.
-- [ ] Séparer les ensembles entraînement, validation et test.
+- [x] Séparer les ensembles entraînement, validation et test par familles de signatures sémantiques.
+- [ ] Relire manuellement toutes les annotations et mesurer la couverture réelle des intentions.
 
 ### 2. Contrat de compréhension
 - [x] Définir les intentions, modes, objets, quantités, propriétés, dimensions, relations et actions.
@@ -74,3 +75,7 @@ Le fichier de poids sera géré en interne par l'application (intégré si sa ta
 
 ## Critères de fin
 L'étape 01 ne sera terminée que lorsque le modèle neuronal fonctionne hors ligne dans l'application, produit des interprétations conformes, demande des précisions, passe les tests français et a été mesuré sur le téléphone réel. Les fondations actuelles ne suffisent pas à déclarer l'étape terminée.
+
+## Découpage expérimental du corpus
+
+Le script `training/phase01/split-corpus.js` génère trois ensembles déterministes : train (environ 70 %), validation (environ 15 %) et test (environ 15 %). Les exemples ayant la même signature sémantique sont regroupés avant répartition. Les fichiers générés sont dans `training/phase01/splits/`. Ce découpage réduit les fuites évidentes entre paraphrases, mais il ne remplace pas une revue humaine des étiquettes et ne constitue pas encore un benchmark représentatif. Le workflow vérifie la conformité des trois fichiers et l'absence de familles identiques entre ensembles.
