@@ -773,11 +773,13 @@ test('les matériaux peuvent être affectés à un sous-ensemble de faces',()=>{
  assert(coated.faceMaterials.slice(2).every(id=>id==='#AAB6C4'),'matériau des autres faces altéré');
 });
 test('l’évaluation de surface combine texture, lumière, rugosité et métal',()=>{
- const material=World.createMaterial({baseColor:'#808080',roughness:.2,metallic:.9,textures:{baseColor:{type:'checker',scale:2,colorA:'#000000',colorB:'#FFFFFF',strength:.5}}});
+ const material=World.createMaterial({baseColor:'#808080',roughness:.2,metallic:.9});
  const a=World.evaluateMaterialAppearance(material,[.1,.1],{ambient:.2,diffuse:.4});
  const b=World.evaluateMaterialAppearance(material,[.1,.1],{ambient:.8,diffuse:.4});
  assert(a.color!==b.color,'éclairage sans effet sur la surface');
  assert(a.specular>b.specular*.9&&a.metallic===.9,'réponse métallique absente');
+ const textured=World.evaluateMaterialAppearance({baseColor:'#808080',textures:{baseColor:{type:'checker',scale:2,colorA:'#000000',colorB:'#FFFFFF',strength:.5}}},[.6,.1]);
+ assert(textured.baseColor!== '#808080','texture de base non appliquée');
  const unlit=World.evaluateMaterialAppearance({shadingModel:'unlit',baseColor:'#336699'},[0,0],{ambient:0,diffuse:0});
  assert(unlit.color==='#336699'&&unlit.specular===0,'matériau non éclairé incorrect');
 });
