@@ -204,6 +204,16 @@ test('l’animation des marches suit la progression de montée et descente',()=>
  const clamped=World.getInteriorStairAnimation({active:true,direction:'up',progress:-2},5);
  assert(clamped.percent===0&&clamped.currentStep===0&&clamped.completedSteps===0,'borne basse incorrecte');
 });
+test('l’opacité de transition utilise une accélération douce et reste bornée',()=>{
+ const start=World.getInteriorTransitionOpacity(0);
+ const quarter=World.getInteriorTransitionOpacity(.25);
+ const middle=World.getInteriorTransitionOpacity(.5);
+ const threeQuarter=World.getInteriorTransitionOpacity(.75);
+ const end=World.getInteriorTransitionOpacity(1);
+ assert(start===0&&middle===1&&end===0,'points de transition incorrects');
+ assert(quarter>.5&&quarter<1&&threeQuarter===quarter,'courbe douce non symétrique');
+ assert(World.getInteriorTransitionOpacity(-2)===0&&World.getInteriorTransitionOpacity(3)===0,'bornes de progression incorrectes');
+});
 test('l’indicateur de transition affiche la bonne direction et la progression',()=>{
  const up=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.35});
  assert(up.active&&up.direction==='up'&&up.label==='MONTÉE EN COURS','indicateur de montée incorrect');
