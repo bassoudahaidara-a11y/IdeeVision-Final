@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Idée Vision</title>
+<title>Jarvis Scientifique</title>
 
 <script src="engine/idea-understanding-contract-v1.js"></script>
 <script src="engine/french-understanding-v1.js"></script>
 <script src="engine/knowledge-manager-v1.js"></script>
+<script src="engine/knowledge-intake-engine-v1.js"></script>
 <script src="engine/reasoning-engine-v1.js"></script>
 <script src="engine/problem-solving-engine-v1.js"></script>
 <script src="engine/scientific-engine-v1.js"></script>
@@ -89,7 +90,7 @@ textarea::placeholder{color:#7C7EA3}
 <div class="beam"></div>
 
 <section id="home" class="screen on">
-  <header class="top"><div class="logo">BH</div><div><b>Idée Vision</b><small>Ton idée, en mouvement</small></div><div class="sp"></div><button class="round" id="gear" aria-label="Réglages">⚙</button></header>
+  <header class="top"><div class="logo">J</div><div><b>Jarvis Scientifique</b><small>Intelligence et connaissances hors ligne</small></div><div class="sp"></div><button class="round" id="gear" aria-label="Réglages">⚙</button></header>
   <h1>Décris ton idée.<br>Elle devient un film.</h1>
   <div class="gate">
     <textarea id="idea" placeholder="Dis ce que tu penses, avec les nombres et ce qui bouge : une balance, une maison, une expérience…"></textarea>
@@ -112,21 +113,28 @@ textarea::placeholder{color:#7C7EA3}
 <section id="settings" class="screen">
   <header class="top"><button class="round" id="backHome" aria-label="Retour">‹</button><div><b>Paramètres</b><small>Évolution hors ligne</small></div></header>
   <div class="settings-wrap">
-    <h1 style="margin-top:24px">Faire évoluer Idée Vision</h1>
+    <h1 style="margin-top:24px">Faire évoluer Jarvis</h1>
     <div class="settings-card">
       <h4>Affichage 3D en traits</h4>
       <p>Affiche les arêtes des objets 3D sans remplir leurs surfaces.</p>
       <div class="setting-row"><label for="wireframeToggle">Activer le mode filaire</label><input id="wireframeToggle" type="checkbox" style="width:24px;height:24px;accent-color:var(--amber)"></div>
     </div>
     <div class="settings-card">
-      <h4>Importer des connaissances</h4>
-      <p>Choisis un paquet JSON Idée Vision. Les nouvelles entrées seront d'abord enregistrées en brouillon pour vérification.</p>
-      <input id="knowledgeFile" type="file" accept=".json,application/json">
-      <div id="knowledgeStatus">Aucun fichier analysé.</div>
+      <h4>1. Importer un fichier de connaissances</h4>
+      <p>Choisis un document TXT, Markdown ou un paquet JSON Idée Vision. Le fichier est d'abord placé en zone d'examen; rien n'est activé automatiquement.</p>
+      <input id="knowledgeFile" type="file" accept=".txt,.md,.markdown,.json,text/plain,text/markdown,application/json">
+      <button class="ghost" id="inspectKnowledge" style="width:100%;margin-top:12px">2. Examiner le fichier</button>
+      <div id="knowledgeStatus">Aucun fichier importé.</div>
+      <div id="knowledgePreview"></div>
+      <label for="knowledgeTestQuery">Question ou domaine à tester</label>
+      <input id="knowledgeTestQuery" type="text" placeholder="Ex. mécanique, force, gravitation…">
+      <button class="ghost" id="testKnowledge" style="width:100%;margin-top:12px">3. Tester les connaissances</button>
+      <button class="cta" id="saveKnowledge" style="width:100%;margin-top:12px">4. Enregistrer en brouillon</button>
     </div>
     <div class="settings-card">
-      <h4>Bibliothèque interne</h4>
+      <h4>Bibliothèque de connaissances</h4>
       <p id="knowledgeStats">Chargement…</p>
+      <p>Les éléments importés restent en brouillon jusqu'à leur activation individuelle. Les connaissances actives sont disponibles aux moteurs compatibles sans réinstaller l'application.</p>
       <div id="knowledgeList"></div>
     </div>
   </div>
@@ -156,6 +164,8 @@ function wireframeEnabled(){try{return localStorage.getItem(WIRE_KEY)==='1'}catc
 window.IdeeVisionWireframeEnabled=wireframeEnabled();
 $('wireframeToggle').checked=window.IdeeVisionWireframeEnabled;
 $('wireframeToggle').onchange=()=>{window.IdeeVisionWireframeEnabled=$('wireframeToggle').checked;try{localStorage.setItem(WIRE_KEY,window.IdeeVisionWireframeEnabled?'1':'0')}catch(e){}};
+let stagedKnowledge=null;
+function showKnowledgeStatus(text){$('knowledgeStatus').textContent=text||''}
 function renderKnowledge(){
  if(!window.IdeeVisionKnowledge)return;
  const stats=window.IdeeVisionKnowledge.stats();
@@ -167,26 +177,44 @@ function renderKnowledge(){
   const meta=document.createElement('small');meta.textContent=item.domain+' • '+item.kind+' • '+item.status;row.appendChild(meta);
   const actions=document.createElement('div');actions.className='knowledge-actions';
   const action=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.onclick=fn;actions.appendChild(b)};
-  if(item.status!=='active')action('Activer',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'active');$('knowledgeStatus').textContent=r.ok?'Connaissance activée.':r.error;renderKnowledge()});
-  if(item.status==='active')action('Désactiver',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'disabled');$('knowledgeStatus').textContent=r.ok?'Connaissance désactivée.':r.error;renderKnowledge()});
+  if(item.status!=='active')action('Activer',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'active');showKnowledgeStatus(r.ok?'Connaissance activée et disponible pour les moteurs compatibles.':r.error);renderKnowledge()});
+  if(item.status==='active')action('Désactiver',()=>{const r=window.IdeeVisionKnowledge.setStatus(item.id,'disabled');showKnowledgeStatus(r.ok?'Connaissance désactivée.':r.error);renderKnowledge()});
   action('Supprimer',()=>{if(confirm('Supprimer cette connaissance de la bibliothèque ?')){window.IdeeVisionKnowledge.remove(item.id);renderKnowledge()}});
   row.appendChild(actions);list.appendChild(row);
  });
 }
 $('knowledgeFile').onchange=()=>{
  const file=$('knowledgeFile').files&&$('knowledgeFile').files[0];if(!file)return;
- if(file.size>window.IdeeVisionKnowledge.maxFileBytes){$('knowledgeStatus').textContent='Fichier trop volumineux (maximum 2 Mio).';return}
+ stagedKnowledge=null;$('knowledgePreview').textContent='';
+ if(file.size>window.IdeeVisionKnowledgeIntake.limits.maxBytes){showKnowledgeStatus('Fichier trop volumineux (maximum 2 Mio).');return}
  const reader=new FileReader();
- reader.onload=()=>{try{const pkg=JSON.parse(String(reader.result||''));const result=window.IdeeVisionKnowledge.importPackage(pkg);
-  if(!result.ok){$('knowledgeStatus').textContent='Import refusé : '+result.error;return}
-  const details=['Import terminé : '+result.accepted+' connaissance(s) enregistrée(s) en brouillon.'];
-  if(result.rejected.length)details.push(result.rejected.length+' entrée(s) refusée(s) : '+result.rejected.map(x=>(x.id||'entrée '+(x.index+1))+ ' — '+x.errors.join(', ')).join(' ; '));
-  details.push('Examine les entrées ci-dessous avant de les activer.');
-  $('knowledgeStatus').textContent=details.join('\n');renderKnowledge();
- }catch(e){$('knowledgeStatus').textContent='JSON illisible : '+e.message}};
- reader.onerror=()=>$('knowledgeStatus').textContent='Impossible de lire ce fichier.';
+ reader.onload=()=>{const result=window.IdeeVisionKnowledgeIntake.stage(file.name,String(reader.result||''));if(!result.ok){showKnowledgeStatus('Import refusé : '+result.message);return;}stagedKnowledge=result;showKnowledgeStatus('Fichier importé dans la zone temporaire. Appuie sur « Examiner le fichier » pour vérifier son contenu.');};
+ reader.onerror=()=>showKnowledgeStatus('Impossible de lire ce fichier.');
  reader.readAsText(file,'UTF-8');
 };
+$('inspectKnowledge').onclick=()=>{
+ if(!stagedKnowledge){showKnowledgeStatus('Importe d’abord un fichier.');return;}
+ const r=stagedKnowledge,preview=$('knowledgePreview');preview.innerHTML='';
+ const heading=document.createElement('strong');heading.textContent='Rapport d’examen : '+(r.fileName||'paquet');preview.appendChild(heading);
+ const summary=document.createElement('p');summary.textContent=r.kind==='knowledge-package'?(r.valid+' entrée(s) valides sur '+r.total+'. '+(r.invalid&&r.invalid.length?r.invalid.length+' entrée(s) rejetée(s).':'Aucune entrée invalide détectée.')):(r.sections+' section(s), '+r.candidateCount+' proposition(s) de connaissance.');preview.appendChild(summary);
+ (r.warnings||[]).forEach(w=>{const p=document.createElement('p');p.textContent='• '+w;preview.appendChild(p)});
+ (r.candidates||[]).slice(0,30).forEach(e=>{const item=document.createElement('div');item.className='knowledge-item';const t=document.createElement('strong');t.textContent=e.title;const m=document.createElement('small');m.textContent=e.domain+' • '+e.kind+' • '+e.description.slice(0,220);item.appendChild(t);item.appendChild(m);preview.appendChild(item)});
+ if((r.candidates||[]).length>30){const p=document.createElement('p');p.textContent='Aperçu limité aux 30 premières propositions.';preview.appendChild(p)}
+ showKnowledgeStatus('Examen terminé. Lis les propositions avant de les enregistrer.');
+};
+$('saveKnowledge').onclick=()=>{
+ if(!stagedKnowledge){showKnowledgeStatus('Aucun fichier examiné à enregistrer.');return;}
+ const r=window.IdeeVisionKnowledgeIntake.saveAnalysis(stagedKnowledge);
+ if(!r.ok){showKnowledgeStatus('Enregistrement refusé : '+(r.message||r.error));return;}
+ showKnowledgeStatus(r.message+' '+r.accepted+' entrée(s) ajoutée(s), '+r.rejected.length+' rejetée(s).');renderKnowledge();
+};
+$('testKnowledge').onclick=()=>{
+ if(!stagedKnowledge){showKnowledgeStatus('Importe et examine un fichier avant le test.');return;}
+ const r=window.IdeeVisionKnowledgeIntake.testKnowledge(stagedKnowledge,$('knowledgeTestQuery').value);
+ if(!r.ok){showKnowledgeStatus(r.message);return;}
+ showKnowledgeStatus(r.assessment+' Couverture lexicale du fichier : '+Math.round(r.coverage*100)+' %. Correspondances : '+r.matches.length+'. Connaissances actives trouvées : '+r.activeKnowledge.length+'. Ce test ne certifie pas la maîtrise scientifique.');
+};
+
 
 /* voix */
 function stopSpeech(){try{if(window.Android)Android.stop();else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}}
