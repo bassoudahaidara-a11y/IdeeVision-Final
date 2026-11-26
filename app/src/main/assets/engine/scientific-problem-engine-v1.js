@@ -27,7 +27,7 @@ function extractMeasurements(text){
   const before=norm(source.slice(Math.max(0,match.index-45),match.index));
   const after=norm(source.slice(match.index+match[0].length,Math.min(source.length,match.index+match[0].length+30)));
   let variable=unit.variable;
-  if(variable==='distance'&&/^(temps|duree|pendant|en)\b/.test(after))continue;
+  if(variable==='distance'&&/^(temps|duree|pendant)\b/.test(after))continue;
   if(variable==='time'&&/^(parcours|distance)\b/.test(after))continue;
   if(variable==='distance'&&/\b(vitesse|rapidite)\b/.test(before))continue;
   const value=raw*unit.factor;
