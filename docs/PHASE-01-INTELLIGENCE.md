@@ -5,13 +5,13 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 
 ## Architecture retenue
 1. Interface texte et future transcription vocale.
-2. Compréhension française : module lexical de secours et futur modèle neuronal spécialisé.
+2. Compréhension française : analyse lexicale, grammaire de règles et représentation structurée développées en interne.
 3. Contrat JSON versionné.
 4. Validation stricte des objets, propriétés, relations, actions et limites.
 5. Clarification des demandes incomplètes.
 6. Adaptateur vers les moteurs de conception et de scène.
 7. Corpus français versionné et évaluations reproductibles.
-8. Runtime neuronal Android, à choisir après comparaison technique.
+8. Tests de référence et mesure des performances sur Android ; aucun runtime neuronal externe requis.
 
 ## État du code
 - `french-understanding-v1.js` : analyse lexicale initiale, limitée à un vocabulaire connu.
@@ -20,7 +20,7 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - `training/phase01/examples-fr-v0.2.jsonl` : corpus français élargi (139 exemples : formulations standard, orales, fautes courantes et descriptions multi-objets).
 - `training/phase01/system-prompt-fr-v0.1.md` : consignes destinées au futur modèle.
 - `training/phase01/MODEL-SELECTION.md` : protocole de sélection et de mesure.
-- Aucun modèle neuronal ni runtime natif n'est intégré à ce stade.
+- Décision Option A : aucun modèle neuronal externe ne sera requis. Le moteur spécialisé sera développé en interne.
 
 ## Les cinq chantiers
 
@@ -41,40 +41,35 @@ Construire une intelligence spécialisée Idée Vision, utilisable hors ligne, q
 - [ ] Ajouter les contraintes mécaniques, unités avancées et références aux connaissances scientifiques.
 - [ ] Stabiliser l'adaptateur vers le schéma du moteur 3D.
 
-### 3. Comparaison des modèles
-- [x] Définir les critères et le protocole de notation.
-- [x] Faire une présélection documentaire de quatre candidats à partir de leurs fiches officielles.
-- [ ] Vérifier les licences complètes et restrictions de redistribution.
-- [ ] Évaluer plusieurs candidats sur le même corpus.
-- [ ] Mesurer mémoire, vitesse, chauffe et stabilité sur le Galaxy A05s.
-- [ ] Choisir le modèle seulement après les résultats.
+### 3. Architecture d'intelligence interne
+- [x] Retenir l'Option A : construire le moteur spécialisé en interne.
+- [x] Définir les modules langage, représentation, raisonnement, connaissances, calcul et validation.
+- [ ] Définir les contrats techniques entre chaque module.
+- [ ] Implémenter le moteur de raisonnement symbolique.
+- [ ] Mesurer mémoire, vitesse et stabilité des moteurs internes sur Android.
 
-### 4. Préparation de l'entraînement
-- [x] Définir un format JSONL avec exemples et sorties attendues.
-- [x] Écrire une première consigne système.
+### 4. Préparation des connaissances et des règles
+- [x] Définir un format JSONL d'exemples et sorties attendues pour les tests de compréhension.
 - [x] Ajouter un test automatique du corpus.
-- [ ] Nettoyer les étiquettes et enrichir les exemples.
-- [ ] Constituer des ensembles séparés sans fuite de données.
-- [ ] Choisir une méthode d'adaptation après sélection du modèle et de la machine d'entraînement.
+- [x] Constituer des ensembles séparés sans fuite évidente entre familles sémantiques.
+- [ ] Nettoyer les annotations par revue humaine.
+- [ ] Construire le catalogue des règles de compréhension et de raisonnement.
 
 ### 5. Intégration progressive
 - [x] Charger le contrat et la compréhension lexicale dans la WebView.
 - [x] Valider et conserver le résultat structuré à titre de diagnostic.
 - [x] Préserver l'interface et le moteur de scène existants.
-- [ ] Connecter le modèle neuronal après tests indépendants.
-- [ ] Gérer les poids dans le stockage privé de l'application sans importation manuelle.
+- [ ] Intégrer progressivement les modules internes validés.
 - [ ] Vérifier le fonctionnement hors ligne sur le téléphone réel.
 
-## Stratégie du modèle
-Nous développons notre propre architecture, notre corpus spécialisé, nos consignes, notre contrat, nos validateurs et nos adaptateurs. Un modèle neuronal compact pré-entraîné pourra être adapté avec nos données si les essais le justifient. Entraîner un grand modèle fondamental depuis zéro n'est pas réaliste sur le téléphone ; l'entraînement éventuel se fera sur une machine adaptée.
-
-Le fichier de poids sera géré en interne par l'application (intégré si sa taille le permet ou initialisé une fois dans le stockage privé). L'utilisateur ne devra pas sélectionner un fichier GGUF.
+## Décision Option A
+Idée Vision sera un moteur spécialisé construit en interne, sans dépendance obligatoire à un LLM pré-entraîné. Voir `docs/DECISION-OPTION-A.md` pour l'architecture cible et les règles de conception. Les modèles présents sur le téléphone ne sont pas nécessaires au fonctionnement du projet.
 
 ## Règle de compilation
 **Aucune compilation Android ne doit être lancée sans autorisation explicite de l'utilisateur.** Le workflow automatique est limité aux tests JavaScript et ne lance ni Gradle ni la création d'APK. Les vérifications de code ne valent pas validation sur téléphone.
 
 ## Critères de fin
-L'étape 01 ne sera terminée que lorsque le modèle neuronal fonctionne hors ligne dans l'application, produit des interprétations conformes, demande des précisions, passe les tests français et a été mesuré sur le téléphone réel. Les fondations actuelles ne suffisent pas à déclarer l'étape terminée.
+L'étape 01 ne sera terminée que lorsque le moteur interne interprète les demandes couvertes, produit des structures conformes, demande des précisions, passe les tests français et a été mesuré sur le téléphone réel. Les fondations actuelles ne suffisent pas à déclarer l'étape terminée.
 
 ## Découpage expérimental du corpus
 
