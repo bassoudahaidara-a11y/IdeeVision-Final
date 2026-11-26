@@ -117,6 +117,14 @@ test('chaque pièce expose une géométrie intérieure avec murs et ouverture de
  assert(backWalls.some(w=>w.to<0)&&backWalls.some(w=>w.from>0),'les segments latéraux ne préservent pas le passage central');
  assert(room.bounds.left===-.88&&room.bounds.right===.88,'limites de pièce incorrectes');
 });
+test('le modèle d’une pièce reçoit les portes de ses connexions',()=>{
+ const rooms=['entrée','séjour','cuisine','chambre'];
+ const options=World.getConnectedRoomOptions(rooms,1);
+ const model=World.getInteriorRoomModel('séjour',options);
+ assert(model.doorways.length===3,'les trois portes du séjour ne sont pas représentées');
+ assert(model.doorways.some(d=>d.side==='left'&&d.target==='chambre'),'porte latérale gauche absente');
+ assert(model.doorways.some(d=>d.side==='right'&&d.target==='cuisine'),'porte latérale droite absente');
+});
 test('les meubles sont des volumes bornés et adaptés à chaque pièce',()=>{
  const living=World.getInteriorRoomModel('séjour');
  const kitchen=World.getInteriorRoomModel('cuisine');
