@@ -5,8 +5,7 @@
   const MAX_OBJECTS = 30;
   const MAX_RELATIONS = 60;
   const MAX_ACTIONS = 40;
-  const MAX_TEXT = 500;
-  const INTENTS = ['create', 'simulate', 'explain', 'modify', 'describe', 'compare'];
+    const INTENTS = ['create', 'simulate', 'explain', 'modify', 'describe', 'compare'];
   const MODES = ['2D', '3D', 'text'];
   const RELATIONS = [
     'on', 'under', 'inside', 'contains', 'left_of', 'right_of',
@@ -60,8 +59,8 @@
     if (!INTENTS.includes(input.intent)) errors.push('Intention inconnue.');
     if (!MODES.includes(input.mode)) errors.push('Mode inconnu.');
 
-    if (!Array.isArray(input.objects) || input.objects.length < 1 || input.objects.length > MAX_OBJECTS) {
-      errors.push('objects doit contenir entre 1 et ' + MAX_OBJECTS + ' éléments.');
+    if (!Array.isArray(input.objects) || input.objects.length > MAX_OBJECTS) {
+      errors.push('objects doit contenir au maximum ' + MAX_OBJECTS + ' éléments.');
     } else {
       const ids = new Set();
       input.objects.forEach((obj, index) => {
@@ -84,7 +83,22 @@
           if (p.size !== undefined && !SIZES.includes(p.size)) errors.push(label + '.properties.size inconnue.');
           if (p.material !== undefined && !MATERIALS.includes(p.material)) errors.push(label + '.properties.material inconnu.');
           if (p.purpose !== undefined) text(p.purpose, label + '.properties.purpose', 160, errors);
-          if (p.custom !== undefined && !isPlainObject(p.custom)) errors.push(label + '.properties.custom doit être un objet.');
+          if (p.custom !== undefined) {
+            if (!isPlainObject(p.custom)) errors.push(label + '.properties.custom doit être un objet.');
+            else {
+              const customKeys = Object.keys(p.custom);
+              if (customKeys.length > 12) errors.push(label + '.properties.custom contient trop de champs.');
+              for (const key of customKeys) {
+                const value = p.custom[key];
+                if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,39}$/.test(key) ||
+                    !(['string', 'number', 'boolean'].includes(typeof value)) ||
+                    (typeof value === 'number' && !Number.isFinite(value)) ||
+                    (typeof value === 'string' && value.length > 120)) {
+                  errors.push(label + '.properties.custom contient une valeur non autorisée.');
+                }
+              }
+            }
+          }
           if (p.dimensions !== undefined) {
             if (ownKeys(p.dimensions, ['width', 'height', 'depth', 'radius', 'unit'], label + '.properties.dimensions', errors)) {
               for (const k of ['width', 'height', 'depth', 'radius']) {
@@ -121,6 +135,7 @@
       });
     }
 
+    const idsForActions = new Set(Array.isArray(input.objects) ? input.objects.map(obj => obj && obj.id).filter(id => typeof id === 'string') : []);
     if (!Array.isArray(input.actions) || input.actions.length > MAX_ACTIONS) {
       errors.push('actions doit être une liste de ' + MAX_ACTIONS + ' éléments maximum.');
     } else {
@@ -128,9 +143,23 @@
         const label = 'actions[' + index + ']';
         if (!ownKeys(action, ['type', 'target', 'parameters'], label, errors)) return;
         if (!ACTIONS.includes(action.type)) errors.push(label + '.type inconnue.');
-        if (action.target !== undefined) text(action.target, label + '.target', 40, errors);
-        if (action.parameters !== undefined && !isPlainObject(action.parameters)) {
-          errors.push(label + '.parameters doit être un objet.');
+        if (action.target !== undefined) {
+          text(action.target, label + '.target', 40, errors);
+          if (typeof action.target === 'string' && !idsForActions.has(action.target)) {
+            errors.push(label + '.target référence un objet absent.');
+          }
+        }
+        if (action.parameters !== undefined) {
+          const allowedParameters = ['speed', 'angle', 'axis', 'distance', 'duration', 'temperature', 'force', 'height', 'mass', 'count', 'unit', 'direction'];
+          if (!ownKeys(action.parameters, allowedParameters, label + '.parameters', errors)) return;
+          for (const key of Object.keys(action.parameters)) {
+            const value = action.parameters[key];
+            if (!['string', 'number', 'boolean'].includes(typeof value) ||
+                (typeof value === 'number' && !Number.isFinite(value)) ||
+                (typeof value === 'string' && value.length > 80)) {
+              errors.push(label + '.parameters.' + key + ' contient une valeur invalide.');
+            }
+          }
         }
       });
     }
@@ -143,6 +172,7 @@
         errors.push('notes doit être une liste de 10 textes maximum (200 caractères chacun).');
       }
     }
+    if ((!Array.isArray(input.objects) || input.objects.length === 0) && !input.needsClarification) errors.push('Une interprétation sans objet doit demander une précision.');
     if (input.needsClarification && !input.clarificationQuestion) {
       errors.push('Une question est obligatoire quand needsClarification vaut true.');
     }
@@ -167,7 +197,7 @@
     const result = {
       schemaVersion: 1,
       language: 'fr',
-      intent: parsed.intent === 'simulate' || parsed.intent === 'explain' ? parsed.intent : 'create',
+      intent: ['simulate', 'explain', 'modify', 'describe', 'compare'].includes(parsed.intent) ? parsed.intent : 'create',
       mode: parsed.mode === '2D' ? '2D' : '3D',
       objects,
       relations: [],
