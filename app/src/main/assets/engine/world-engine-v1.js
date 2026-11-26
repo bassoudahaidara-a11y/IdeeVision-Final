@@ -226,7 +226,7 @@ function getInteriorStairTraversal(x,z,dx,dz,level,levels,hasStairs,tolerance){
  if(!access.visible)return {triggered:false,reason:'no-stairs',level:access.visible?access.level:Math.max(1,Math.floor(Number(level)||0)+1)};
  if(!access.near)return {triggered:false,reason:'too-far',level:access.level};
  if(!moving||!toward)return {triggered:false,reason:'not-approaching',level:access.level};
- const direction=access.canGoUp?1:access.canGoDown?-1:0;
+ const approachDirection=(Number(z)>-.55)?1:-1;const direction=approachDirection>0?(access.canGoUp?1:0):(access.canGoDown?-1:0);
  if(!direction)return {triggered:false,reason:'limit',level:access.level};
  const change=changeInteriorLevel(level,levels,direction,true);
  return {triggered:change.changed,reason:change.reason,level:change.level+1,direction:direction>0?'up':'down'};
