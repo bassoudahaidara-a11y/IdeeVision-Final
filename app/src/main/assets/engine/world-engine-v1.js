@@ -251,6 +251,13 @@ function getInteriorStairTraversal(x,z,dx,dz,level,levels,hasStairs,tolerance){
  const change=changeInteriorLevel(level,levels,direction,true);
  return {triggered:change.changed,reason:change.reason,level:change.level+1,direction:direction>0?'up':'down'};
 }
+function getInteriorStairLanding(level,levels,hasStairs,direction){
+ const indicator=getInteriorLevelIndicator(level,levels,hasStairs);
+ const dir=direction==='down'?'down':'up';
+ const canReach=dir==='up'?indicator.up:indicator.down;
+ const target=canReach?indicator.level+(dir==='up'?1:-1):indicator.level;
+ return {visible:indicator.stairs,accessible:canReach,direction:dir,currentLevel:indicator.level,targetLevel:target,label:!indicator.stairs?'AUCUN PALIER':!canReach?'PALIER INACCESSIBLE':dir==='up'?'PALIER ÉTAGE '+(target+1):'PALIER ÉTAGE '+target,marker:dir==='up'?'▲':'▼'};
+}
 function getInteriorStairAnimation(transition,stepCount){
  const count=Math.max(1,Math.floor(Number(stepCount)||10));
  if(!transition||!transition.active)return {active:false,direction:null,progress:0,percent:0,currentStep:-1,completedSteps:0,totalSteps:count};
@@ -457,6 +464,7 @@ function play(canvas,world,onCaption){
     ctx.fillStyle=stepState==='current'?'#F4D27A':stepState==='completed'?'#B98A5C':'#76543A';ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+run,py);ctx.lineTo(px+run,py+rise*.72);ctx.lineTo(px,py+rise*.72);ctx.closePath();ctx.fill();if(stepState==='current'){ctx.strokeStyle='#FFF1B8';ctx.lineWidth=2;ctx.stroke();}
     ctx.fillStyle='#B98A5C';ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+run,py);ctx.lineTo(px+run-3,py-5);ctx.lineTo(px-3,py-5);ctx.closePath();ctx.fill();
    });
+   const landing=getInteriorStairLanding(inside.level,inside.building.interior.levels,inside.building.interior.stairs,stairAnimation.active?stairAnimation.direction:stairModel.direction),landingX=ascending?sx+half*.48:sx,landingY=baseY-rise*1.12;ctx.fillStyle=landing.accessible?'rgba(244,210,122,.22)':'rgba(160,160,160,.12)';ctx.beginPath();ctx.moveTo(landingX-5,landingY);ctx.lineTo(landingX+half*.12,landingY-7);ctx.lineTo(landingX+half*.12+run,landingY+rise*.5-7);ctx.lineTo(landingX+run,landingY+rise*.5);ctx.closePath();ctx.fill();ctx.strokeStyle=landing.accessible?'#F4D27A':'#8A929B';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle=landing.accessible?'#F4D27A':'#AAB0B8';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(landing.marker,landingX+half*.06+run/2,landingY+rise*.28);
    ctx.strokeStyle='#D8C29B';ctx.lineWidth=3;ctx.beginPath();
    ctx.moveTo(ascending?sx:sx+half*.48,baseY-rise*.2);ctx.lineTo(ascending?sx+half*.48:sx,baseY-rise*1.12);ctx.stroke();
    ctx.strokeStyle='#5B4939';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ascending?sx+half*.48:sx,baseY-rise*1.12);ctx.lineTo(ascending?sx+half*.56:sx-half*.08,baseY-rise*1.12);ctx.lineTo(ascending?sx+half*.56:sx-half*.08,baseY-rise*.65);ctx.stroke();
@@ -514,5 +522,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
