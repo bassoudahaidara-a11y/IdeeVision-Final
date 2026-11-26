@@ -221,5 +221,6 @@ test('les interactions avec les meubles alternent un état simple et rejettent l
  const invalid=World.interactWithFurniture('chambre','meuble-inconnu',{});
  assert(!invalid.ok,'meuble inconnu accepté');
 });
-\nconsole.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
+
+console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
