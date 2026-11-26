@@ -147,6 +147,15 @@ function getInteriorTouchAction(x,y,width,height){
  if(Math.abs(offset-106)<=46)return 'select-door';
  return 'none';
 }
+function getInteriorTouchLabels(doorOpen,doorTarget,doorCount,nearbyFurniture){
+ return {
+  door:doorTarget>.5||doorOpen>.5?'FERMER':'OUVRIR',
+  examine:nearbyFurniture?'EXAMINER':'MEUBLE',
+  selectDoor:doorCount>0?'PORTE SUIV.':'SANS PORTE',
+  examineEnabled:!!nearbyFurniture,
+  selectDoorEnabled:doorCount>0
+ };
+}
 function getInteriorDoorThreshold(side){
  if(side==='left')return {x:-.79,z:0};
  if(side==='right')return {x:.79,z:0};
@@ -336,7 +345,7 @@ function play(canvas,world,onCaption){
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   ctx.fillText(selectedDoor?'Porte : '+selectedDoor.target+' • mur '+selectedDoor.side:'Aucune porte reliée',cx,h-30);
   ctx.fillText(nearbyFurniture?'Meuble proche : '+nearbyFurniture.label+' • F ou bouton pour examiner':'Approche-toi d’un meuble • F ou bouton pour examiner',cx,h-12);
-  const touchButtons=[{x:cx-106,label:'PORTE'},{x:cx,label:'EXAMINER'},{x:cx+106,label:'CHOISIR'}];touchButtons.forEach(button=>{ctx.fillStyle='rgba(20,29,42,.9)';ctx.fillRect(button.x-46,h-94,92,48);ctx.strokeStyle='#F4D27A';ctx.lineWidth=1.5;ctx.strokeRect(button.x-46,h-94,92,48);ctx.fillStyle='#F4D27A';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,h-65);});
+  const touchLabels=getInteriorTouchLabels(inside.doorOpen,inside.doorTarget,doorOptions.length,nearbyFurniture);const touchButtons=[{x:cx-106,label:touchLabels.door,enabled:true},{x:cx,label:touchLabels.examine,enabled:touchLabels.examineEnabled},{x:cx+106,label:touchLabels.selectDoor,enabled:touchLabels.selectDoorEnabled}];touchButtons.forEach(button=>{ctx.fillStyle=button.enabled?'rgba(20,29,42,.92)':'rgba(20,29,42,.55)';ctx.fillRect(button.x-46,h-94,92,48);ctx.strokeStyle=button.enabled?'#F4D27A':'rgba(190,198,208,.45)';ctx.lineWidth=1.5;ctx.strokeRect(button.x-46,h-94,92,48);ctx.fillStyle=button.enabled?'#F4D27A':'rgba(210,216,224,.6)';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,h-65);});
  }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
@@ -377,5 +386,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLabels,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
 })(window);
