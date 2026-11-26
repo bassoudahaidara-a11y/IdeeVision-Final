@@ -720,5 +720,80 @@ test('les composants géométriques restent isolés entre deux créations',()=>{
  first.mesh.vertices[0][0]=999;
  assert(second.mesh.vertices[0][0]!==999,'les modèles partagent leurs sommets');
 });
+
+test('les matériaux valident couleurs, propriétés physiques et transparence',()=>{
+ const opaque=World.createMaterial({id:'paint',baseColor:'#aa7733',roughness:.4,metallic:.2});
+ const glass=World.createMaterial({opacity:.25,transparent:true,alphaMode:'blend'});
+ assert(World.validateMaterial(opaque).valid&&opaque.baseColor==='#AA7733','matériau opaque invalide');
+ assert(World.validateMaterial(glass).valid&&glass.transparent&&glass.opacity===.25,'transparence du verre incorrecte');
+ assert(!World.validateMaterial(Object.assign({},opaque,{roughness:2})).valid,'rugosité hors limites acceptée');
+});
+test('la bibliothèque fournit des matériaux réutilisables pour plusieurs surfaces',()=>{
+ const library=World.createMaterialLibrary();
+ assert(library.length>=6,'bibliothèque de matériaux trop petite');
+ for(const id of ['wall-plaster','oak-wood','polished-metal','clear-glass','ceramic-tile','fabric-blue']){
+  const material=World.getMaterialPreset(library,id);
+  assert(material&&World.validateMaterial(material).valid,'préréglage absent ou invalide : '+id);
+ }
+ assert(World.getMaterialPreset(library,'inconnu')===null,'préréglage inconnu retourné');
+});
+test('les textures procédurales produisent des variations reproductibles',()=>{
+ const checker={type:'checker',scale:4,colorA:'#000000',colorB:'#FFFFFF',strength:1};
+ const a=World.sampleMaterialTexture(checker,[.1,.1]),b=World.sampleMaterialTexture(checker,[.4,.1]);
+ assert(a!==b,'damier sans variation');
+ assert(a===World.sampleMaterialTexture(checker,[.1,.1]),'texture non déterministe');
+ const gradient={type:'gradient',scale:1,colorA:'#000000',colorB:'#FFFFFF',strength:1,axis:'u'};
+ assert(World.sampleMaterialTexture(gradient,[0,0])==='#000000','début du dégradé incorrect');
+ assert(World.sampleMaterialTexture(gradient,[1,0])==='#FFFFFF','fin du dégradé incorrect');
+ for(const type of ['stripes','grid','wood']){
+  const color=World.sampleMaterialTexture({type,scale:5,colorA:'#111111',colorB:'#EEEEEE',strength:1,axis:'v'},[.3,.7]);
+  assert(/^#[0-9A-F]{6}$/.test(color),'texture non calculée : '+type);
+ }
+});
+test('les coordonnées UV planaires sont normalisées sur les axes demandés',()=>{
+ const mesh=World.createBoxGeometry(2,4,6);
+ for(const axis of ['xy','xz','yz']){
+  const uvs=World.generatePlanarUV(mesh,axis);
+  assert(uvs.length===mesh.vertices.length,'nombre de coordonnées UV incorrect');
+  assert(uvs.every(uv=>uv.length===2&&uv.every(v=>v>=0&&v<=1)),'coordonnées UV hors limites');
+ }
+});
+test('un matériau peut être appliqué à un maillage sans altérer sa géométrie source',()=>{
+ const mesh=World.createBoxGeometry(2,2,2),before=JSON.stringify(mesh);
+ const material=World.createMaterial({id:'blue-metal',baseColor:'#336699',metallic:.8});
+ const coated=World.applyMaterialToMesh(mesh,material);
+ assert(coated.materials['blue-metal'].baseColor==='#336699','matériau non attaché au maillage');
+ assert(coated.faceMaterials.length===mesh.faces.length&&coated.faceMaterials.every(id=>id==='blue-metal'),'affectation des faces incorrecte');
+ assert(coated.uvs.length===mesh.vertices.length,'coordonnées UV absentes');
+ assert(JSON.stringify(mesh)===before,'maillage source modifié');
+});
+test('les matériaux peuvent être affectés à un sous-ensemble de faces',()=>{
+ const mesh=World.createBoxGeometry(1,1,1),coated=World.applyMaterialToMesh(mesh,{id:'front',baseColor:'#FF0000'},{faceIndices:[0,1]});
+ assert(coated.faceMaterials[0]==='front'&&coated.faceMaterials[1]==='front','faces ciblées non peintes');
+ assert(coated.faceMaterials.slice(2).every(id=>id==='#AAB6C4'),'matériau des autres faces altéré');
+});
+test('l’évaluation de surface combine texture, lumière, rugosité et métal',()=>{
+ const material=World.createMaterial({baseColor:'#808080',roughness:.2,metallic:.9,textures:{baseColor:{type:'checker',scale:2,colorA:'#000000',colorB:'#FFFFFF',strength:.5}}});
+ const a=World.evaluateMaterialAppearance(material,[.1,.1],{ambient:.2,diffuse:.4});
+ const b=World.evaluateMaterialAppearance(material,[.1,.1],{ambient:.8,diffuse:.4});
+ assert(a.color!==b.color,'éclairage sans effet sur la surface');
+ assert(a.specular>b.specular*.9&&a.metallic===.9,'réponse métallique absente');
+ const unlit=World.evaluateMaterialAppearance({shadingModel:'unlit',baseColor:'#336699'},[0,0],{ambient:0,diffuse:0});
+ assert(unlit.color==='#336699'&&unlit.specular===0,'matériau non éclairé incorrect');
+});
+test('le mode alpha masque les surfaces sous le seuil de transparence',()=>{
+ const material=World.createMaterial({opacity:.2,alphaMode:'mask',alphaCutoff:.5});
+ const hidden=World.evaluateMaterialAppearance(material,[0,0]);
+ const visible=World.evaluateMaterialAppearance(Object.assign({},material,{opacity:.8}),[0,0]);
+ assert(hidden.opacity===0&&visible.opacity===1,'seuil alpha non respecté');
+});
+test('l’aperçu de matériau expose plusieurs échantillons et propriétés',()=>{
+ const material=World.createMaterial({id:'preview-oak',name:'Chêne',textures:{baseColor:{type:'wood',scale:8,colorA:'#553311',colorB:'#CC9955'}}});
+ const preview=World.createMaterialSurfacePreview(material,[[0,0],[.5,.5],[1,1]]);
+ assert(preview.materialId==='preview-oak'&&preview.name==='Chêne','identité du matériau absente');
+ assert(preview.samples.length===3&&preview.samples.every(s=>s.appearance.color),'échantillons visuels absents');
+ assert(preview.validation.valid&&preview.properties.roughness===material.roughness,'propriétés non validées');
+});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
