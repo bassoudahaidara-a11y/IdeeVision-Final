@@ -180,6 +180,18 @@ test('la navigation des étages indique les accès disponibles et les limites',(
  const invalid=World.getInteriorFloorNavigation(99,3,true);
  assert(invalid.level===3&&!invalid.canGoUp&&invalid.canGoDown,'niveau hors limites non normalisé');
 });
+test('l’animation des marches suit la progression de montée et descente',()=>{
+ const idle=World.getInteriorStairAnimation(null,10);
+ assert(!idle.active&&idle.currentStep===-1&&idle.totalSteps===10,'état inactif incorrect');
+ const up=World.getInteriorStairAnimation({active:true,direction:'up',progress:.35},10);
+ assert(up.active&&up.direction==='up'&&up.currentStep===3&&up.completedSteps===3&&up.percent===35,'progression montante incorrecte');
+ const down=World.getInteriorStairAnimation({active:true,direction:'down',progress:.6},10);
+ assert(down.direction==='down'&&down.currentStep===6&&down.completedSteps===6,'progression descendante incorrecte');
+ const end=World.getInteriorStairAnimation({active:true,direction:'up',progress:1.4},10);
+ assert(end.percent===100&&end.currentStep===-1&&end.completedSteps===10,'fin d’animation incorrecte');
+ const clamped=World.getInteriorStairAnimation({active:true,direction:'up',progress:-2},5);
+ assert(clamped.percent===0&&clamped.currentStep===0&&clamped.completedSteps===0,'borne basse incorrecte');
+});
 test('l’indicateur de transition affiche la bonne direction et la progression',()=>{
  const up=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.35});
  assert(up.active&&up.direction==='up'&&up.label==='MONTÉE EN COURS','indicateur de montée incorrect');
