@@ -40,6 +40,18 @@ test('terrain forêt et campagne avec amplitude intermédiaire',()=>{
  assert(forest.terrain.amplitude>0&&country.terrain.amplitude>0,'terrain sans relief');
  assert(forest.terrain.resolution>=8,'résolution du terrain trop faible');
 });
+test('les immeubles urbains possèdent plusieurs étages',()=>{
+ const w=World.create('Crée une ville moderne');
+ const buildings=w.elements.filter(e=>e.type==='building');
+ assert(buildings.length>0,'aucun immeuble généré');
+ assert(buildings.every(e=>Number.isInteger(e.floors)&&e.floors>=2&&e.floors<=5),'nombre d’étages incorrect');
+});
+test('les maisons de campagne ont une échelle positive',()=>{
+ const w=World.create('Crée une campagne avec des maisons');
+ const houses=w.elements.filter(e=>e.type==='house');
+ assert(houses.length>0,'aucune maison générée');
+ assert(houses.every(e=>e.scale>0),'échelle maison invalide');
+});
 test('chaque élément possède un identifiant et des coordonnées valides',()=>{
  const w=World.create('Crée un quartier');
  const ids=new Set();
