@@ -1,0 +1,21 @@
+const fs=require('fs'),vm=require('vm'),store={};const window={localStorage:{getItem:k=>store[k]||null,setItem:(k,v)=>store[k]=v,removeItem:k=>delete store[k]}};const context={window,JSON,Object,Array,String,Number,Math,Map,Set,TextEncoder};vm.createContext(context);for(const p of ['knowledge-manager-v1.js','scientific-knowledge-engine-v1.js','knowledge-intake-engine-v1.js'])vm.runInContext(fs.readFileSync('app/src/main/assets/engine/'+p,'utf8'),context);const I=window.IdeeVisionKnowledgeIntake,K=window.IdeeVisionKnowledge;let pass=0,fail=0;function t(n,f){try{f();pass++;console.log('✓ '+n)}catch(e){fail++;console.error('✗ '+n+': '+e.message)}}function a(v,m){if(!v)throw Error(m)}
+t('module chargé',()=>a(I&&I.version==='1.0.0','absent'));
+t('analyse Markdown',()=>{const r=I.analyzeFile('cours.md','# Force\nLa force est une interaction qui modifie le mouvement.');a(r.ok&&r.candidateCount===1,'échec')});
+t('détection du domaine physique',()=>a(I.analyzeFile('cours.txt','La force et la masse produisent une accélération.').candidates[0].domain==='Physique','domaine'));
+t('examen sans sauvegarde',()=>{I.analyzeFile('a.txt','Une connaissance avec un texte assez long.');a(K.stats().total===0,'sauvegarde automatique')});
+t('sauvegarde en brouillon',()=>{const r=I.analyzeFile('a.md','# Gravitation\nLa gravitation est une interaction attractive entre deux masses.');const s=I.saveAnalysis(r);a(s.ok&&s.draft===1&&K.stats().active===0,'statut')});
+t('test de correspondance',()=>{const r=I.analyzeFile('a.md','# Force\nLa force dépend de la masse et de l’accélération.');a(I.testKnowledge(r,'force accélération').coverage===1,'couverture')});
+t('sujet absent',()=>a(I.testKnowledge(I.analyzeFile('a.md','# Force\nLa force dépend de la masse et accélération.'),'photosynthèse chlorophylle').matches.length===0,'absence'));
+t('import JSON reconnu',()=>{const p={format:'ideevision-knowledge',schemaVersion:1,entries:[{id:'gravitation.base',domain:'Physique',title:'Gravitation',description:'Interaction entre masses.',kind:'concept'}]};const r=I.analyzeFile('p.json',JSON.stringify(p));a(r.ok&&r.valid===1,'JSON')});
+t('format JSON incorrect refusé',()=>a(I.analyzeFile('x.json','{}').error==='format-unsupported','format'));
+t('JSON illisible refusé',()=>a(I.analyzeFile('x.json','{').error==='json-invalid','JSON'));
+t('PDF refusé explicitement',()=>a(I.analyzeFile('x.pdf','text').error==='file-type-unsupported','PDF'));
+t('document vide refusé',()=>a(I.analyzeFile('x.txt',' ').error==='file-empty','vide'));
+t('taille maximale appliquée',()=>a(I.analyzeFile('x.txt','x'.repeat(2097153)).error==='file-too-large','taille'));
+t('limite de cent sections',()=>{const s=Array.from({length:120},(_,i)=>'# Sujet '+i+'\nDescription suffisamment longue pour un candidat.').join('\n');a(I.analyzeFile('x.md',s).candidates.length<=100,'limite')});
+t('texte importé inerte',()=>{I.analyzeFile('x.txt','<script>window.injected=true</script>\nUne phrase descriptive suffisamment longue.');a(!window.injected,'code exécuté')});
+t('zone temporaire persistante',()=>{I.stage('x.txt','Un contenu assez long pour persister dans le stockage local.');a(I.current().fileName==='x.txt','staging')});
+t('sauvegarde sans analyse refusée',()=>a(!I.saveAnalysis(null).ok,'sauvegarde prématurée'));
+t('question vide refusée',()=>a(!I.testKnowledge(I.analyzeFile('x.txt','Un contenu suffisamment long pour analyser.'),'').ok,'question'));
+t('analyse non modifiée par test',()=>{const r=I.analyzeFile('x.md','# Test\nUn contenu assez long pour tester la non mutation.');const b=JSON.stringify(r);I.testKnowledge(r,'contenu');a(JSON.stringify(r)===b,'mutation')});
+console.log('Résultat : '+pass+' réussis, '+fail+' échoués');if(fail)process.exitCode=1;
