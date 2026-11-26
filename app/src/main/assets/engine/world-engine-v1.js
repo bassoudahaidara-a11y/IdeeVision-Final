@@ -974,7 +974,7 @@ function exportOBJ(mesh,options){
  (mesh.normals||[]).forEach(n=>lines.push('vn '+n.slice(0,3).map(v=>Number(v).toPrecision(9)).join(' ')));
  let lastMaterial=null;
  mesh.faces.forEach((face,index)=>{
-  const material=mesh.faceMaterials&&mesh.faceMaterials[index]||mesh.material&&typeof mesh.material==='string'?mesh.material:null;
+  const material=(mesh.faceMaterials&&mesh.faceMaterials[index])||(typeof mesh.material==='string'?mesh.material:null);
   if(material&&material!==lastMaterial){lines.push('usemtl '+String(material).replace(/[\\r\\n]/g,'_'));lastMaterial=material;}
   const parts=face.map((v,i)=>{const uv=mesh.faceUVs&&mesh.faceUVs[index]&&mesh.faceUVs[index][i],normal=mesh.faceNormals&&mesh.faceNormals[index]&&mesh.faceNormals[index][i];const vi=v+1,ti=Number.isInteger(uv)?uv+1:Number.isInteger(uv&&uv.index)?uv.index+1:null,ni=Number.isInteger(normal)?normal+1:Number.isInteger(normal&&normal.index)?normal.index+1:null;return ti!==null&&ni!==null?vi+'/'+ti+'/'+ni:ti!==null?vi+'/'+ti:ni!==null?vi+'//'+ni:String(vi);});
   lines.push('f '+parts.join(' '));
@@ -986,7 +986,7 @@ function parseOBJIndex(value,count){
 }
 function importOBJ(data,options){
  const text=typeof data==='string'?data:'';if(!text.trim())return {ok:false,mesh:null,error:'empty-obj'};
- const o=options&&typeof options==='object'?options:{},maxVertices=Math.max(3,Math.min(1000000,Number(o.maxVertices)||250000)),maxFaces=Math.max(1,Math.min(1000000,Number(o.maxFaces)||250000));
+ const o=options&&typeof options==='object'?options:{},maxVertices=Math.max(1,Math.min(1000000,Number(o.maxVertices)||250000)),maxFaces=Math.max(1,Math.min(1000000,Number(o.maxFaces)||250000));
  const vertices=[],uvs=[],normals=[],faces=[],faceUVs=[],faceNormals=[],faceMaterials=[],groups=[];let material=null,group='default';
  for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line||line[0]==='#')continue;const p=line.split(/\s+/),tag=p.shift();
   if(tag==='v'){const v=p.slice(0,3).map(Number);if(v.length!==3||!v.every(Number.isFinite))return {ok:false,mesh:null,error:'invalid-obj-vertex'};vertices.push(v);if(vertices.length>maxVertices)return {ok:false,mesh:null,error:'obj-vertex-limit-exceeded'};}
@@ -1009,7 +1009,7 @@ function exportSTL(mesh,options){
  const o=options&&typeof options==='object'?options:{},binary=o.binary===true;
  const triangles=[];mesh.faces.forEach(face=>triangulateFaceIndices(face).forEach(tri=>triangles.push(tri)));
  if(binary){
-  const buffer=new ArrayBuffer(84+triangles.length*50),view=new DataView(buffer);const header=new TextEncoder().encode('IdeeVision binary STL');new Uint8Array(buffer,0,header.length).set(header);view.setUint32(80,triangles.length,true);
+  const buffer=new ArrayBuffer(84+triangles.length*50),view=new DataView(buffer);const header='IdeeVision binary STL';for(let h=0;h<header.length;h++)view.setUint8(h,header.charCodeAt(h));view.setUint32(80,triangles.length,true);
   triangles.forEach((face,i)=>{const a=mesh.vertices[face[0]],b=mesh.vertices[face[1]],c=mesh.vertices[face[2]],n=normalize3({x:(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]),y:(b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]),z:(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])});let offset=84+i*50;[n.x,n.y,n.z,...a,...b,...c].forEach(v=>{view.setFloat32(offset,v,true);offset+=4;});view.setUint16(offset,0,true);});
   return {ok:true,data:new Uint8Array(buffer),format:'stl-binary',triangleCount:triangles.length,error:null};
  }
@@ -1037,7 +1037,7 @@ function importSTL(data,options){
  return {ok:true,mesh,format,triangleCount:faces.length,validation,warnings:[],error:null};
 }
 function exportAssemblyJSON(assembly){
- if(!assembly||assembly.kind!=='assembly-model'||!Array.isArray(assembly.components))return {ok:false,data:null,error:'invalid-assembly'};
+ if(!assembly||assembly.kind!=='ideevision-assembly'||!Array.isArray(assembly.components))return {ok:false,data:null,error:'invalid-assembly'};
  try{return {ok:true,data:JSON.stringify({kind:'ideevision-assembly-export',formatVersion:1,assembly}),format:'ideevision-assembly-json',error:null};}catch(e){return {ok:false,data:null,error:'assembly-serialization-failed'};}
 }
 function importAssemblyJSON(data){
