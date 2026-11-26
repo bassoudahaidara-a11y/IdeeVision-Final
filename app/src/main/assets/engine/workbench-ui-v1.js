@@ -34,7 +34,7 @@ function draw(){
  W.drawEnvironmentBackground(ctx,w,h,{skyTop:'#101b35',skyHorizon:'#293B58',groundColor:'#111A2B',ambient:.48});
  if(!objects.length){ctx.fillStyle='white';ctx.fillText('Choisis Avion, Maison + escaliers ou un autre objet.',18,28);return}
  const mesh=merge(objects.filter(o=>o.visible).flatMap(o=>{const groups=[];const m=o.mesh;const mats=m.materials||[];const map=new Map();m.faces.forEach((face,i)=>{const id=Array.isArray(m.faceMaterials)?m.faceMaterials[i]:m.material||'#AAB6C4';const color=typeof id==='number'?(mats[id]||m.material||'#AAB6C4'):id;const key=String(color);if(!map.has(key))map.set(key,{type:'mesh',vertices:m.vertices,faces:[],material:key});map.get(key).faces.push(face)});return Array.from(map.values())}));
- const cam=W.createCameraState({position:{x:Math.sin(yaw)*9/zoom,y:4.5/zoom,z:Math.cos(yaw)*9/zoom},target:{x:0,y:0,z:0},yaw:yaw+Math.PI,pitch:pitch,distance:9/zoom});
+ const cam=W.createCameraState({position:{x:Math.sin(yaw)*9/zoom,y:4.5/zoom,z:Math.cos(yaw)*9/zoom},target:{x:0,y:0,z:0},yaw:-yaw,pitch:pitch,distance:9/zoom});
  W.renderMeshToCanvas(ctx,mesh,cam,{width:w,height:h,wireframe:wire,wireframeColor:'#D8E8FF',lineWidth:1.1,environment:{ambient:.48,lights:[{type:'directional',direction:{x:-.4,y:1,z:.3},intensity:.85,color:'#FFFFFF'}]}});
  ctx.fillStyle='#FFFFFF';ctx.font='12px system-ui';ctx.fillText('Jarvis • '+objects.length+' objet(s) • '+mesh.vertices.length+' sommets • '+mesh.faces.length+' faces',12,h-14);
 }
