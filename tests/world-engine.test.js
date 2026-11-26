@@ -155,6 +155,17 @@ test('la transition d’étage progresse, change de niveau au milieu et se termi
  const down=World.createInteriorLevelTransition(0,'down');
  assert(down.direction==='down'&&down.targetLevel===0,'transition descendante incorrecte');
 });
+test('l’indicateur de transition affiche la bonne direction et la progression',()=>{
+ const up=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:.35});
+ assert(up.active&&up.direction==='up'&&up.label==='MONTÉE EN COURS','indicateur de montée incorrect');
+ assert(up.progress===.35&&up.percent===35,'pourcentage de montée incorrect');
+ const down=World.getInteriorTransitionIndicator({active:true,direction:'down',progress:.8});
+ assert(down.label==='DESCENTE EN COURS'&&down.percent===80,'indicateur de descente incorrect');
+ const clamped=World.getInteriorTransitionIndicator({active:true,direction:'up',progress:1.4});
+ assert(clamped.progress===1&&clamped.percent===100,'progression non bornée');
+ const empty=World.getInteriorTransitionIndicator(null);
+ assert(!empty.active&&empty.percent===0,'indicateur inactif incorrect');
+});
 test('la traversée des escaliers se déclenche en s’en approchant dans le bon sens',()=>{
  const far=World.getInteriorStairTraversal(0,.55,0,-.02,0,3,true);
  assert(!far.triggered&&far.reason==='too-far','transition déclenchée à distance');
