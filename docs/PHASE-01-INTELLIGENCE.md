@@ -100,3 +100,12 @@ Le WebView dispose maintenant d'un `WebChromeClient` et d'un sélecteur Android 
 ## Politique de compilation
 
 Aucun workflow de compilation Android automatique n'est actif. Seuls les tests JavaScript s'exécutent lors des changements. Une compilation APK attend une autorisation explicite de l'utilisateur.
+
+
+## Terrain procédural et exploration de base
+
+Le moteur de monde ajoute une grille de terrain 16 × 16 cellules, avec une hauteur calculée localement à partir de fonctions déterministes. Les biomes montagne, forêt et campagne possèdent des amplitudes de relief différentes; les montagnes utilisent plusieurs sommets procéduraux. Les éléments posés dans le monde prennent en compte la hauteur locale du terrain.
+
+La caméra accepte la rotation par glissement, le zoom, les touches WASD/flèches et un pavé directionnel tactile dessiné dans le canvas. Cette navigation est une première exploration de prototype; elle ne constitue pas encore un contrôleur de personnage ni un moteur physique de monde ouvert.
+
+Les tests automatisés vérifient la détection des montagnes, la présence d'un relief non plat et les paramètres de terrain. Les tests JavaScript sont verts. Aucune compilation Android n'a été exécutée.
