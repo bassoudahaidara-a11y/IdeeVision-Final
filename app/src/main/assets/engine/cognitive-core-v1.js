@@ -7,7 +7,7 @@
   const VERSION = "1.0.0";
   const STOP = new Set(["le","la","les","un","une","des","du","de","d","et","ou","en","dans","sur","pour","avec","sans","que","qui","quoi","est","sont","ce","cette","ces","mon","ma","mes","ton","ta","tes","je","tu","il","elle","nous","vous","ils","elles","à","au","aux","the","a","an","and","or","in","on","for","with","to","is","are"]);
   const INTENTS = [
-    ["create", /\b(crée|creer|créer|construis|construire|fabrique|dessine|modélise|modelise|génère|genere|build|create|draw|design)\b/],
+    ["create", /\b(crée|cree|creer|créer|construis|construire|fabrique|dessine|modélise|modelise|génère|genere|build|create|draw|design)\b/],
     ["explain", /\b(explique|expliquer|définis|definis|définir|pourquoi|comment fonctionne|what is|explain|why|how does)\b/],
     ["calculate", /\b(calcule|calculer|résous|resous|résoudre|combien|solve|calculate|compute)\b/],
     ["compare", /\b(compare|comparer|différence|difference|versus|vs\.?|meilleur|best)\b/],
