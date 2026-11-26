@@ -25,4 +25,4 @@ for (let i = 0; i < lines.length; i++) {
   }
 }
 console.log('Corpus : ' + (lines.length - failed) + '/' + lines.length + ' exemples valides et sans doublons.');
-if (lines.length < 80 || failed) process.exitCode = 1;
+if (lines.length < 100 || failed) process.exitCode = 1;
