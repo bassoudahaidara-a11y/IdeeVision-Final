@@ -109,3 +109,10 @@ Le moteur de monde ajoute une grille de terrain 16 × 16 cellules, avec une haut
 La caméra accepte la rotation par glissement, le zoom, les touches WASD/flèches et un pavé directionnel tactile dessiné dans le canvas. Cette navigation est une première exploration de prototype; elle ne constitue pas encore un contrôleur de personnage ni un moteur physique de monde ouvert.
 
 Les tests automatisés vérifient la détection des montagnes, la présence d'un relief non plat et les paramètres de terrain. Les tests JavaScript sont verts. Aucune compilation Android n'a été exécutée.
+
+
+## Architecture des bâtiments procéduraux
+
+Le moteur distingue désormais les maisons et les immeubles. Les maisons de campagne reçoivent une façade avec porte et fenêtres ainsi qu'une toiture à deux pentes. Les immeubles urbains reçoivent un nombre d'étages déterministe, des fenêtres répétées, des séparations de niveaux, une entrée et un toit plat avec acrotère. Les bâtiments sont dessinés à partir de primitives géométriques dans le moteur de rendu existant.
+
+Les tests vérifient que les immeubles possèdent un nombre d'étages cohérent et que les maisons disposent d'une échelle valide. Les intérieurs visitables, l'ouverture des portes et l'édition libre des bâtiments ne sont pas encore implémentés.
