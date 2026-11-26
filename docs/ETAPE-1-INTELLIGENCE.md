@@ -170,3 +170,41 @@ Les documents sont stockés localement dans IndexedDB. La recherche est lexicale
 - L'application n'effectue pas encore de vérification externe de la véracité d'un document ou de son auteur.
 - L'effacement des données de l'application ou du navigateur peut supprimer la base IndexedDB.
 
+
+
+## Groupe 1.5 — Planificateur multi-moteurs et vérification des résultats (24 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Détecter plusieurs domaines dans une demande | Développé, règles heuristiques |
+| 2 | Déclarer les capacités attendues des moteurs | Développé |
+| 3 | Associer les tâches aux capacités | Développé |
+| 4 | Décomposer la demande en tâches identifiées | Développé |
+| 5 | Construire un graphe de dépendances | Développé |
+| 6 | Vérifier les dépendances inconnues | Développé |
+| 7 | Détecter les cycles de dépendances | Développé |
+| 8 | Trier les tâches selon leurs dépendances | Développé |
+| 9 | Attribuer une priorité aux tâches | Développé |
+| 10 | Former des phases de tâches parallélisables | Développé, planification uniquement |
+| 11 | Identifier les moteurs candidats | Développé |
+| 12 | Signaler les capacités sans moteur déclaré | Développé |
+| 13 | Produire un plan multi-domaines | Développé |
+| 14 | Générer un contexte de planification pour le générateur | Développé |
+| 15 | Valider la présence et le type d'une sortie | Développé |
+| 16 | Vérifier des exigences textuelles explicites | Développé |
+| 17 | Repérer des divergences numériques possibles | Développé, heuristique |
+| 18 | Signaler les résultats nécessitant une revue | Développé |
+| 19 | Enregistrer le statut d'une tâche | Développé |
+| 20 | Compter les tentatives et borner les reprises | Développé, suivi d'état |
+| 21 | Conserver les erreurs de tâche de façon limitée | Développé |
+| 22 | Produire un résumé de progression | Développé |
+| 23 | Fournir les diagnostics et limites du planificateur | Développé |
+| 24 | Ajouter 24 tests automatisés | Écrit, exécution CI à confirmer |
+
+### Intégration et limites du groupe 1.5
+
+Le pipeline crée désormais un plan multi-domaines avant de demander la conception de la scène et transmet ce plan au générateur. Le module peut répartir des tâches sur des capacités déclarées, ordonner les dépendances, identifier les capacités manquantes et préparer des phases parallélisables.
+
+**Limite importante :** à ce stade, le planificateur ne lance pas lui-même plusieurs modèles ou moteurs indépendants. Les moteurs spécialisés sont encore des capacités déclarées et des cibles de planification ; seule la chaîne de génération existante est effectivement appelée. Les comparaisons de résultats numériques sont des alertes heuristiques, pas une preuve de contradiction. Les tentatives sont suivies dans le plan mais aucun effet externe n'est relancé automatiquement.
+
+Le planificateur fonctionne localement, sans requête réseau. La génération de scènes de l'application utilise toujours le service Groq déjà configuré ; l'ajout de ce planificateur ne rend donc pas l'application entièrement hors ligne.
