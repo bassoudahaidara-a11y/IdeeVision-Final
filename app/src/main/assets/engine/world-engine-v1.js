@@ -107,7 +107,8 @@ function play(canvas,world,onCaption){
  }
  function drawInterior(){
   const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#29364A');sky.addColorStop(1,'#101827');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-  const cx=w*.5,cy=h*.52,roomW=Math.min(w*.72,420),roomH=Math.min(h*.58,330),left=cx-roomW/2,right=cx+roomW/2,top=cy-roomH/2,bottom=cy+roomH/2;\n  const speed=.018;inside.x=Math.max(-.88,Math.min(.88,inside.x+(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed));inside.z=Math.max(-.88,Math.min(.88,inside.z+(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed));inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
+  const cx=w*.5,cy=h*.52,roomW=Math.min(w*.72,420),roomH=Math.min(h*.58,330),left=cx-roomW/2,right=cx+roomW/2,top=cy-roomH/2,bottom=cy+roomH/2;
+  const speed=.018;inside.x=Math.max(-.88,Math.min(.88,inside.x+(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed));inside.z=Math.max(-.88,Math.min(.88,inside.z+(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed));inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
   poly([{x:left,y:top},{x:cx,y:top+roomH*.22},{x:right,y:top},{x:right,y:bottom},{x:cx,y:bottom-roomH*.18},{x:left,y:bottom}],'#A9A18F','#4C4B4A');
   poly([{x:left,y:top},{x:cx,y:top+roomH*.22},{x:cx,y:bottom-roomH*.18},{x:left,y:bottom}],'#D5C7A9','#514B43');
   poly([{x:cx,y:top+roomH*.22},{x:right,y:top},{x:right,y:bottom},{x:cx,y:bottom-roomH*.18}],'#B8AE99','#514B43');
