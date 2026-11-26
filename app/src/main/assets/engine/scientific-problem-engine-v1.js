@@ -20,7 +20,7 @@ const UNITS={
  '°':{variable:'angle',factor:1,unit:'°'}
 };
 function extractMeasurements(text){
- const source=String(text),re=/(\d+(?:[.,]\d+)?)\s*(km\/h|m\/s²|m\/s2|m\/s|kg|mm|cm|km|m|g|min|h|s|°)/gi,values={},measurements=[];let match;
+ const source=String(text),re=/(\d+(?:[.,]\d+)?)\s*(km\/h|m\/s²|m\/s2|m\/s|min|kg|mm|cm|km|m|g|h|s|°)/gi,values={},measurements=[];let match;
  while((match=re.exec(source))!==null&&measurements.length<MAX_VALUES){
   const rawUnit=match[2].toLowerCase(),unit=UNITS[rawUnit];if(!unit)continue;
   const raw=Number(match[1].replace(',','.'));if(!Number.isFinite(raw))continue;
