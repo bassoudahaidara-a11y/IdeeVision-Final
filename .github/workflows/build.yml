@@ -23,5 +23,7 @@ jobs:
       - name: Tester le planificateur multi-moteurs
         run: node --test tests/multi-engine-orchestrator-v1.test.js
 
+      - name: Vérifier la syntaxe du moteur scientifique
+        run: node --check app/src/main/assets/engine/scientific-validation-v1.js
       - name: Tester le contrôle scientifique
         run: node --test tests/scientific-validation-v1.test.js
