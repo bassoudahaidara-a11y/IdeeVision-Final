@@ -29,7 +29,7 @@ function resolveValues(values,results){
  for(const [key,v] of Object.entries(values||{})){
   if(v&&typeof v==='object'&&!Array.isArray(v)&&typeof v.from==='string'){
    if(!Object.prototype.hasOwnProperty.call(results,v.from)){missing.push({key,from:v.from});continue;}
-   out[key]=results[v.from];
+   const prior=results[v.from];if(!prior||!Object.prototype.hasOwnProperty.call(prior,'value')){missing.push({key,from:v.from,reason:'result-value-unavailable'});continue;}out[key]=prior.value;
   }else if(typeof v==='number'&&Number.isFinite(v))out[key]=v;
   else if(typeof v==='string'&&v.trim()!==''&&Number.isFinite(Number(v)))out[key]=Number(v);
   else missing.push({key});
@@ -40,7 +40,7 @@ function executeStep(step,values,options){
  if(step.operation==='calculate'){
   if(!S)return fail('scientific-engine-unavailable','Le moteur de calcul est indisponible.');
   const r=S.evaluateExpression(step.expression,values);if(!r.ok)return r;
-  if(step.expectedValue!==undefined&&P){const check=P.verifyCalculation(step.expression,values,step.expectedValue,{tolerance:step.tolerance,expectedUnit:step.expectedUnit,variableDimensions:step.variableDimensions});return Object.assign({value:r.value,unit:step.expectedUnit||null,proof:check},check.ok?{}:{ok:false});}
+  if(step.expectedValue!==undefined&&P){const check=P.verifyCalculation(step.expression,values,step.expectedValue,{tolerance:step.tolerance,expectedUnit:step.expectedUnit,variableDimensions:step.variableDimensions});return Object.assign({value:r.value,unit:step.expectedUnit||null,proof:check},check);}
   return {ok:true,value:r.value,unit:step.expectedUnit||null,verified:false,status:'calculated-not-independently-verified',steps:['Expression évaluée par le parseur scientifique sécurisé.']};
  }
  if(step.operation==='equation'){
