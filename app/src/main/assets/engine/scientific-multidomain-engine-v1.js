@@ -81,6 +81,7 @@ function run(plan,options){
   const resolved=resolveValues(step.variables||step.values,results);
   if(resolved.missing.length){const r=fail('input-missing','Des données d’entrée sont absentes ou invalides.',{missing:resolved.missing});missingInputs.push({step:step.id,missing:resolved.missing});trace.push({id:step.id,domain:step.domain,operation:step.operation,ok:false,result:r});results[step.id]=r;continue;}
   const r=executeStep(step,resolved.values,options||{});
+  if(!r.ok&&r.error==='input-missing')missingInputs.push({step:step.id,missing:r.missing||[]});
   const sources=Array.isArray(step.sources)?step.sources.filter(x=>typeof x==='string').slice(0,10):[];
   const assumptions=Array.isArray(step.assumptions)?step.assumptions.filter(x=>typeof x==='string').slice(0,10):[];
   const record=Object.assign({},r,{domain:step.domain,operation:step.operation,sources,assumptions,dependsOn:deps.slice()});
