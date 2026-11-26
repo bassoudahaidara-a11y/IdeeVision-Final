@@ -28,6 +28,7 @@ jobs:
       - run: node tests/advanced-problem-solving-engine.test.js
       - run: node tests/knowledge-intake-engine.test.js
       - run: node tests/world-engine.test.js
+      - run: node --check app/src/main/assets/engine/workbench-ui-v1.js
       - run: node tests/french-corpus.test.js
       - run: node tests/french-corpus-splits.test.js
 
