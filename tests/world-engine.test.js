@@ -144,7 +144,7 @@ test('la traversée des escaliers se déclenche en s’en approchant dans le bon
  assert(near.triggered&&near.level===2&&near.direction==='up','montée automatique non déclenchée');
  const away=World.getInteriorStairTraversal(.58,-.55,0,.02,0,3,true);
  assert(!away.triggered&&away.reason==='not-approaching','transition déclenchée en s’éloignant');
- const top=World.getInteriorStairTraversal(.58,-.55,0,-.02,2,3,true);
+ const top=World.getInteriorStairTraversal(.58,-.5,0,-.02,2,3,true);
  assert(!top.triggered&&top.reason==='limit','montée au-delà du dernier étage');
  const middleDown=World.getInteriorStairTraversal(.58,-.55,0,.02,1,3,true);
  assert(middleDown.triggered&&middleDown.level===1&&middleDown.direction==='down','descente automatique incorrecte');
