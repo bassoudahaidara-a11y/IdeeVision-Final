@@ -222,5 +222,15 @@ test('les interactions avec les meubles alternent un état simple et rejettent l
  assert(!invalid.ok,'meuble inconnu accepté');
 });
 
+test('l’interaction de proximité fonctionne sans clavier pour les commandes tactiles',()=>{
+ const room=World.getInteriorRoomModel('séjour'),sofa=room.furniture.find(f=>f.id==='canape');
+ const x=(sofa.left+sofa.right)/2,z=(sofa.top+sofa.bottom)/2;
+ const result=World.interactWithNearbyFurniture(x,z,'séjour',{},.3);
+ assert(result.ok&&result.nearby.id==='canape','interaction tactile de proximité impossible');
+ assert(result.states.canape==='open','état du meuble non actualisé');
+ const far=World.interactWithNearbyFurniture(.8,.8,'séjour',{},.2);
+ assert(!far.ok&&far.states&&far.nearby===null,'interaction déclenchée trop loin');
+});
+
 console.log('Résultat : '+passed+' réussis, '+failed+' échoués.');
 if(failed)process.exitCode=1;
