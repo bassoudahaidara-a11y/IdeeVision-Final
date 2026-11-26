@@ -121,3 +121,52 @@ Le pipeline de conception reçoit désormais le contexte des échanges précéde
 Ce moteur est une aide de structuration heuristique : il ne prouve pas mathématiquement une solution, ne remplace pas un solveur spécialisé et ne constitue pas une intelligence générale. La détection des domaines, hypothèses et conflits peut manquer des formulations. Les données absentes ne doivent pas être inventées : le générateur doit demander une précision lorsque celle-ci est indispensable. Le contexte transmis au modèle contient un résumé de méthode vérifiable, pas un raisonnement privé détaillé.
 
 Le pipeline ajoute maintenant le plan logique au contexte de conception avant de demander la génération de la scène.
+
+
+## Groupe 1.4 — Gestion des connaissances et des sources (26 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Importer des fichiers texte depuis l'appareil | Développé |
+| 2 | Prendre en charge TXT | Développé |
+| 3 | Prendre en charge Markdown (MD) | Développé |
+| 4 | Prendre en charge CSV | Développé |
+| 5 | Prendre en charge JSON valide | Développé |
+| 6 | Prendre en charge LOG et XML | Développé |
+| 7 | Vérifier l'extension des fichiers | Développé |
+| 8 | Contrôler la taille maximale d'un fichier | Développé |
+| 9 | Refuser les documents vides | Développé |
+| 10 | Nettoyer le texte importé | Développé |
+| 11 | Découper les documents en extraits avec chevauchement | Développé |
+| 12 | Tokeniser les extraits et normaliser les accents | Développé |
+| 13 | Construire un index de recherche local | Développé, calcul du score à la recherche |
+| 14 | Classer les extraits par pertinence | Développé, score lexical de type TF-IDF |
+| 15 | Retrouver les passages pertinents selon la demande | Développé |
+| 16 | Conserver le nom du document comme source | Développé |
+| 17 | Ajouter les extraits trouvés au contexte du générateur | Développé |
+| 18 | Séparer les documents de référence des instructions | Développé, consigne de prudence dans le contexte |
+| 19 | Enregistrer les documents dans IndexedDB | Développé |
+| 20 | Lister les documents importés | Développé |
+| 21 | Supprimer un document individuellement | Développé |
+| 22 | Effacer toute la base locale | Développé |
+| 23 | Exporter une archive structurée | Développé dans le moteur |
+| 24 | Importer une archive structurée validée | Développé dans le moteur |
+| 25 | Fournir des diagnostics de la base | Développé |
+| 26 | Ajouter 26 tests automatisés | Écrit, exécution CI à confirmer |
+
+### Utilisation dans l'application
+
+Dans les réglages, la section **Ma base de connaissances** permet de sélectionner des fichiers depuis l'appareil, de les ajouter, de voir les documents importés et de les supprimer. Avant la génération, Idée Vision recherche les extraits qui correspondent à la demande et transmet les passages retrouvés avec le nom de leur document source.
+
+Les documents sont stockés localement dans IndexedDB. La recherche est lexicale et approximative : elle ne comprend pas encore le sens profond des textes comme un modèle vectoriel. Les noms de fichiers et les extraits sont transmis au service de génération lorsque celui-ci est appelé.
+
+### Limites et sécurité des sources
+
+- Formats pris en charge actuellement : TXT, MD, CSV, JSON, LOG et XML.
+- PDF et DOCX ne sont pas encore pris en charge : ils sont explicitement refusés, sans prétendre avoir extrait leur contenu.
+- Limites actuelles : 3 Mo par fichier, 40 documents et 1 200 000 caractères dans la base par défaut.
+- La recherche classe les passages par correspondance lexicale ; elle peut manquer une formulation sémantiquement proche.
+- Les documents importés sont des données non fiables. Le contexte demande au modèle de ne pas suivre les instructions contenues dans ces documents.
+- L'application n'effectue pas encore de vérification externe de la véracité d'un document ou de son auteur.
+- L'effacement des données de l'application ou du navigateur peut supprimer la base IndexedDB.
+
