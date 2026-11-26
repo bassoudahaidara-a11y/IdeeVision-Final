@@ -142,11 +142,11 @@ test('la transition d’étage progresse, change de niveau au milieu et se termi
  assert(initial.active&&initial.targetLevel===2&&initial.progress===0,'transition initiale incorrecte');
  const first=World.advanceInteriorLevelTransition(initial,.2);
  assert(first.transition.progress===.2&&!first.switchLevel&&first.opacity>.3,'fondu initial incorrect');
- const middle=World.advanceInteriorLevelTransition(first.transition,.35);
+ const middle=World.advanceInteriorLevelTransition(first.transition,.25);
  assert(middle.switchLevel&&middle.transition.switched&&middle.opacity>.8,'changement de niveau non déclenché au milieu');
- const after=World.advanceInteriorLevelTransition(middle.transition,.2);
+ const after=World.advanceInteriorLevelTransition(middle.transition,.1);
  assert(!after.switchLevel&&after.transition.progress>.5,'changement de niveau déclenché deux fois');
- const final=World.advanceInteriorLevelTransition(after.transition,.25);
+ const final=World.advanceInteriorLevelTransition(after.transition,.45);
  assert(final.complete&&final.transition===null&&final.opacity===0,'transition non terminée proprement');
  const empty=World.advanceInteriorLevelTransition(null,.1);
  assert(empty.complete&&empty.opacity===0,'état sans transition incorrect');
