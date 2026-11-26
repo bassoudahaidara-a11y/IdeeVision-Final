@@ -232,13 +232,16 @@ test('l’interaction de proximité fonctionne sans clavier pour les commandes t
  assert(!far.ok&&far.states&&far.nearby===null,'interaction déclenchée trop loin');
 });
 
-test('les trois commandes tactiles intérieures sont détectées séparément',()=>{
- const w=360,h=640,c=w/2,y=h-70;
- assert(World.getInteriorTouchAction(c-106,y,w,h)==='door','bouton porte non détecté');
- assert(World.getInteriorTouchAction(c,y,w,h)==='examine','bouton examiner non détecté');
- assert(World.getInteriorTouchAction(c+106,y,w,h)==='select-door','bouton choisir non détecté');
- assert(World.getInteriorTouchAction(8,y,w,h)==='none','zone extérieure prise pour un bouton');
- assert(World.getInteriorTouchAction(c,y-40,w,h)==='none','zone au-dessus des boutons prise pour un bouton');
+test('les commandes tactiles s’adaptent aux petites et grandes largeurs',()=>{
+ for(const w of [240,280,320,360,420,600]){
+  const h=640,layout=World.getInteriorTouchLayout(w,h);
+  assert(layout.buttonWidth>=64&&layout.centers[0]-layout.buttonWidth/2>=-0.1,'bouton gauche hors écran à '+w);
+  assert(layout.centers[2]+layout.buttonWidth/2<=w+.1,'bouton droit hors écran à '+w);
+  assert(World.getInteriorTouchAction(layout.centers[0],layout.centerY,w,h)==='door','bouton porte non détecté à '+w);
+  assert(World.getInteriorTouchAction(layout.centers[1],layout.centerY,w,h)==='examine','bouton examiner non détecté à '+w);
+  assert(World.getInteriorTouchAction(layout.centers[2],layout.centerY,w,h)==='select-door','bouton choisir non détecté à '+w);
+  assert(World.getInteriorTouchAction(w/2,layout.centerY-40,w,h)==='none','zone supérieure confondue à '+w);
+ }
 });
 
 test('les libellés tactiles suivent l’état de la porte et les possibilités',()=>{
