@@ -1,0 +1,54 @@
+{
+  "format": "ideevision-knowledge",
+  "schemaVersion": 1,
+  "title": "Introduction à la gravitation universelle",
+  "entries": [
+    {
+      "id": "physique.gravitation.universelle.intro",
+      "domain": "physique",
+      "title": "Gravitation universelle de Newton",
+      "description": "Deux corps possédant une masse s'attirent mutuellement. Dans le modèle newtonien, la valeur de la force dépend du produit des masses et du carré de la distance entre leurs centres.",
+      "kind": "law",
+      "formula": "F = G * m1 * m2 / r^2",
+      "variables": [
+        {
+          "symbol": "F",
+          "unit": "N",
+          "meaning": "Valeur de la force gravitationnelle"
+        },
+        {
+          "symbol": "G",
+          "unit": "N·m^2/kg^2",
+          "meaning": "Constante gravitationnelle"
+        },
+        {
+          "symbol": "m1",
+          "unit": "kg",
+          "meaning": "Masse du premier corps"
+        },
+        {
+          "symbol": "m2",
+          "unit": "kg",
+          "meaning": "Masse du second corps"
+        },
+        {
+          "symbol": "r",
+          "unit": "m",
+          "meaning": "Distance entre les centres des deux corps"
+        }
+      ],
+      "assumptions": [
+        "Modèle classique newtonien",
+        "Corps assimilés à des masses ponctuelles ou à des distributions sphériques",
+        "Distance r strictement positive"
+      ],
+      "tests": [
+        {
+          "name": "Deux masses unitaires séparées d'un mètre",
+          "expected": "F = G si m1 = 1 kg, m2 = 1 kg et r = 1 m"
+        }
+      ],
+      "source": "Exemple pédagogique à vérifier avec une référence scientifique fiable."
+    }
+  ]
+}
