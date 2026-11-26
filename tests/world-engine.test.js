@@ -244,6 +244,21 @@ test('les commandes tactiles s’adaptent aux petites et grandes largeurs',()=>{
  }
 });
 
+test('l’indicateur de porte affiche la sélection et gère les indices circulaires',()=>{
+ const doors=[{target:'séjour',side:'back'},{target:'cuisine',side:'right'},{target:'chambre',side:'left'}];
+ const first=World.getInteriorDoorIndicator(doors,0);
+ assert(first.available&&first.index===1&&first.count===3,'première porte mal indiquée');
+ assert(first.label==='PORTE 1/3 : SÉJOUR'&&first.side==='back','libellé première porte incorrect');
+ const second=World.getInteriorDoorIndicator(doors,1);
+ assert(second.index===2&&second.target==='cuisine','deuxième porte non sélectionnée');
+ const wrapped=World.getInteriorDoorIndicator(doors,3);
+ assert(wrapped.index===1&&wrapped.target==='séjour','retour circulaire après la dernière porte incorrect');
+ const negative=World.getInteriorDoorIndicator(doors,-1);
+ assert(negative.index===3&&negative.target==='chambre','indice négatif non normalisé');
+ const empty=World.getInteriorDoorIndicator([],0);
+ assert(!empty.available&&empty.label==='AUCUNE PORTE'&&empty.count===0,'absence de porte mal indiquée');
+});
+
 test('les libellés tactiles suivent l’état de la porte et les possibilités',()=>{
  const closed=World.getInteriorTouchLabels(0,0,2,null);
  assert(closed.door==='OUVRIR','libellé porte fermée incorrect');
