@@ -94,8 +94,44 @@ function getInteriorRoomModel(roomName,doorways){
   ],
   doorway:{side:'back',left:-.22,right:.22,width:.44,headerHeight:.28,wallOpening:true},
   doorways:Array.isArray(doorways)?doorways.map(d=>({doorId:d.doorId,target:d.target,side:d.side,width:d.width})):[],
+  windows:[
+   {id:'window-left',side:'left',position:-.42,width:.34,height:.3,sill:.38},
+   {id:'window-right',side:'right',position:.38,width:.3,height:.28,sill:.42}
+  ],
+  architecture:{skirtingHeight:.07,trimWidth:.035,ceilingHeight:.9,floorPattern:/cuisine/.test(name)?'tiles':/chambre/.test(name)?'wood':'planks'},
+  lighting:getInteriorLighting(roomName),
   furniture
  };
+}
+function getInteriorWindows(roomName){
+ const modelName=String(roomName||'').toLowerCase();
+ const windows=[{id:'window-left',side:'left',position:-.42,width:.34,height:.3,sill:.38},{id:'window-right',side:'right',position:.38,width:.3,height:.28,sill:.42}];
+ return windows.map(w=>Object.assign({},w,{room:modelName}));
+}
+function getInteriorLighting(roomName){
+ const name=String(roomName||'').toLowerCase();
+ const windowCount=getInteriorWindows(name).length;
+ const ambient=/cuisine/.test(name)?.62:/chambre/.test(name)?.56:.6;
+ return {ambient,windowLight:Math.min(.3,windowCount*.12),brightness:Math.min(1,ambient+windowCount*.12),direction:'left-to-right'};
+}
+function getNearbyFurniture(x,z,roomName,maxDistance){
+ const limit=Number.isFinite(Number(maxDistance))?Math.max(0,Number(maxDistance)):.42;
+ const furniture=getInteriorRoomModel(roomName).furniture;
+ let best=null,bestDistance=Infinity;
+ furniture.forEach(item=>{
+  const qx=Math.max(item.left,Math.min(item.right,x));
+  const qz=Math.max(item.top,Math.min(item.bottom,z));
+  const distance=Math.hypot(x-qx,z-qz);
+  if(distance<=limit&&distance<bestDistance){bestDistance=distance;best={id:item.id,label:item.id.replace(/-/g,' '),distance,action:'inspect'};}
+ });
+ return best;
+}
+function interactWithFurniture(roomName,furnitureId,states){
+ const valid=getInteriorRoomModel(roomName).furniture.find(item=>item.id===furnitureId);
+ if(!valid)return {ok:false,state:null,message:'Meuble introuvable.'};
+ const next=Object.assign({},states||{}),opened=next[furnitureId]!=='open';
+ next[furnitureId]=opened?'open':'closed';
+ return {ok:true,state:next[furnitureId],states:next,message:opened?'Tu examines '+furnitureId.replace(/-/g,' ')+'.':'Tu termines l’interaction avec '+furnitureId.replace(/-/g,' ')+'.'};
 }
 function getInteriorDoorThreshold(side){
  if(side==='left')return {x:-.79,z:0};
@@ -140,9 +176,9 @@ function play(canvas,world,onCaption){
  resize();root.addEventListener('resize',resize);
  const pointerDown=e=>{const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;pointerStart={x:e.clientX,y:e.clientY};if(inside){drag=false;if(x<118&&y>h-132){moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));drag='interior-pad'}return}if(x<118&&y>h-132){drag=true;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else{drag=true;moveX=0;moveZ=0;lastX=e.clientX;lastY=e.clientY;drag='camera'}if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId)};
  const pointerMove=e=>{if(drag==='camera'){yaw+=(e.clientX-lastX)*.008;pitch=Math.max(.12,Math.min(.72,pitch+(e.clientY-lastY)*.003));lastX=e.clientX;lastY=e.clientY}else if(drag==='interior-pad'){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}else if(drag){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;moveX=Math.max(-1,Math.min(1,(x-62)/42));moveZ=Math.max(-1,Math.min(1,(y-(h-72))/42));}};
- const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.9&&y>h*.58&&inside.building.interior.stairs){const change=changeInteriorLevel(inside.level,inside.building.interior.levels,1,true);inside.level=change.level;if(change.changed){inside.roomIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu montes au niveau '+(inside.level+1)+'.')}else onCaption('Tu es déjà au dernier étage.')}else if(x>w*.78&&y<h*.42&&inside.building.interior.stairs){const change=changeInteriorLevel(inside.level,inside.building.interior.levels,-1,true);inside.level=change.level;if(change.changed){inside.roomIndex=0;inside.x=0;inside.z=.55;onCaption('Tu descends au niveau '+(inside.level+1)+'.')}else onCaption('Tu es déjà au rez-de-chaussée.')}else if(y>h*.78&&isNearInteriorDoor(inside.x,inside.z,'front',.3)){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7&&x>w*.68){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){inside.selectedDoorIndex=((inside.selectedDoorIndex||0)+1)%options.length;const choice=options[inside.selectedDoorIndex];onCaption('Porte choisie : '+choice.target+' ('+choice.side+').')}else onCaption('Aucune autre pièce reliée.')}else if(inside.doorOpen>.7){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);const active=options[Math.min(inside.selectedDoorIndex||0,Math.max(0,options.length-1))];if(active&&!isNearInteriorDoor(inside.x,inside.z,active.side,.34)){onCaption('Approche-toi de la porte '+active.side+' avant de la franchir.')}else if(options.length){const selected=Math.min(inside.selectedDoorIndex||0,options.length-1),choice=options[selected];inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex,selected,inside.building.interior.connections);inside.selectedDoorIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu passes par la porte vers : '+choice.target+'.')}else onCaption('Cette pièce ne possède pas de porte reliée.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,selectedDoorIndex:0,doorOpen:0,doorTarget:0};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
+ const pointerUp=e=>{const wasCamera=drag==='camera',wasInteriorPad=drag==='interior-pad',start=pointerStart;drag=false;moveX=0;moveZ=0;if(!start||!e)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y);pointerStart=null;if(moved>9)return;if(inside){if(wasInteriorPad)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;if(x>w*.9&&y>h*.58&&inside.building.interior.stairs){const change=changeInteriorLevel(inside.level,inside.building.interior.levels,1,true);inside.level=change.level;if(change.changed){inside.roomIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu montes au niveau '+(inside.level+1)+'.')}else onCaption('Tu es déjà au dernier étage.')}else if(x>w*.78&&y<h*.42&&inside.building.interior.stairs){const change=changeInteriorLevel(inside.level,inside.building.interior.levels,-1,true);inside.level=change.level;if(change.changed){inside.roomIndex=0;inside.x=0;inside.z=.55;onCaption('Tu descends au niveau '+(inside.level+1)+'.')}else onCaption('Tu es déjà au rez-de-chaussée.')}else if(y>h*.78&&isNearInteriorDoor(inside.x,inside.z,'front',.3)){inside=null;onCaption('Tu es ressorti du bâtiment.')}else if(x<w*.34){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}else if(inside.doorOpen>.7&&x>w*.68){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);if(options.length){inside.selectedDoorIndex=((inside.selectedDoorIndex||0)+1)%options.length;const choice=options[inside.selectedDoorIndex];onCaption('Porte choisie : '+choice.target+' ('+choice.side+').')}else onCaption('Aucune autre pièce reliée.')}else if(inside.doorOpen>.7){const options=getConnectedRoomOptions(inside.building.interior.rooms,inside.roomIndex,inside.building.interior.connections);const active=options[Math.min(inside.selectedDoorIndex||0,Math.max(0,options.length-1))];if(active&&!isNearInteriorDoor(inside.x,inside.z,active.side,.34)){onCaption('Approche-toi de la porte '+active.side+' avant de la franchir.')}else if(options.length){const selected=Math.min(inside.selectedDoorIndex||0,options.length-1),choice=options[selected];inside.roomIndex=getNextConnectedRoomIndex(inside.building.interior.rooms,inside.roomIndex,selected,inside.building.interior.connections);inside.selectedDoorIndex=0;inside.x=0;inside.z=.55;inside.doorOpen=0;inside.doorTarget=0;onCaption('Tu passes par la porte vers : '+choice.target+'.')}else onCaption('Cette pièce ne possède pas de porte reliée.')}return}const nearby=world.elements.filter(o=>(o.type==='house'||o.type==='building')&&Math.hypot(o.x-cameraX,o.z-cameraZ)<1.65).sort((a,b)=>Math.hypot(a.x-cameraX,a.z-cameraZ)-Math.hypot(b.x-cameraX,b.z-cameraZ))[0];if(nearby){inside={building:nearby,x:0,z:.55,level:0,roomIndex:0,selectedDoorIndex:0,doorOpen:0,doorTarget:0,furnitureStates:{},selectedFurnitureId:null};onCaption('Tu es entré dans '+(nearby.type==='house'?'la maison':'un immeuble')+'. Déplace-toi avec WASD ou le pavé tactile.')}};
  const keys=new Set();
- const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(k)){keys.add(k);if(k==='e'&&inside&&!e.repeat){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}e.preventDefault()}};
+ const keyDown=e=>{const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e','f'].includes(k)){keys.add(k);if(k==='e'&&inside&&!e.repeat){inside.doorTarget=inside.doorTarget?0:1;onCaption(inside.doorTarget?'La porte s’ouvre.':'La porte se ferme.')}if(k==='f'&&inside&&!e.repeat){const rooms=inside.building.interior.rooms||['séjour'],name=rooms[inside.roomIndex]||rooms[0],near=getNearbyFurniture(inside.x,inside.z,name,.5);if(near){const result=interactWithFurniture(name,near.id,inside.furnitureStates);if(result.ok){inside.furnitureStates=result.states;inside.selectedFurnitureId=near.id;onCaption(result.message)}}else onCaption('Approche-toi d’un meuble pour interagir.')}e.preventDefault()}};
  const keyUp=e=>keys.delete(e.key.toLowerCase());
  root.addEventListener('keydown',keyDown);root.addEventListener('keyup',keyUp);
  const wheel=e=>{zoom=Math.max(.65,Math.min(1.8,zoom+(e.deltaY<0?.08:-.08)))};
@@ -251,6 +287,23 @@ function play(canvas,world,onCaption){
   ctx.fillStyle='#75B6D5';ctx.fillRect(left+half*.18,back+45,half*.27,doorH*.35);ctx.strokeStyle='#E5E9E7';ctx.lineWidth=4;ctx.strokeRect(left+half*.18,back+45,half*.27,doorH*.35);
   // Meubles en volumes bas-poly : dessus, face avant et côté.
   const floorDepth=(floorY-back)*.52;
+  // Encadrements de fenêtres et lumière douce projetée dans la pièce.
+  const windowY=back+48,windowH=doorH*.34;
+  roomModel.windows.forEach((win,index)=>{
+   const wx=win.side==='left'?left+half*.17:right-half*.44;
+   const ww=half*win.width*.55,wy=windowY+index*5;
+   ctx.fillStyle='#5A4637';ctx.fillRect(wx-5,wy-5,ww+10,windowH+10);
+   ctx.fillStyle='#82C6E5';ctx.fillRect(wx,wy,ww,windowH);
+   ctx.strokeStyle='#F1E8D7';ctx.lineWidth=3;ctx.strokeRect(wx,wy,ww,windowH);
+   ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(wx+ww*.5,wy);ctx.lineTo(wx+ww*.5,wy+windowH);ctx.moveTo(wx,wy+windowH*.5);ctx.lineTo(wx+ww,wy+windowH*.5);ctx.stroke();
+   ctx.fillStyle='rgba(255,231,166,.12)';ctx.beginPath();ctx.moveTo(wx+ww,wy+windowH);ctx.lineTo(cx+half*.35,floorY);ctx.lineTo(cx-half*.12,floorY);ctx.closePath();ctx.fill();
+  });
+  // Plinthes et moulures : détails simples, peu coûteux à dessiner.
+  ctx.strokeStyle='#6F5E4C';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(left+8,floorY-7);ctx.lineTo(cx,floorY-52);ctx.lineTo(right-8,floorY-7);ctx.stroke();
+  ctx.strokeStyle='rgba(245,235,215,.75)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left+8,back+25);ctx.lineTo(cx,top+8);ctx.lineTo(right-8,back+25);ctx.stroke();
+  // Meubles en volumes bas-poly : dessus, face avant et côté.
+  const nearbyFurniture=getNearbyFurniture(inside.x,inside.z,roomName,.5);
+  inside.selectedFurnitureId=nearbyFurniture?nearbyFurniture.id:null;
   roomModel.furniture.forEach(item=>{
    const sx=cx+item.left*half*.72,ex=cx+item.right*half*.72;
    const sy=floorY-(item.bottom+.88)*floorDepth,ey=floorY-(item.top+.88)*floorDepth;
@@ -258,13 +311,17 @@ function play(canvas,world,onCaption){
    ctx.fillStyle=item.color;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,sy);ctx.lineTo(ex,ey);ctx.lineTo(sx,ey);ctx.closePath();ctx.fill();
    ctx.fillStyle='rgba(20,25,32,.28)';ctx.beginPath();ctx.moveTo(sx,ey);ctx.lineTo(ex,ey);ctx.lineTo(ex,ey-lift);ctx.lineTo(sx,ey-lift);ctx.closePath();ctx.fill();
    ctx.fillStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(sx,ey-lift);ctx.lineTo(ex,ey-lift);ctx.lineTo(ex-7,ey-lift-7);ctx.lineTo(sx-7,ey-lift-7);ctx.closePath();ctx.fill();
+   if(inside.selectedFurnitureId===item.id){ctx.strokeStyle='#F4D27A';ctx.lineWidth=3;ctx.strokeRect(sx-3,ey-lift-3,ex-sx+6,lift+6);}
+   if(inside.furnitureStates&&inside.furnitureStates[item.id]==='open'){ctx.fillStyle='#E9C47A';ctx.fillRect(sx+4,ey-lift+4,Math.max(5,ex-sx-8),5);}
   });
+  // Éclairage ambiant simulé par un voile léger, sans calcul physique lourd.
+  ctx.fillStyle='rgba(255,224,166,'+(Math.max(0,.16-roomModel.lighting.brightness*.1))+')';ctx.fillRect(left,back,right-left,floorY-back);
   ctx.fillStyle='#FFFFFF';ctx.font='700 17px system-ui';ctx.textAlign='center';ctx.fillText(roomName.toLocaleUpperCase('fr'),cx,34);
   ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText('Pièce '+(inside.roomIndex+1)+'/'+roomNames.length+' • Étage '+(inside.level+1)+'/'+inside.building.interior.levels,cx,54);
   ctx.fillStyle='rgba(10,16,24,.78)';ctx.fillRect(8,8,Math.min(w-16,300),38);ctx.fillStyle='#FFF';ctx.textAlign='left';ctx.font='12px system-ui';ctx.fillText('Gauche : ouvrir • Droite : choisir une porte',18,32);
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   ctx.fillText(selectedDoor?'Porte : '+selectedDoor.target+' • mur '+selectedDoor.side:'Aucune porte reliée',cx,h-30);
-  ctx.fillText('Ouvre la porte, choisis à droite, puis touche le centre',cx,h-12);
+  ctx.fillText(nearbyFurniture?'Meuble proche : '+nearbyFurniture.label+' • touche F pour examiner':'Déplace-toi près d’un meuble • F pour examiner',cx,h-12);
  }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
@@ -305,5 +362,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,resolveInteriorMovement,play});
 })(window);
