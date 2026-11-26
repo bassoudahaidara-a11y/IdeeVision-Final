@@ -85,3 +85,18 @@ Le module `knowledge-manager-v1.js` importe des paquets JSON versionnés, vérif
 ## Rendu filaire 3D — première version
 
 Le rendu des maillages peut être basculé vers un affichage des arêtes uniquement. Le réglage est mémorisé localement dans les paramètres. Il s'agit d'une première visualisation filaire, pas encore d'une navigation 3D avec caméra tactile ni d'un outil de modélisation complet.
+
+
+## Première fondation du monde 3D procédural
+
+Le module `world-engine-v1.js` construit une description de monde locale avec un biome (ville, forêt, campagne, port ou aéroport), des routes et des éléments positionnés. Il dispose d'un premier aperçu 3D stylisé avec caméra orientable au doigt et zoom. Il s'agit d'une base procédurale de type prototype, pas d'un monde ouvert réaliste de qualité AAA.
+
+Le modèle d'ordinateur de bureau a aussi été ajouté au catalogue de maillages de l'ancien moteur de scène.
+
+## Importation de fichiers sur Android
+
+Le WebView dispose maintenant d'un `WebChromeClient` et d'un sélecteur Android via `onShowFileChooser`. Cette correction répond au problème où le champ de sélection JSON apparaissait mais ne permettait pas d'ouvrir le gestionnaire de fichiers. Elle doit encore être vérifiée sur appareil lors d'une prochaine compilation autorisée.
+
+## Politique de compilation
+
+Aucun workflow de compilation Android automatique n'est actif. Seuls les tests JavaScript s'exécutent lors des changements. Une compilation APK attend une autorisation explicite de l'utilisateur.
