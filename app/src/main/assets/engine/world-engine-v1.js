@@ -59,6 +59,35 @@ function getInteriorRoomConnections(rooms,customConnections){
  for(let i=0;i<names.length-1;i++)links.push({from:names[i],to:names[i+1],doorId:'door-'+i,side:['back','right','left'][i%3],width:.44,openable:true});
  return links;
 }
+function analyzeInteriorRoomNetwork(rooms,connections,startRoom){
+ const names=Array.isArray(rooms)?Array.from(new Set(rooms.map(v=>String(v||'').trim()).filter(Boolean))):[];
+ const links=getInteriorRoomConnections(names,connections),adjacency=new Map(names.map(name=>[name,[]]));
+ links.forEach(link=>{
+  if(link.openable===false||!adjacency.has(link.from)||!adjacency.has(link.to))return;
+  adjacency.get(link.from).push(link.to);
+  adjacency.get(link.to).push(link.from);
+ });
+ const start=names.includes(String(startRoom||''))?String(startRoom):names[0]||null;
+ const paths=Object.create(null),queue=[];
+ if(start){paths[start]=[start];queue.push(start);}
+ while(queue.length){
+  const current=queue.shift();
+  adjacency.get(current).forEach(next=>{
+   if(paths[next])return;
+   paths[next]=paths[current].concat(next);
+   queue.push(next);
+  });
+ }
+ const roomDetails=names.map(name=>{
+  const degree=adjacency.get(name).length;
+  return {name,degree,reachable:!!paths[name],deadEnd:!!paths[name]&&degree===1,isolated:degree===0};
+ });
+ const reachableRooms=roomDetails.filter(room=>room.reachable).map(room=>room.name);
+ const unreachableRooms=roomDetails.filter(room=>!room.reachable).map(room=>room.name);
+ const deadEnds=roomDetails.filter(room=>room.deadEnd).map(room=>room.name);
+ const isolatedRooms=roomDetails.filter(room=>room.isolated).map(room=>room.name);
+ return {roomCount:names.length,connectionCount:links.length,startRoom:start,isConnected:names.length>0&&unreachableRooms.length===0,rooms:roomDetails,reachableRooms,unreachableRooms,deadEnds,isolatedRooms,paths};
+}
 function getConnectedRoomOptions(rooms,currentIndex,connections){
  if(!Array.isArray(rooms)||!rooms.length)return [];
  const index=Math.max(0,Math.min(rooms.length-1,Number(currentIndex)||0)),current=rooms[index];
@@ -530,5 +559,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
