@@ -789,6 +789,94 @@ function getMeshBounds(mesh){
  mesh.vertices.forEach(v=>{for(let i=0;i<3;i++){min[i]=Math.min(min[i],v[i]);max[i]=Math.max(max[i],v[i]);}});
  return {min,max,size:max.map((v,i)=>v-min[i]),center:max.map((v,i)=>(v+min[i])/2)};
 }
+
+function normalizeAssemblyTransform(value){
+ const t=value&&typeof value==='object'?value:{},p=vector3(t.position),r=vector3(t.rotation),s=t.scale&&typeof t.scale==='object'?t.scale:{};
+ return {position:p,rotation:r,scale:{x:Number.isFinite(Number(s.x))?Number(s.x):1,y:Number.isFinite(Number(s.y))?Number(s.y):1,z:Number.isFinite(Number(s.z))?Number(s.z):1}};
+}
+function rotateAssemblyVector(v,r){
+ let x=v.x,y=v.y,z=v.z,q=y*Math.cos(r.x)-z*Math.sin(r.x);z=y*Math.sin(r.x)+z*Math.cos(r.x);y=q;
+ q=x*Math.cos(r.y)+z*Math.sin(r.y);z=-x*Math.sin(r.y)+z*Math.cos(r.y);x=q;
+ q=x*Math.cos(r.z)-y*Math.sin(r.z);y=x*Math.sin(r.z)+y*Math.cos(r.z);x=q;return {x,y,z};
+}
+function createParametricComponent(type,parameters,options){
+ const p=Object.assign({},parameters||{}),o=options&&typeof options==='object'?options:{},kind=String(type||'box');let mesh=null;
+ if(kind==='box')mesh=createBoxGeometry(p.width||1,p.height||1,p.depth||1,o.material||p.material);
+ else if(kind==='cylinder')mesh=createCylinderGeometry(p.radius||.5,p.height||1,p.segments||24,o.material||p.material);
+ else if(kind==='sphere')mesh=createSphereGeometry(p.radius||.5,p.segments||24,p.rings||12,o.material||p.material);
+ else return {id:String(o.id||'component'),type:kind,mesh:null,parameters:p,validation:{valid:false,errors:['unsupported-parametric-type']}};
+ return {id:String(o.id||'component'),name:String(o.name||kind),type:kind,mesh,parameters:p,transform:normalizeAssemblyTransform(o.transform),anchors:Object.assign({},o.anchors||{}),metadata:Object.assign({},o.metadata||{}),validation:validateGeometryMesh(mesh)};
+}
+function updateParametricComponent(component,patch){
+ if(!component||!['box','cylinder','sphere'].includes(component.type))return {ok:false,component:null,error:'unsupported-parametric-component'};
+ const next=createParametricComponent(component.type,Object.assign({},component.parameters||{},patch||{}),component);
+ if(!next.validation.valid)return {ok:false,component,error:'invalid-generated-geometry'};
+ return {ok:true,component:Object.assign({},component,next,{transform:normalizeAssemblyTransform(component.transform)}),error:null};
+}
+function createAssemblyModel(name,components,connections,options){
+ const source=Array.isArray(components)?components:[],ids=new Set(),errors=[],normalized=source.map((item,index)=>{
+  const c=item||{},id=String(c.id||'component-'+index),mesh=c.mesh||(c.geometry&&c.geometry.mesh);
+  if(ids.has(id))errors.push('duplicate-component-id:'+id);ids.add(id);
+  const anchors={};Object.keys(c.anchors||{}).forEach(key=>{const p=c.anchors[key];if(p&&[p.x,p.y,p.z].every(v=>Number.isFinite(Number(v))))anchors[key]=vector3(p);else errors.push('invalid-anchor:'+id+':'+key);});
+  if(!mesh||!validateGeometryMesh(mesh).valid)errors.push('invalid-component-mesh:'+id);
+  return {id,name:String(c.name||id),type:String(c.type||'mesh'),mesh,parameters:Object.assign({},c.parameters||{}),transform:normalizeAssemblyTransform(c.transform),parentId:c.parentId?String(c.parentId):null,anchors,metadata:Object.assign({},c.metadata||{}),visible:c.visible!==false};
+ });
+ const byId=new Map(normalized.map(c=>[c.id,c]));
+ normalized.forEach(c=>{if(c.parentId&&!byId.has(c.parentId))errors.push('missing-parent:'+c.id+':'+c.parentId);});
+ normalized.forEach(c=>{const seen=new Set([c.id]);let p=c.parentId;while(p&&byId.has(p)){if(seen.has(p)){errors.push('hierarchy-cycle:'+c.id);break;}seen.add(p);p=byId.get(p).parentId;}});
+ const validTypes=['fixed','hinge','slider','ball'],links=(Array.isArray(connections)?connections:[]).map((link,index)=>{
+  const l=link||{},a=l.a||{},b=l.b||{},type=String(l.type||'fixed');
+  if(!byId.has(String(a.componentId||'')))errors.push('connection-component-a-missing:'+index);
+  if(!byId.has(String(b.componentId||'')))errors.push('connection-component-b-missing:'+index);
+  if(!validTypes.includes(type))errors.push('unsupported-joint-type:'+index);
+  if(a.componentId===b.componentId)errors.push('self-connection:'+index);
+  const ca=byId.get(String(a.componentId||'')),cb=byId.get(String(b.componentId||''));
+  if(ca&&a.anchorId&&!ca.anchors[a.anchorId])errors.push('anchor-a-missing:'+index);
+  if(cb&&b.anchorId&&!cb.anchors[b.anchorId])errors.push('anchor-b-missing:'+index);
+  return {id:String(l.id||'joint-'+index),type,a:{componentId:String(a.componentId||''),anchorId:String(a.anchorId||'origin')},b:{componentId:String(b.componentId||''),anchorId:String(b.anchorId||'origin')},axis:vector3(l.axis,{x:0,y:1,z:0}),limits:l.limits&&typeof l.limits==='object'?Object.assign({},l.limits):null,metadata:Object.assign({},l.metadata||{})};
+ });
+ const idsJ=new Set();links.forEach(j=>{if(idsJ.has(j.id))errors.push('duplicate-joint-id:'+j.id);idsJ.add(j.id);});
+ return {kind:'ideevision-assembly',version:1,name:String(name||'Assemblage 3D'),components:normalized,connections:links,revision:0,validation:{valid:errors.length===0&&normalized.length>0,errors},settings:{allowCycles:false,metadata:Object.assign({},options&&options.metadata||{})}};
+}
+function getAssemblyWorldTransform(assembly,componentId){
+ if(!assembly||!Array.isArray(assembly.components))return null;const map=new Map(assembly.components.map(c=>[c.id,c])),chain=[],seen=new Set();let current=map.get(String(componentId));
+ if(!current)return null;while(current){if(seen.has(current.id))return null;seen.add(current.id);chain.unshift(current);current=current.parentId?map.get(current.parentId):null;}
+ let result=normalizeAssemblyTransform(null);
+ chain.forEach(c=>{const t=normalizeAssemblyTransform(c.transform),scaled={x:t.position.x*result.scale.x,y:t.position.y*result.scale.y,z:t.position.z*result.scale.z},offset=rotateAssemblyVector(scaled,result.rotation);result={position:{x:result.position.x+offset.x,y:result.position.y+offset.y,z:result.position.z+offset.z},rotation:{x:result.rotation.x+t.rotation.x,y:result.rotation.y+t.rotation.y,z:result.rotation.z+t.rotation.z},scale:{x:result.scale.x*t.scale.x,y:result.scale.y*t.scale.y,z:result.scale.z*t.scale.z}};});
+ return result;
+}
+function getAssemblyAnchorWorldPosition(assembly,componentId,anchorId){
+ const c=assembly&&assembly.components&&assembly.components.find(x=>x.id===componentId);if(!c)return null;
+ const anchor=anchorId==='origin'?{x:0,y:0,z:0}:c.anchors&&c.anchors[anchorId];if(!anchor)return null;
+ const t=getAssemblyWorldTransform(assembly,componentId);if(!t)return null;
+ const scaled={x:anchor.x*t.scale.x,y:anchor.y*t.scale.y,z:anchor.z*t.scale.z},rotated=rotateAssemblyVector(scaled,t.rotation);
+ return {x:t.position.x+rotated.x,y:t.position.y+rotated.y,z:t.position.z+rotated.z};
+}
+function evaluateAssemblyConnections(assembly){
+ if(!assembly||!Array.isArray(assembly.connections))return {valid:false,joints:[],errors:['invalid-assembly']};
+ const joints=assembly.connections.map(j=>{const a=getAssemblyAnchorWorldPosition(assembly,j.a.componentId,j.a.anchorId),b=getAssemblyAnchorWorldPosition(assembly,j.b.componentId,j.b.anchorId),error=a&&b?Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z):null;return {id:j.id,type:j.type,a,b,anchorDistance:error,aligned:error!==null&&error<1e-4,axis:j.axis,limits:j.limits};});
+ return {valid:joints.every(j=>j.anchorDistance!==null),jointCount:joints.length,alignedCount:joints.filter(j=>j.aligned).length,joints,errors:joints.filter(j=>j.anchorDistance===null).map(j=>'unresolved-joint:'+j.id)};
+}
+function updateAssemblyComponent(assembly,componentId,patch){
+ if(!assembly||!Array.isArray(assembly.components))return {ok:false,assembly,error:'invalid-assembly'};
+ const index=assembly.components.findIndex(c=>c.id===componentId);if(index<0)return {ok:false,assembly,error:'component-not-found'};
+ const current=assembly.components[index];if(patch&&patch.parameters){const updated=updateParametricComponent(current,patch.parameters);if(!updated.ok)return {ok:false,assembly,error:updated.error};}
+ const nextComponents=assembly.components.slice(),changes=patch&&typeof patch==='object'?patch:{};
+ let replacement=Object.assign({},current,changes,{transform:changes.transform?normalizeAssemblyTransform(Object.assign({},current.transform,changes.transform)):current.transform});
+ if(changes.parameters&&['box','cylinder','sphere'].includes(current.type)){const generated=createParametricComponent(current.type,Object.assign({},current.parameters,changes.parameters),current);replacement=Object.assign(replacement,{mesh:generated.mesh,parameters:generated.parameters});}
+ nextComponents[index]=replacement;const next=createAssemblyModel(assembly.name,nextComponents,assembly.connections,assembly.settings);next.revision=(assembly.revision||0)+1;return {ok:next.validation.valid,assembly:next,error:next.validation.valid?null:next.validation.errors[0]};
+}
+function duplicateAssemblyComponent(assembly,componentId,newId,options){
+ if(!assembly||!Array.isArray(assembly.components)||assembly.components.some(c=>c.id===newId)||!newId)return {ok:false,assembly,error:'invalid-new-component-id'};
+ const source=assembly.components.find(c=>c.id===componentId);if(!source)return {ok:false,assembly,error:'component-not-found'};
+ const o=options&&typeof options==='object'?options:{},copy=Object.assign({},source,{id:String(newId),name:String(o.name||source.name+' (copie)'),parentId:o.parentId===undefined?source.parentId:o.parentId,mesh:cloneGeometryMesh(source.mesh),transform:normalizeAssemblyTransform(o.transform||source.transform),metadata:Object.assign({},source.metadata,{duplicatedFrom:source.id})});
+ const next=createAssemblyModel(assembly.name,assembly.components.concat(copy),assembly.connections,assembly.settings);next.revision=(assembly.revision||0)+1;return {ok:next.validation.valid,assembly:next,error:next.validation.valid?null:next.validation.errors[0],component:next.components.find(c=>c.id===newId)};
+}
+function getAssemblySummary(assembly){
+ if(!assembly||!Array.isArray(assembly.components))return {valid:false,componentCount:0,jointCount:0,roots:[],errors:['invalid-assembly']};
+ const roots=assembly.components.filter(c=>!c.parentId).map(c=>c.id),visible=assembly.components.filter(c=>c.visible),meshCount=visible.filter(c=>c.mesh).length,metrics=evaluateAssemblyConnections(assembly);
+ return {valid:!!assembly.validation.valid,componentCount:assembly.components.length,visibleCount:visible.length,meshCount,jointCount:assembly.connections.length,roots,alignedJointCount:metrics.alignedCount,revision:assembly.revision||0,errors:assembly.validation.errors.slice()};
+}
 function createInteractiveScene(objects,options){
  const o=options&&typeof options==='object'?options:{};
  const source=Array.isArray(objects)?objects:[];
@@ -1171,5 +1259,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createParametricSurface,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createParametricSurface,createParametricComponent,updateParametricComponent,createAssemblyModel,getAssemblyWorldTransform,getAssemblyAnchorWorldPosition,evaluateAssemblyConnections,updateAssemblyComponent,duplicateAssemblyComponent,getAssemblySummary,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
