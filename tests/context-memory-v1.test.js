@@ -1,0 +1,28 @@
+const test=require("node:test");
+const assert=require("node:assert/strict");
+require("../app/src/main/assets/engine/cognitive-core-v1.js");
+require("../app/src/main/assets/engine/context-memory-v1.js");
+const M=global.IdeeVisionContextMemory;
+
+test("01 crée une mémoire vide",()=>{const m=M.create();assert.equal(m.size,0);});
+test("02 conserve un message utilisateur",()=>{const m=M.create();m.add("user","Je construis une maison");assert.equal(m.recent()[0].content,"Je construis une maison");});
+test("03 distingue utilisateur et assistant",()=>{const m=M.create();m.add("user","Bonjour");m.add("assistant","Bonjour à toi");assert.deepEqual(m.recent().map(x=>x.role),["user","assistant"]);});
+test("04 limite le nombre de tours",()=>{const m=M.create({maxTurns:2});m.add("user","message un");m.add("user","message deux");m.add("user","message trois");assert.equal(m.size,2);assert.equal(m.recent()[0].content,"message deux");});
+test("05 limite la taille totale des messages",()=>{const m=M.create({maxTurns:8,maxChars:2000});m.add("user","a".repeat(1500));m.add("user","b".repeat(900));assert.ok(m.characters<=2000);});
+test("06 refuse un message vide",()=>{const m=M.create();assert.throws(()=>m.add("user","   "),/vide/);});
+test("07 nettoie les espaces",()=>{const m=M.create();m.add("user","  une   maison  ");assert.equal(m.recent()[0].content,"une maison");});
+test("08 extrait les sujets utiles",()=>{const m=M.create();m.add("user","Construis un avion");assert.ok(m.topic().includes("avion"));});
+test("09 détecte une demande de continuation",()=>{const m=M.create();m.add("user","Construis un pont");assert.equal(m.resolveReference("Ajoute des piliers").isFollowUp,true);});
+test("10 détecte un pronom de référence",()=>{const m=M.create();m.add("user","Construis une maison");assert.equal(m.resolveReference("Agrandis-la").hasPronoun,true);});
+test("11 propose des référents du contexte précédent",()=>{const m=M.create();m.add("user","Construis une maison avec un escalier");const r=m.resolveReference("Agrandis cette maison");assert.ok(r.referents.length>0);});
+test("12 signale une référence impossible à résoudre",()=>{const m=M.create();assert.equal(m.resolveReference("Continue cela").unresolved,true);});
+test("13 ne signale pas de référence pour une nouvelle demande",()=>{const m=M.create();assert.equal(m.resolveReference("Explique la photosynthèse").unresolved,false);});
+test("14 construit un résumé de conversation",()=>{const m=M.create();m.add("user","Construis un robot");m.add("assistant","Je prépare le robot");const s=m.summary();assert.equal(s.turnCount,2);assert.equal(s.userTurnCount,1);});
+test("15 construit un contexte lisible pour le moteur",()=>{const m=M.create();m.add("user","Construis un pont");assert.match(m.context(),/MÉMOIRE DE TRAVAIL IDÉE VISION/);});
+test("16 efface toute la mémoire",()=>{const m=M.create();m.add("user","message");m.clear();assert.equal(m.size,0);assert.equal(m.characters,0);});
+test("17 exporte un format identifié",()=>{const m=M.create();m.add("user","Bonjour");assert.equal(m.exportData().schema,"idee-vision-context-memory");});
+test("18 réimporte un historique valide",()=>{const a=M.create();a.add("user","Construis une maison");const b=M.create();b.importData(a.exportData());assert.equal(b.recent()[0].content,"Construis une maison");});
+test("19 refuse un format d'import invalide",()=>{const m=M.create();assert.throws(()=>m.importData({schema:"autre",turns:[]}),/invalide/);});
+test("20 expose des diagnostics de confidentialité",()=>{const m=M.create();const d=m.diagnostics();assert.equal(d.volatile,true);assert.equal(d.persistence,"disabled_by_default");});
+test("21 conserve une intention associée au tour",()=>{const m=M.create();m.add("user","Calcule la vitesse",{intent:"calculate"});assert.equal(m.recent()[0].intent,"calculate");});
+test("22 accepte uniquement des rôles contrôlés",()=>{const m=M.create();m.add("alien","bonjour");assert.equal(m.recent()[0].role,"user");});
