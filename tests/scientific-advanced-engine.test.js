@@ -11,7 +11,7 @@ test('calcule une intégrale polynomiale et ajoute C',()=>{const r=A.integrate('
 test('traite les constantes et polynômes nuls',()=>{assert(A.differentiate('12','x').expression==='0'&&A.integrate('0','x').expression==='0','constante incorrecte')});
 test('refuse une fonction non polynomiale pour le calcul symbolique',()=>assert(!A.differentiate('sin(x)','x').ok,'fonction non polynomiale acceptée'));
 test('résout un système linéaire 2x2',()=>{const r=A.solveLinearSystem([[2,1],[1,-1]],[5,1]);assert(r.ok&&r.solvable&&Math.abs(r.solutions[0]-2)<1e-9&&Math.abs(r.solutions[1]-1)<1e-9,'solution 2x2 incorrecte')});
-test('résout un système linéaire 3x3',()=>{const r=A.solveLinearSystem([[1,1,1],[2,-1,1],[1,2,-1]],[6,3,2]);assert(r.ok&&r.solvable&&r.solutions.every((v,i)=>Math.abs(v-[1,2,3][i])<1e-9),'solution 3x3 incorrecte')});
+test('résout un système linéaire 3x3',()=>{const r=A.solveLinearSystem([[1,1,1],[2,-1,1],[1,2,-1]],[6,3,2]);assert(r.ok&&r.solvable&&r.solutions.every((v,i)=>Math.abs(v-[1,2,3][i])<1e-9),'solution 3x3 incorrecte '+JSON.stringify(r))});
 test('détecte un système singulier',()=>{const r=A.solveLinearSystem([[1,2],[2,4]],[3,6]);assert(r.ok&&!r.solvable&&r.type==='singular-or-underdetermined','système singulier non détecté')});
 test('refuse les matrices non carrées et trop grandes',()=>{assert(!A.solveLinearSystem([[1,2]],[1]).ok&&!A.solveLinearSystem(Array.from({length:13},()=>Array(13).fill(1)),Array(13).fill(1)).ok,'limites matrice non respectées')});
 test('vérifie des solutions d’équation',()=>{const r=A.verifyEquation('x^2-5*x+6=0','x',[2,3]);assert(r.ok&&r.allValid&&r.checks.length===2,'solutions valides rejetées')});
