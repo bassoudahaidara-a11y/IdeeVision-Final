@@ -208,3 +208,53 @@ Le pipeline crée désormais un plan multi-domaines avant de demander la concept
 **Limite importante :** à ce stade, le planificateur ne lance pas lui-même plusieurs modèles ou moteurs indépendants. Les moteurs spécialisés sont encore des capacités déclarées et des cibles de planification ; seule la chaîne de génération existante est effectivement appelée. Les comparaisons de résultats numériques sont des alertes heuristiques, pas une preuve de contradiction. Les tentatives sont suivies dans le plan mais aucun effet externe n'est relancé automatiquement.
 
 Le planificateur fonctionne localement, sans requête réseau. La génération de scènes de l'application utilise toujours le service Groq déjà configuré ; l'ajout de ce planificateur ne rend donc pas l'application entièrement hors ligne.
+
+
+## Groupe 1.6 — Vérification scientifique et calculs contrôlés (36 tâches)
+
+| # | Tâche | État |
+|---:|---|---|
+| 1 | Déclarer un registre d'unités SI courantes | Développé |
+| 2 | Définir les facteurs de conversion | Développé |
+| 3 | Analyser une quantité et son unité | Développé |
+| 4 | Convertir les unités d'une même dimension | Développé |
+| 5 | Refuser les conversions de dimensions différentes | Développé |
+| 6 | Extraire plusieurs grandeurs d'une demande | Développé |
+| 7 | Détecter des formules candidates | Développé, règles lexicales |
+| 8 | Vérifier la compatibilité de deux dimensions | Développé |
+| 9 | Contrôler une liste de dimensions | Développé |
+| 10 | Effectuer des opérations arithmétiques autorisées | Développé, sans eval |
+| 11 | Refuser la division par zéro | Développé |
+| 12 | Borner les exposants | Développé |
+| 13 | Compter les chiffres significatifs | Développé |
+| 14 | Arrondir selon les chiffres significatifs | Développé |
+| 15 | Comparer deux résultats avec tolérance | Développé |
+| 16 | Contrôler une valeur positive | Développé |
+| 17 | Vérifier un intervalle annoncé | Développé |
+| 18 | Valider l'inégalité triangulaire | Développé |
+| 19 | Vérifier les dimensions d'un rectangle | Développé |
+| 20 | Calculer une vitesse moyenne | Développé |
+| 21 | Calculer une masse volumique | Développé |
+| 22 | Appliquer la deuxième loi de Newton | Développé |
+| 23 | Calculer le poids avec la gravité terrestre | Développé |
+| 24 | Appliquer la loi d'Ohm | Développé |
+| 25 | Calculer l'énergie cinétique | Développé |
+| 26 | Comparer une conservation énergétique à une tolérance | Développé |
+| 27 | Vérifier la forme entière et positive de coefficients chimiques | Développé, sans équilibrage automatique |
+| 28 | Calculer une concentration molaire | Développé |
+| 29 | Détecter quelques risques de calcul dans le texte | Développé, heuristique |
+| 30 | Valider la présence d'un résultat numérique | Développé |
+| 31 | Vérifier la compatibilité de l'unité d'un résultat | Développé |
+| 32 | Fournir des constantes physiques usuelles | Développé |
+| 33 | Construire un audit scientifique d'une demande | Développé |
+| 34 | Produire un contexte prudent pour le générateur | Développé |
+| 35 | Exposer les diagnostics du moteur | Développé |
+| 36 | Ajouter 36 tests automatisés | Développé |
+
+### Intégration et limites du groupe 1.6
+
+Le moteur scientifique est chargé dans l'application. Avant la génération, il analyse la demande, extrait certaines quantités, suggère des formules candidates et ajoute des alertes et règles de vérification au contexte transmis au générateur.
+
+Les calculs déterministes exposés par le module peuvent être testés directement. En revanche, le branchement au générateur reste un contexte de vérification : le module ne recalcule pas automatiquement chaque réponse produite par le modèle et ne certifie pas une solution. Le catalogue de formules et la reconnaissance des unités sont limités aux éléments explicitement implémentés. Le contrôle de coefficients chimiques ne vérifie pas l'équilibrage des équations. Les alertes lexicales peuvent manquer des erreurs ou signaler à tort un risque.
+
+Le moteur fonctionne localement et ne nécessite pas de service distant pour ses opérations. La génération de films/scènes utilise toujours le service Groq configuré dans l'application. Aucun APK n'est compilé à cette étape.
