@@ -231,6 +231,17 @@ function getInteriorStairTraversal(x,z,dx,dz,level,levels,hasStairs,tolerance){
  const change=changeInteriorLevel(level,levels,direction,true);
  return {triggered:change.changed,reason:change.reason,level:change.level+1,direction:direction>0?'up':'down'};
 }
+function createInteriorLevelTransition(targetLevel,direction){
+ const level=Math.max(0,Math.floor(Number(targetLevel)||0));
+ return {active:true,targetLevel:level,direction:direction==='down'?'down':'up',progress:0,switched:false,complete:false};
+}
+function advanceInteriorLevelTransition(transition,step){
+ if(!transition||!transition.active)return {transition:null,switchLevel:false,complete:true,opacity:0};
+ const amount=Number.isFinite(Number(step))?Math.max(0,Math.min(.25,Number(step))):.05;
+ const progress=Math.min(1,transition.progress+amount),switchLevel=!transition.switched&&transition.progress<.5&&progress>=.5;
+ const next={...transition,progress,switched:transition.switched||switchLevel,complete:progress>=1,active:progress<1};
+ return {transition:next.active?next:null,switchLevel,complete:progress>=1,opacity:progress<.5?progress*2:(1-progress)*2};
+}
 function changeInteriorLevel(level,levels,direction,hasStairs){
  const max=Math.max(1,Math.floor(Number(levels)||1)),current=Math.max(0,Math.min(max-1,Math.floor(Number(level)||0)));
  if(!hasStairs||max<2)return {level:current,changed:false,reason:'no-stairs'};
@@ -336,14 +347,14 @@ function play(canvas,world,onCaption){
  function drawInterior(){
   const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#34495E');sky.addColorStop(1,'#101827');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
   const cx=w*.5,top=h*.19,bottom=h*.82,half=Math.min(w*.43,250),floorY=bottom;
-  const speed=.018;inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
+  const speed=.018;let stairFade=0;if(inside.levelTransition){const step=advanceInteriorLevelTransition(inside.levelTransition,.055);stairFade=step.opacity;if(step.switchLevel){const transition=step.transition;Object.assign(inside,getInteriorLevelEntryState(inside.levelTransition.targetLevel));inside.levelTransition=transition;}else inside.levelTransition=step.transition;if(step.complete)inside.levelTransition=null;}inside.doorOpen+=(inside.doorTarget-inside.doorOpen)*.12;
   const roomNames=inside.building.interior.rooms||['séjour'],roomName=roomNames[inside.roomIndex]||roomNames[0];
   const doorOptions=getConnectedRoomOptions(roomNames,inside.roomIndex,inside.building.interior.connections);
   const selectedDoor=doorOptions[Math.min(inside.selectedDoorIndex||0,Math.max(0,doorOptions.length-1))];
   const roomModel=getInteriorRoomModel(roomName,doorOptions);
-  const dx=(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
-  const dz=(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
-  const previousX=inside.x,previousZ=inside.z;const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen,selectedDoor?selectedDoor.side:'back');inside.x=moved.x;inside.z=moved.z;const stairTraversal=getInteriorStairTraversal(inside.x,inside.z,inside.x-previousX,inside.z-previousZ,inside.level,inside.building.interior.levels,inside.building.interior.stairs,.18);if(stairTraversal.triggered){Object.assign(inside,getInteriorLevelEntryState(stairTraversal.level-1));onCaption(stairTraversal.direction==='up'?'Tu montes automatiquement par l’escalier.':'Tu descends automatiquement par l’escalier.');}
+  const dx=inside.levelTransition?0:(keys.has('d')||keys.has('arrowright')?speed:0)-(keys.has('a')||keys.has('arrowleft')?speed:0)+moveX*speed;
+  const dz=inside.levelTransition?0:(keys.has('s')||keys.has('arrowdown')?speed:0)-(keys.has('w')||keys.has('arrowup')?speed:0)+moveZ*speed;
+  const previousX=inside.x,previousZ=inside.z;const moved=resolveInteriorMovement(inside.x,inside.z,dx,dz,roomName,inside.doorOpen,selectedDoor?selectedDoor.side:'back');inside.x=moved.x;inside.z=moved.z;const stairTraversal=getInteriorStairTraversal(inside.x,inside.z,inside.x-previousX,inside.z-previousZ,inside.level,inside.building.interior.levels,inside.building.interior.stairs,.18);if(stairTraversal.triggered&&!inside.levelTransition){inside.levelTransition=createInteriorLevelTransition(stairTraversal.level-1,stairTraversal.direction);onCaption(stairTraversal.direction==='up'?'Tu montes automatiquement par l’escalier.':'Tu descends automatiquement par l’escalier.');}
   const left=cx-half,right=cx+half,back=top+70;
   poly([{x:left,y:back},{x:cx,y:top},{x:right,y:back},{x:right,y:floorY},{x:left,y:floorY}],'#B9AD98','#45413B');
   poly([{x:left,y:back},{x:cx,y:top},{x:cx,y:floorY-45},{x:left,y:floorY}],'#D7C9AE','#5C5145');
@@ -426,7 +437,7 @@ function play(canvas,world,onCaption){
   ctx.textAlign='center';ctx.font='12px system-ui';ctx.fillStyle='rgba(255,255,255,.92)';
   const doorIndicator=getInteriorDoorIndicator(doorOptions,inside.selectedDoorIndex);ctx.fillText(doorIndicator.available?doorIndicator.label+' • mur '+doorIndicator.side.toLocaleUpperCase('fr'):doorIndicator.label,cx,h-30);
   ctx.fillText(nearbyFurniture?'Meuble proche : '+nearbyFurniture.label+' • F ou bouton pour examiner':'Approche-toi d’un meuble • F ou bouton pour examiner',cx,h-12);
-  const touchLabels=getInteriorTouchLabels(inside.doorOpen,inside.doorTarget,doorOptions.length,nearbyFurniture),touchLayout=getInteriorTouchLayout(w,h);const touchButtons=[{x:touchLayout.centers[0],label:touchLabels.door,enabled:true},{x:touchLayout.centers[1],label:touchLabels.examine,enabled:touchLabels.examineEnabled},{x:touchLayout.centers[2],label:touchLabels.selectDoor,enabled:touchLabels.selectDoorEnabled}];touchButtons.forEach(button=>{const bw=touchLayout.buttonWidth;ctx.fillStyle=button.enabled?'rgba(20,29,42,.92)':'rgba(20,29,42,.55)';ctx.fillRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.strokeStyle=button.enabled?'#F4D27A':'rgba(190,198,208,.45)';ctx.lineWidth=1.5;ctx.strokeRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.fillStyle=button.enabled?'#F4D27A':'rgba(210,216,224,.6)';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,touchLayout.centerY+4);});
+  const touchLabels=getInteriorTouchLabels(inside.doorOpen,inside.doorTarget,doorOptions.length,nearbyFurniture),touchLayout=getInteriorTouchLayout(w,h);const touchButtons=[{x:touchLayout.centers[0],label:touchLabels.door,enabled:true},{x:touchLayout.centers[1],label:touchLabels.examine,enabled:touchLabels.examineEnabled},{x:touchLayout.centers[2],label:touchLabels.selectDoor,enabled:touchLabels.selectDoorEnabled}];touchButtons.forEach(button=>{const bw=touchLayout.buttonWidth;ctx.fillStyle=button.enabled?'rgba(20,29,42,.92)':'rgba(20,29,42,.55)';ctx.fillRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.strokeStyle=button.enabled?'#F4D27A':'rgba(190,198,208,.45)';ctx.lineWidth=1.5;ctx.strokeRect(button.x-bw/2,touchLayout.top,bw,touchLayout.bottom-touchLayout.top);ctx.fillStyle=button.enabled?'#F4D27A':'rgba(210,216,224,.6)';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(button.label,button.x,touchLayout.centerY+4);});if(stairFade>0){ctx.fillStyle='rgba(0,0,0,'+Math.min(.94,stairFade*.94)+')';ctx.fillRect(0,0,w,h);ctx.fillStyle='#F4D27A';ctx.font='bold 17px system-ui';ctx.textAlign='center';ctx.fillText(inside.levelTransition&&inside.levelTransition.direction==='down'?'DESCENTE EN COURS':'CHANGEMENT D’ÉTAGE',cx,h*.5);}
  }
  function frame(){
   if(stopped)return;w=canvas.clientWidth;h=canvas.clientHeight;
@@ -467,5 +478,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorStairModel,getInteriorStairInteraction,getInteriorStairTraversal,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorStairModel,getInteriorStairInteraction,getInteriorStairTraversal,createInteriorLevelTransition,advanceInteriorLevelTransition,selectNextInteriorDoor,getInteriorRoomConnections,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
