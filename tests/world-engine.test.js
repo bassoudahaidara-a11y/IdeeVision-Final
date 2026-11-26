@@ -137,6 +137,17 @@ test('l’indicateur des étages décrit correctement le niveau et les escaliers
  const invalid=World.getInteriorLevelIndicator(-4,0,true);
  assert(invalid.level===1&&invalid.total===1,'niveau invalide non normalisé');
 });
+test('le modèle d’escalier fournit des marches et un sens de circulation cohérents',()=>{
+ const ground=World.getInteriorStairModel(0,3,true);
+ assert(ground.visible&&ground.steps.length===10&&ground.direction==='up','escalier montant absent au rez-de-chaussée');
+ assert(ground.canGoUp&&!ground.canGoDown&&ground.landing&&ground.railings,'accès du rez-de-chaussée incorrect');
+ const middle=World.getInteriorStairModel(1,3,true);
+ assert(middle.canGoUp&&middle.canGoDown,'étage intermédiaire sans circulation dans les deux sens');
+ const top=World.getInteriorStairModel(2,3,true);
+ assert(top.direction==='down'&&!top.canGoUp&&top.canGoDown,'escalier du dernier étage incorrect');
+ const absent=World.getInteriorStairModel(0,1,false);
+ assert(!absent.visible&&absent.steps.length===0,'escalier affiché dans un bâtiment sans escalier');
+});
 test('les escaliers respectent les limites des étages',()=>{
  assert(World.changeInteriorLevel(0,3,-1,true).level===0,'descente sous le rez-de-chaussée');
  assert(World.changeInteriorLevel(0,3,-1,true).changed===false,'changement impossible signalé comme réussi');
