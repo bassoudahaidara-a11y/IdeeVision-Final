@@ -5,7 +5,7 @@ const UNITS={
  '1':{factor:1,d:[0,0,0,0,0]},m:{factor:1,d:[1,0,0,0,0]},km:{factor:1000,d:[1,0,0,0,0]},cm:{factor:.01,d:[1,0,0,0,0]},mm:{factor:.001,d:[1,0,0,0,0]},
  kg:{factor:1,d:[0,1,0,0,0]},g:{factor:.001,d:[0,1,0,0,0]},mg:{factor:.000001,d:[0,1,0,0,0]},
  s:{factor:1,d:[0,0,1,0,0]},min:{factor:60,d:[0,0,1,0,0]},h:{factor:3600,d:[0,0,1,0,0]},
- A:{factor:1,d:[0,0,0,1,0]},K:{factor:1,d:[0,0,0,0,1]},N:{factor:1,d:[1,1,-2,0,0]},J:{factor:1,d:[2,1,-2,0,0]},W:{factor:1,d:[2,1,-3,0,0]},Pa:{factor:1,d:[-1,1,-2,0,0]},Hz:{factor:1,d:[0,0,-1,0,0]}
+ A:{factor:1,d:[0,0,0,1,0]},K:{factor:1,d:[0,0,0,0,1]},N:{factor:1,d:[1,1,-2,0,0]},J:{factor:1,d:[2,1,-2,0,0]},W:{factor:1,d:[2,1,-3,0,0]},Pa:{factor:1,d:[-1,1,-2,0,0]},Hz:{factor:1,d:[0,0,-1,0,0]},mps:{factor:1,d:[1,0,-1,0,0]},mps2:{factor:1,d:[1,0,-2,0,0]}
 };
 function fail(code,message){return {ok:false,error:code,message};}
 function tokenize(source){
