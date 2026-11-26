@@ -155,6 +155,18 @@ test('la transition d’étage progresse, change de niveau au milieu et se termi
  const down=World.createInteriorLevelTransition(0,'down');
  assert(down.direction==='down'&&down.targetLevel===0,'transition descendante incorrecte');
 });
+test('le message contextuel des escaliers dépend de la proximité et des limites',()=>{
+ const far=World.getInteriorStairPrompt(0,0,0,3,true);
+ assert(far.visible&&!far.near&&!far.ready&&far.action==='approach','message d’approche incorrect');
+ const ground=World.getInteriorStairPrompt(.58,-.55,0,3,true);
+ assert(ground.near&&ground.ready&&ground.action==='up','accès de montée non détecté');
+ const middle=World.getInteriorStairPrompt(.58,-.55,1,3,true);
+ assert(middle.ready&&middle.action==='both','choix des deux directions incorrect');
+ const top=World.getInteriorStairPrompt(.58,-.55,2,3,true);
+ assert(top.ready&&top.action==='down','accès de descente non détecté');
+ const none=World.getInteriorStairPrompt(.58,-.55,0,2,false);
+ assert(!none.visible&&none.action==='none','absence d’escalier non détectée');
+});
 test('la navigation des étages indique les accès disponibles et les limites',()=>{
  const ground=World.getInteriorFloorNavigation(0,3,true);
  assert(ground.level===1&&ground.total===3,'niveau du rez-de-chaussée incorrect');
