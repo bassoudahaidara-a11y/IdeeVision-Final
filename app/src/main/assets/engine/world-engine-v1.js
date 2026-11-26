@@ -962,6 +962,103 @@ function loadSceneDocument(data){
 function getSceneDocumentSummary(document){
  const validation=validateSceneDocument(document);return {valid:validation.valid,objectCount:document&&document.objects?document.objects.length:0,collectionCount:document&&document.collections?document.collections.length:0,assetReferenceCount:document&&document.objects?document.objects.filter(o=>o.assetId).length:0,revision:document&&document.revision||0,formatVersion:document&&document.formatVersion,errors:validation.errors};
 }
+
+function triangulateFaceIndices(face){
+ const result=[];for(let i=1;i<face.length-1;i++)result.push([face[0],face[i],face[i+1]]);return result;
+}
+function exportOBJ(mesh,options){
+ const validation=validateGeometryMesh(mesh);if(!validation.valid)return {ok:false,data:null,error:'invalid-mesh',validation};
+ const o=options&&typeof options==='object'?options:{},lines=['# IdeeVision OBJ export', 'o '+String(o.name||'IdeeVisionModel').replace(/[\\r\\n]/g,'_')];
+ mesh.vertices.forEach(v=>lines.push('v '+v.slice(0,3).map(n=>Number(n).toPrecision(9)).join(' ')));
+ (mesh.uvs||[]).forEach(uv=>lines.push('vt '+uv.slice(0,2).map(n=>Number(n).toPrecision(9)).join(' ')));
+ (mesh.normals||[]).forEach(n=>lines.push('vn '+n.slice(0,3).map(v=>Number(v).toPrecision(9)).join(' ')));
+ let lastMaterial=null;
+ mesh.faces.forEach((face,index)=>{
+  const material=mesh.faceMaterials&&mesh.faceMaterials[index]||mesh.material&&typeof mesh.material==='string'?mesh.material:null;
+  if(material&&material!==lastMaterial){lines.push('usemtl '+String(material).replace(/[\\r\\n]/g,'_'));lastMaterial=material;}
+  const parts=face.map((v,i)=>{const uv=mesh.faceUVs&&mesh.faceUVs[index]&&mesh.faceUVs[index][i],normal=mesh.faceNormals&&mesh.faceNormals[index]&&mesh.faceNormals[index][i];const vi=v+1,ti=Number.isInteger(uv)?uv+1:Number.isInteger(uv&&uv.index)?uv.index+1:null,ni=Number.isInteger(normal)?normal+1:Number.isInteger(normal&&normal.index)?normal.index+1:null;return ti!==null&&ni!==null?vi+'/'+ti+'/'+ni:ti!==null?vi+'/'+ti:ni!==null?vi+'//'+ni:String(vi);});
+  lines.push('f '+parts.join(' '));
+ });
+ return {ok:true,data:lines.join('\n')+'\n',format:'obj',vertexCount:mesh.vertices.length,faceCount:mesh.faces.length,error:null};
+}
+function parseOBJIndex(value,count){
+ const n=Number(value);if(!Number.isInteger(n)||n===0)return -1;const index=n>0?n-1:count+n;return index>=0&&index<count?index:-1;
+}
+function importOBJ(data,options){
+ const text=typeof data==='string'?data:'';if(!text.trim())return {ok:false,mesh:null,error:'empty-obj'};
+ const o=options&&typeof options==='object'?options:{},maxVertices=Math.max(3,Math.min(1000000,Number(o.maxVertices)||250000)),maxFaces=Math.max(1,Math.min(1000000,Number(o.maxFaces)||250000));
+ const vertices=[],uvs=[],normals=[],faces=[],faceUVs=[],faceNormals=[],faceMaterials=[],groups=[];let material=null,group='default';
+ for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line||line[0]==='#')continue;const p=line.split(/\s+/),tag=p.shift();
+  if(tag==='v'){const v=p.slice(0,3).map(Number);if(v.length!==3||!v.every(Number.isFinite))return {ok:false,mesh:null,error:'invalid-obj-vertex'};vertices.push(v);if(vertices.length>maxVertices)return {ok:false,mesh:null,error:'obj-vertex-limit-exceeded'};}
+  else if(tag==='vt'){const uv=p.slice(0,2).map(Number);if(uv.length<1||!uv.every(Number.isFinite))return {ok:false,mesh:null,error:'invalid-obj-uv'};uvs.push([uv[0],uv[1]||0]);}
+  else if(tag==='vn'){const n=p.slice(0,3).map(Number);if(n.length!==3||!n.every(Number.isFinite))return {ok:false,mesh:null,error:'invalid-obj-normal'};normals.push(n);}
+  else if(tag==='usemtl')material=p.join(' ')||null;
+  else if(tag==='g'||tag==='o')group=p.join(' ')||'default';
+  else if(tag==='f'){
+   if(p.length<3)return {ok:false,mesh:null,error:'invalid-obj-face'};
+   const fv=[],fu=[],fn=[];for(const token of p){const a=token.split('/'),vi=parseOBJIndex(a[0],vertices.length);if(vi<0)return {ok:false,mesh:null,error:'obj-index-out-of-range'};fv.push(vi);fu.push(a[1]?parseOBJIndex(a[1],uvs.length):null);fn.push(a[2]?parseOBJIndex(a[2],normals.length):null);if(a[1]&&fu[fu.length-1]<0)return {ok:false,mesh:null,error:'obj-uv-index-out-of-range'};if(a[2]&&fn[fn.length-1]<0)return {ok:false,mesh:null,error:'obj-normal-index-out-of-range'};}
+   faces.push(fv);faceUVs.push(fu);faceNormals.push(fn);faceMaterials.push(material);groups.push(group);if(faces.length>maxFaces)return {ok:false,mesh:null,error:'obj-face-limit-exceeded'};
+  }
+ }
+ const mesh={type:'mesh',primitive:'imported-obj',vertices,faces,uvs,normals,faceUVs,faceNormals,faceMaterials,faceGroups:groups,material:faceMaterials.find(Boolean)||'#AAB6C4'};
+ const validation=validateGeometryMesh(mesh);if(!validation.valid)return {ok:false,mesh:null,error:'invalid-imported-obj',validation};
+ return {ok:true,mesh,format:'obj',warnings:[],validation,error:null};
+}
+function exportSTL(mesh,options){
+ const validation=validateGeometryMesh(mesh);if(!validation.valid)return {ok:false,data:null,error:'invalid-mesh',validation};
+ const o=options&&typeof options==='object'?options:{},binary=o.binary===true;
+ const triangles=[];mesh.faces.forEach(face=>triangulateFaceIndices(face).forEach(tri=>triangles.push(tri)));
+ if(binary){
+  const buffer=new ArrayBuffer(84+triangles.length*50),view=new DataView(buffer);const header=new TextEncoder().encode('IdeeVision binary STL');new Uint8Array(buffer,0,header.length).set(header);view.setUint32(80,triangles.length,true);
+  triangles.forEach((face,i)=>{const a=mesh.vertices[face[0]],b=mesh.vertices[face[1]],c=mesh.vertices[face[2]],n=normalize3({x:(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]),y:(b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]),z:(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])});let offset=84+i*50;[n.x,n.y,n.z,...a,...b,...c].forEach(v=>{view.setFloat32(offset,v,true);offset+=4;});view.setUint16(offset,0,true);});
+  return {ok:true,data:new Uint8Array(buffer),format:'stl-binary',triangleCount:triangles.length,error:null};
+ }
+ const lines=['solid IdeeVision'];triangles.forEach(face=>{const a=mesh.vertices[face[0]],b=mesh.vertices[face[1]],c=mesh.vertices[face[2]],n=normalize3({x:(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]),y:(b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]),z:(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])});lines.push(' facet normal '+n.x+' '+n.y+' '+n.z,'  outer loop');[a,b,c].forEach(v=>lines.push('   vertex '+v.join(' ')));lines.push('  endloop',' endfacet');});lines.push('endsolid IdeeVision');
+ return {ok:true,data:lines.join('\n')+'\n',format:'stl-ascii',triangleCount:triangles.length,error:null};
+}
+function importSTL(data,options){
+ const o=options&&typeof options==='object'?options:{},maxTriangles=Math.max(1,Math.min(1000000,Number(o.maxTriangles)||250000));let vertices=[],faces=[],format='stl-ascii';
+ const addTriangle=(a,b,c)=>{const face=[];[a,b,c].forEach(v=>{const key=v.map(n=>Number(n).toFixed(7)).join(',');let index=lookup.get(key);if(index===undefined){index=vertices.length;lookup.set(key,index);vertices.push(v);}face.push(index);});faces.push(face);};
+ const lookup=new Map();
+ if(data instanceof ArrayBuffer||ArrayBuffer.isView(data)){
+  const bytes=data instanceof ArrayBuffer?new Uint8Array(data):new Uint8Array(data.buffer,data.byteOffset,data.byteLength),buffer=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+  if(bytes.length<84)return {ok:false,mesh:null,error:'stl-binary-too-short'};
+  const view=new DataView(buffer),count=view.getUint32(80,true);if(count>maxTriangles||84+count*50!==bytes.length)return {ok:false,mesh:null,error:'invalid-or-oversized-binary-stl'};
+  format='stl-binary';for(let i=0;i<count;i++){let off=84+i*50;const values=[];for(let j=0;j<9;j++)values.push(view.getFloat32(off+12+j*4,true));if(!values.every(Number.isFinite))return {ok:false,mesh:null,error:'invalid-binary-stl-coordinate'};addTriangle(values.slice(0,3),values.slice(3,6),values.slice(6,9));}
+ }else{
+  const text=String(data||'');if(!text.trim())return {ok:false,mesh:null,error:'empty-stl'};
+  const matches=[...text.matchAll(/vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/gi)];if(!matches.length||matches.length%3!==0)return {ok:false,mesh:null,error:'invalid-ascii-stl'};
+  if(matches.length/3>maxTriangles)return {ok:false,mesh:null,error:'stl-triangle-limit-exceeded'};
+  const values=matches.map(m=>m.slice(1,4).map(Number));if(values.some(v=>!v.every(Number.isFinite)))return {ok:false,mesh:null,error:'invalid-ascii-stl-coordinate'};
+  for(let i=0;i<values.length;i+=3)addTriangle(values[i],values[i+1],values[i+2]);
+ }
+ const mesh={type:'mesh',primitive:'imported-stl',vertices,faces,material:o.material||'#AAB6C4'};
+ const validation=validateGeometryMesh(mesh);if(!validation.valid)return {ok:false,mesh:null,error:'invalid-imported-stl',validation};
+ return {ok:true,mesh,format,triangleCount:faces.length,validation,warnings:[],error:null};
+}
+function exportAssemblyJSON(assembly){
+ if(!assembly||assembly.kind!=='assembly-model'||!Array.isArray(assembly.components))return {ok:false,data:null,error:'invalid-assembly'};
+ try{return {ok:true,data:JSON.stringify({kind:'ideevision-assembly-export',formatVersion:1,assembly}),format:'ideevision-assembly-json',error:null};}catch(e){return {ok:false,data:null,error:'assembly-serialization-failed'};}
+}
+function importAssemblyJSON(data){
+ try{const parsed=typeof data==='string'?JSON.parse(data):data;if(!parsed||parsed.kind!=='ideevision-assembly-export'||parsed.formatVersion!==1)return {ok:false,assembly:null,error:'invalid-assembly-format'};
+ const a=parsed.assembly;if(!a||!Array.isArray(a.components))return {ok:false,assembly:null,error:'invalid-assembly-data'};
+ const rebuilt=createAssemblyModel(a.name,a.components,a.connections,a.options);if(!rebuilt.validation||!rebuilt.validation.valid)return {ok:false,assembly:null,error:'invalid-imported-assembly',validation:rebuilt.validation};
+ return {ok:true,assembly:rebuilt,format:'ideevision-assembly-json',error:null};
+ }catch(e){return {ok:false,assembly:null,error:'assembly-parse-failed'};}
+}
+function importGeometryMesh(data,format,options){
+ const f=String(format||'').toLowerCase().replace(/^\./,'');
+ if(f==='obj')return importOBJ(data,options);
+ if(f==='stl'||f==='stla'||f==='stlb')return importSTL(data,options);
+ return {ok:false,mesh:null,error:'unsupported-geometry-format'};
+}
+function exportGeometryMesh(mesh,format,options){
+ const f=String(format||'').toLowerCase().replace(/^\./,'');
+ if(f==='obj')return exportOBJ(mesh,options);
+ if(f==='stl')return exportSTL(mesh,options);
+ return {ok:false,data:null,error:'unsupported-geometry-format'};
+}
 function createInteractiveScene(objects,options){
  const o=options&&typeof options==='object'?options:{};
  const source=Array.isArray(objects)?objects:[];
@@ -1344,5 +1441,5 @@ function play(canvas,world,onCaption){
  raf=root.requestAnimationFrame(frame);
  return ()=>{stopped=true;root.cancelAnimationFrame(raf);root.removeEventListener('resize',resize);root.removeEventListener('keydown',keyDown);root.removeEventListener('keyup',keyUp);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);canvas.removeEventListener('wheel',wheel)};
 }
-root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,createSceneDocument,validateSceneDocument,addSceneObject,addSceneCollection,moveSceneObjectToCollection,updateSceneObjectMetadata,setSceneCollectionVisibility,createAssetLibrary,registerSceneAsset,searchSceneAssets,instantiateSceneAsset,saveSceneDocument,loadSceneDocument,getSceneDocumentSummary,createParametricSurface,createParametricComponent,updateParametricComponent,createAssemblyModel,getAssemblyWorldTransform,getAssemblyAnchorWorldPosition,evaluateAssemblyConnections,updateAssemblyComponent,duplicateAssemblyComponent,getAssemblySummary,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
+root.IdeeVisionWorld=Object.freeze({version:1,isWorldRequest,create,terrainHeight,createBoxGeometry,createCylinderGeometry,createSphereGeometry,extrudeGeometryFace,subdivideGeometryFace,moveGeometryVertex,splitGeometryEdge,separateGeometryIslands,createExtrudedPolygonGeometry,createLatheGeometry,exportOBJ,importOBJ,exportSTL,importSTL,importGeometryMesh,exportGeometryMesh,exportAssemblyJSON,importAssemblyJSON,createSceneDocument,validateSceneDocument,addSceneObject,addSceneCollection,moveSceneObjectToCollection,updateSceneObjectMetadata,setSceneCollectionVisibility,createAssetLibrary,registerSceneAsset,searchSceneAssets,instantiateSceneAsset,saveSceneDocument,loadSceneDocument,getSceneDocumentSummary,createParametricSurface,createParametricComponent,updateParametricComponent,createAssemblyModel,getAssemblyWorldTransform,getAssemblyAnchorWorldPosition,evaluateAssemblyConnections,updateAssemblyComponent,duplicateAssemblyComponent,getAssemblySummary,transformGeometryMesh,mergeGeometryMeshes,validateGeometryMesh,measureGeometryMesh,assembleGeometryModel,createBuildingGeometry,createFurnitureGeometry,createMaterial,validateMaterial,createMaterialLibrary,getMaterialPreset,generatePlanarUV,sampleMaterialTexture,applyMaterialToMesh,evaluateMaterialAppearance,createMaterialSurfacePreview,getSceneObjectWorldMesh,getMeshBounds,createRenderEnvironment,evaluateRenderLighting,drawEnvironmentBackground,projectMeshVertex,renderMeshToCanvas,createCameraState,getCameraDirection,updateCameraMode,orbitCamera,dollyCamera,zoomCamera,moveCamera,focusCameraOnObject,updateCameraFollow,serializeCameraState,restoreCameraState,createInteractiveScene,intersectRayBounds,pickSceneObject,selectSceneObject,updateSceneObjectTransform,moveSceneObject,rotateSceneObject,scaleSceneObject,detectSceneCollisions,setSceneObjectVisibility,setSceneObjectLock,getSceneInteractionSummary,getInteriorRoomModel,getInteriorWindows,getInteriorLighting,getNearbyFurniture,interactWithFurniture,interactWithNearbyFurniture,getInteriorTouchAction,getInteriorTouchLayout,getInteriorTouchLabels,getInteriorDoorIndicator,getInteriorInteractionStatus,getInteriorLevelIndicator,getInteriorFloorNavigation,getInteriorStairModel,getInteriorStairPrompt,getInteriorStairInteraction,getInteriorStairTraversal,getInteriorStairLanding,getInteriorTransitionOpacity,createInteriorLevelTransition,advanceInteriorLevelTransition,getInteriorTransitionIndicator,getInteriorStairAnimation,selectNextInteriorDoor,getInteriorRoomConnections,analyzeInteriorRoomNetwork,findInteriorRoute,findInteriorRouteAlternatives,resolveInteriorDoorAccess,analyzeInteriorAccessNetwork,analyzeInteriorCirculation,getConnectedRoomOptions,getNextConnectedRoomIndex,getInteriorDoorThreshold,isNearInteriorDoor,changeInteriorLevel,getInteriorLevelEntryState,resolveInteriorMovement,play});
 })(window);
