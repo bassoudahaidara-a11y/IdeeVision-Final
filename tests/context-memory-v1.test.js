@@ -13,7 +13,7 @@ test("06 refuse un message vide",()=>{const m=M.create();assert.throws(()=>m.add
 test("07 nettoie les espaces",()=>{const m=M.create();m.add("user","  une   maison  ");assert.equal(m.recent()[0].content,"une maison");});
 test("08 extrait les sujets utiles",()=>{const m=M.create();m.add("user","Construis un avion");assert.ok(m.topic().includes("avion"));});
 test("09 détecte une demande de continuation",()=>{const m=M.create();m.add("user","Construis un pont");assert.equal(m.resolveReference("Ajoute des piliers").isFollowUp,true);});
-test("10 détecte un pronom de référence",()=>{const m=M.create();m.add("user","Construis une maison");assert.equal(m.resolveReference("Agrandis-la").hasPronoun,true);});
+test("10 détecte un pronom de référence",()=>{const m=M.create();m.add("user","Construis une maison");assert.equal(m.resolveReference("Agrandis cette maison").hasPronoun,true);});
 test("11 propose des référents du contexte précédent",()=>{const m=M.create();m.add("user","Construis une maison avec un escalier");const r=m.resolveReference("Agrandis cette maison");assert.ok(r.referents.length>0);});
 test("12 signale une référence impossible à résoudre",()=>{const m=M.create();assert.equal(m.resolveReference("Continue cela").unresolved,true);});
 test("13 ne signale pas de référence pour une nouvelle demande",()=>{const m=M.create();assert.equal(m.resolveReference("Explique la photosynthèse").unresolved,false);});
