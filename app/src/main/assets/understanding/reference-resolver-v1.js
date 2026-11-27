@@ -53,7 +53,7 @@ function analyze(input,grammarAnalysis,objectModel){
    if(p.spec.number){if(m.number===p.spec.number){score+=3;checks.push("number_match");}else{score-=6;checks.push("number_mismatch");}}
    const distance=p.start-m.end;
    score+=Math.max(0,4-Math.floor(distance/45));
-   if(m.sentenceIndex===tokens.find(t=>t.start===p.start)?.sentenceIndex)score+=1;
+   if(m.sentenceIndex===p.sentenceIndex)score+=1;
    return {mentionId:m.id,text:m.text,score,checks,distance};
   }).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score||a.distance-b.distance);
   const best=scored[0]||null,second=scored[1]||null;
