@@ -12,6 +12,7 @@ const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
 const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.js");
 const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js");
 const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
+const T=require("../app/src/main/assets/understanding/time-model-v1.js");
 const T=require("../app/src/main/assets/understanding/temporal-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
@@ -92,3 +93,8 @@ test("65 pipeline intègre le modèle temporel",()=>assert.equal(P.analyze("La b
 test("66 étape temporelle comptabilisée",()=>assert.ok(P.analyze("Le test aura lieu demain à 14h.").stages.temporalModel.expressionCount>0));
 test("67 contexte JSON contient les événements temporels",()=>assert.ok(JSON.parse(P.analyze("La balle tombe demain.").promptContext).temporalModel.events.length>0));
 test("68 aucune chronologie réelle n'est affirmée",()=>assert.equal(P.analyze("La balle tombe demain.").representation.temporalModel.policy.temporalOrderIsTextualOnly,true));
+
+test("65 pipeline intègre le modèle temporel",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.ready,true));
+test("66 étape temporelle comptabilisée",()=>assert.ok(P.analyze("La balle tombe pendant 2 secondes.").stages.timeModel.durationCount>0));
+test("67 contexte JSON contient les événements temporels",()=>assert.ok(JSON.parse(P.analyze("La balle tombe demain.").promptContext).timeModel.events.length>0));
+test("68 le pipeline ne résout pas arbitrairement les dates relatives",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.policy.relativeDatesAreNotResolvedWithoutReferenceDate,true));
