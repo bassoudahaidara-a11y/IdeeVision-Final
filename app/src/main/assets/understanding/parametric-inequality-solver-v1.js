@@ -35,10 +35,10 @@ function condition(lo,hi,li,ui,p){const fmt=x=>x===null?"":String(x);return (lo=
 function xSolution(A,B,op,pName,parameterValue){
  const eps=EPS,pass=x=>op===">"?x>eps:op==="<"?x< -eps:(op===">="||op==="≥")?x>=-eps:(op==="<="||op==="≤")?x<=eps:Math.abs(x)>eps;
  if(Math.abs(A)<eps){const ok=pass(B);return {status:ok?"all_real_numbers":"empty_set",intervals:ok?[{lower:null,upper:null,lowerInclusive:false,upperInclusive:false}]:[],reason:"coefficient_of_variable_zero"};}
- const root=clean(-B/A),positive=A>0,lower=(op===">"||op===">="||op==="≥")===positive;
+ const root=clean(-B/A),positive=A>0,lower=(op===">"||op===">="||op==="≥")===positive,wide=op===">="||op==="≥"||op==="<="||op==="≤";
  if(op==="≠"||op==="!=")return {status:"solution_set",intervals:[{lower:null,upper:root,lowerInclusive:false,upperInclusive:false},{lower:root,upper:null,lowerInclusive:false,upperInclusive:false}]};
- if(lower)return {status:"solution_set",intervals:[{lower:root,upper:null,lowerInclusive:op!==">",upperInclusive:false}]};
- return {status:"solution_set",intervals:[{lower:null,upper:root,lowerInclusive:false,upperInclusive:op!=="<"}]};
+ if(lower)return {status:"solution_set",intervals:[{lower:root,upper:null,lowerInclusive:wide,upperInclusive:false}]};
+ return {status:"solution_set",intervals:[{lower:null,upper:root,lowerInclusive:false,upperInclusive:wide}]};
 }
 function solveOne(source,M,options={}){
  const parsed=M.parse(source),ast=unwrap(parsed.ast);
