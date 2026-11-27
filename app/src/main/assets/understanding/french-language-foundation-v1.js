@@ -140,13 +140,13 @@
     if (token.kind === "punctuation") return "punctuation";
     const w = token.normalized;
     if (NEGATIONS.has(w)) return "negation";
-    if (FUNCTION_WORDS.has(w)) return "function_word";
     if (VERBS.has(w)) return "verb";
-    if (OBJECTS.has(w)) return "known_noun";
-    if (ADJECTIVES.has(w)) return "adjective";
     if (QUANTIFIERS.has(w)) return "quantifier";
+    if (ADJECTIVES.has(w)) return "adjective";
+    if (OBJECTS.has(w)) return "known_noun";
     if (SPATIAL.has(w)) return "spatial_marker";
     if (TEMPORAL.has(w)) return "temporal_marker";
+    if (FUNCTION_WORDS.has(w)) return "function_word";
     return "unknown_word";
   }
 
@@ -204,7 +204,9 @@
     }
     for (const object of objects) {
       const index = tokens.findIndex(t => t.start === object.start);
-      for (const t of tokens.slice(index + 1, index + 4)) {
+      const nearby = tokens.slice(Math.max(0, index - 3), index)
+        .concat(tokens.slice(index + 1, index + 4));
+      for (const t of nearby) {
         if (ADJECTIVES.has(t.normalized)) {
           object.properties.push({
             value: t.text,
