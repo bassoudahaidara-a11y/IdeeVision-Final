@@ -5,6 +5,7 @@ const G=require("../app/src/main/assets/understanding/french-grammar-semantics-v
 const I=require("../app/src/main/assets/understanding/intent-understanding-v1.js");
 const O=require("../app/src/main/assets/understanding/object-model-v1.js");
 const A=require("../app/src/main/assets/understanding/action-model-v1.js");
+const R=require("../app/src/main/assets/understanding/relation-graph-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 test("2 pipeline renvoie une structure stable",()=>assert.equal(P.analyze("La balle tombe.").ready,true));
@@ -38,3 +39,9 @@ test("27 le contexte JSON contient les modèles d'actions",()=>assert.ok(JSON.pa
 test("28 la séquence d'actions est conservée",()=>assert.ok(P.analyze("La balle tombe puis tourne.").representation.actionSequence.length>=2));
 test("29 la négation reste signalée dans le pipeline",()=>assert.equal(P.analyze("Ne pousse pas la balle.").representation.actionModels[0].polarity,"negative"));
 test("30 le pipeline n'invente aucune causalité",()=>assert.equal(P.analyze("Le moteur tourne.").representation.actionModels[0]&&P.analyze("Le moteur tourne.").representation.actionModels[0].resultStateStatus,"not_specified"));
+
+test("31 pipeline intègre le graphe des relations",()=>assert.ok(P.analyze("Le robot pousse la balle.").representation.relationGraph.nodes.length));
+test("32 le graphe est une étape distincte",()=>assert.ok(P.analyze("Le robot pousse la balle.").stages.relations.edgeCount>0));
+test("33 le contexte JSON contient le graphe",()=>assert.ok(JSON.parse(P.analyze("La balle est dans le tube.").promptContext).relationGraph.edges.length>0));
+test("34 le graphe conserve les liens action-objet",()=>assert.ok(P.analyze("Le robot pousse la balle.").representation.relationGraph.edges.some(e=>e.type==="action_target")));
+test("35 le graphe ne déduit aucune causalité",()=>assert.equal(P.analyze("Le moteur tourne.").representation.relationGraph.policy.causalityInferred,false));
