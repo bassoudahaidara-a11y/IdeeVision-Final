@@ -42,7 +42,7 @@ function analyze(input){
  const spatialModel=S.analyze(source,grammar,objectModel,relationGraph);
  const quantityModel=U.analyze(source,language,objectModel);
  const mathExpressions=X.analyze(source);
- const algebraicStructures=Z.analyze(source,X);
+ const algebraicStructures=Z.analyze(String(input==null?"":input),X);
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
  const relations=language.structure.relations.map(x=>({type:x.type,evidence:x.evidence||x.text||"",status:x.status||"candidate",start:x.start,end:x.end}));
