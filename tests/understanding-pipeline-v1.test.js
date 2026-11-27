@@ -10,6 +10,7 @@ const Q=require("../app/src/main/assets/understanding/reference-resolver-v1.js")
 const C=require("../app/src/main/assets/understanding/complex-clause-analyzer-v1.js");
 const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
 const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.js");
+const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
