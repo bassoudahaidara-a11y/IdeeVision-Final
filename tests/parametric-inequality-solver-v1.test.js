@@ -47,7 +47,7 @@ test("40 refuse le degré deux en x",()=>assert.equal(one("a*x^2+1>0").status,"u
 test("41 refuse deux paramètres sans sélection",()=>assert.equal(one("a*x+b>0",{variable:"x",parameters:["a","b"]}).status,"parameter_declaration_required"));
 test("42 refuse un symbole non déclaré",()=>assert.equal(one("b*x+2>0").status,"parameter_declaration_required"));
 test("43 déclaration naturelle du paramètre",()=>assert.equal(analyze("paramètre a : a*x+2>0",M).status,"parameter_cases"));
-test("44 variable absente signalée",()=>assert.equal(one("a+2>0").status,"variable_not_identified"));
+test("44 expression sans x traitée comme constante en x",()=>assert.equal(one("a+2>0").cases.find(x=>x.condition==="a < -2").solution.status,"empty_set"));
 test("45 expression non inéquation refusée",()=>assert.equal(analyze("a*x+2=0").status,"no_parameterized_inequality_detected"));
 test("46 phrase ordinaire ignorée",()=>assert.equal(analyze("La balle tombe.").status,"no_parameterized_inequality_detected"));
 test("47 refuse division par expression variable",()=>assert.equal(one("x/a>0").status,"unsupported_expression"));
