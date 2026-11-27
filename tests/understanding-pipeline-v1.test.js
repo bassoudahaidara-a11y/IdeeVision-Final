@@ -27,7 +27,8 @@ const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequ
 const RationalInequalitySolver=require("../app/src/main/assets/understanding/rational-inequality-solver-v1.js");
 const ParametricInequalitySolver=require("../app/src/main/assets/understanding/parametric-inequality-solver-v1.js");
 const ParametricEquationSystemSolver=require("../app/src/main/assets/understanding/parametric-equation-system-solver-v1.js");
-const NonlinearSystemSolver=require("../app/src/main/assets/understanding/nonlinear-system-solver-v1.js");\nconst PolynomialResultant=require("../app/src/main/assets/understanding/polynomial-resultant-engine-v1.js");
+const NonlinearSystemSolver=require("../app/src/main/assets/understanding/nonlinear-system-solver-v1.js");
+const PolynomialResultant=require("../app/src/main/assets/understanding/polynomial-resultant-engine-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
