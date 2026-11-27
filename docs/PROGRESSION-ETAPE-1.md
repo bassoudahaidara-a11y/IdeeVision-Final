@@ -191,5 +191,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests ciblés : 45 tests.
 - Intégration au pipeline : repérage des équations, inégalités, systèmes candidats, variables communes, formes polynomiales simples et degré syntaxique candidat.
 - Le moteur ne résout ni les équations ni les systèmes et n'effectue aucun calcul numérique.
-- Validation globale en attente de GitHub Actions.
+- Validation globale réussie : [workflow 45997727386](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45997727386) — 971 tests réussis, 0 échec.
 - APK non compilé.
