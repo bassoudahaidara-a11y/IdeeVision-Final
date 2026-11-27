@@ -167,3 +167,11 @@ test("123 pipeline intègre la résolution des inéquations",()=>assert.equal(P.
 test("124 étape des inéquations exposée",()=>assert.equal(P.analyze("x^2-4<=0").stages.inequalitySolver.status,"solution_set"));
 test("125 contexte JSON contient le résolveur d’inéquations",()=>assert.equal(JSON.parse(P.analyze("x>=3").promptContext).inequalitySolver.intervals[0].lower,3));
 test("126 phrase ordinaire non interprétée comme inéquation",()=>assert.equal(P.analyze("La balle tombe.").representation.inequalitySolver.status,"no_inequality_detected"));
+
+test("127 pipeline intègre les systèmes d'inéquations",()=>assert.equal(P.analyze("x>1 et x<5").representation.inequalitySystemSolver.intervals[0].lower,1));
+test("128 étape système d'inéquations comptabilisée",()=>assert.equal(P.analyze("x>=1 et x<=5").stages.inequalitySystemSolver.intervalCount,1));
+test("129 contexte JSON contient les systèmes d'inéquations",()=>assert.equal(JSON.parse(P.analyze("x>1 et x<5").promptContext).inequalitySystemSolver.intervals[0].upper,5));
+test("130 pipeline expose l'intersection vide",()=>assert.equal(P.analyze("x>5 et x<1").representation.inequalitySystemSolver.status,"empty_set"));
+test("131 pipeline expose la disjonction comme union",()=>assert.equal(P.analyze("x<0 ou x>2").representation.inequalitySystemSolver.intervals.length,2));
+test("132 pipeline conserve les inégalités d'un système",()=>assert.equal(P.analyze("x>1 et x<5").representation.inequalitySystemSolver.inequalities.length,2));
+test("133 pipeline ne combine pas des variables différentes",()=>assert.equal(P.analyze("x>1 et y<5").representation.inequalitySystemSolver.status,"multiple_variables_unsupported"));
