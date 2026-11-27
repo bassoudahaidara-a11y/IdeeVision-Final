@@ -42,7 +42,7 @@ const cases=[
  ["x>0 et x<10 et x!=5","solution_set",[[0,5,false,false],[5,10,false,false]]],
  ["x>=0 et x<=10 et x!=5","solution_set",[[0,5,true,false],[5,10,false,true]]],
  ["x<0 ou x>0 ou x=2","unsupported_system",[]],
- ["x+y>2 et x<4","multiple_variables_unsupported",[]],
+ ["x+y>2 et x<4","unsupported_system",[]],
  ["x>1 et y<5","multiple_variables_unsupported",[]],
  ["m>2 et m<5","unsupported_system",[]],
  ["sin(x)>0 et x<2","unsupported_system",[]],
