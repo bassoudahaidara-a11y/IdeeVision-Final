@@ -165,3 +165,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Représentation des relations spatiales, coordonnées, distances, orientations et directions explicitement écrites.
 - Les points de vue et repères manquants restent non résolus ; aucune géométrie ni physique n'est inventée.
 - Validation CI en attente ; APK non compilé.
+
+
+## Groupe 1.15 — première implémentation
+- Module : `quantity-model-v1.js`.
+- Tests ciblés : 32 ; tests d'intégration pipeline : 4.
+- Extraction de nombres, unités, plages, bornes, comparaisons, pourcentages et approximations.
+- Aucune conversion d'unité ni validation physique ; les unités manquantes restent inconnues.
+- Validation CI en attente ; APK non compilé.
