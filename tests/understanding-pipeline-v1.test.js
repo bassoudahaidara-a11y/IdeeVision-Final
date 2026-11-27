@@ -209,9 +209,9 @@ test("155 contexte JSON contient les solutions non linéaires",()=>assert.equal(
 test("156 pipeline conserve le cas sans solution réelle",()=>assert.equal(P.analyze("x^2+y=1\nx+y=3").representation.nonlinearSystemSolver.status,"no_real_solution"));
 test("157 phrase ordinaire non interprétée comme système",()=>assert.equal(P.analyze("La balle tombe.").representation.nonlinearSystemSolver.status,"no_system_detected"));
 
-test("158 pipeline reconnaît deux équations quadratiques proportionnelles",()=>assert.equal(P.analyze("x^2+y^2=25\\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.status,"two_real_solutions"));
-test("159 pipeline expose la méthode d'élimination",()=>assert.equal(P.analyze("x^2+y^2=25\\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.method,"proportional_quadratic_elimination"));
-test("160 pipeline expose les deux solutions vérifiées",()=>assert.equal(P.analyze("x^2+y^2=25\\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.solutions.length,2));
-test("161 pipeline conserve le refus des parties non proportionnelles",()=>assert.equal(P.analyze("x^2+y^2=25\\n2*x^2-y^2=10").representation.nonlinearSystemSolver.status,"unsupported_system_shape"));
-test("162 pipeline signale les équations quadratiques dépendantes",()=>assert.equal(P.analyze("x^2+y^2=25\\n2*x^2+2*y^2=50").representation.nonlinearSystemSolver.status,"dependent_equations"));
-test("163 contexte JSON expose la méthode quadratique",()=>assert.equal(JSON.parse(P.analyze("x^2+y^2=25\\n2*x^2+2*y^2+x-y=50").promptContext).nonlinearSystemSolver.method,"proportional_quadratic_elimination"));
+test("158 pipeline reconnaît deux équations quadratiques proportionnelles",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.status,"two_real_solutions"));
+test("159 pipeline expose la méthode d'élimination",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.method,"proportional_quadratic_elimination"));
+test("160 pipeline expose les deux solutions vérifiées",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2+2*y^2+x-y=50").representation.nonlinearSystemSolver.solutions.length,2));
+test("161 pipeline conserve le refus des parties non proportionnelles",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2-y^2=10").representation.nonlinearSystemSolver.status,"unsupported_system_shape"));
+test("162 pipeline signale les équations quadratiques dépendantes",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2+2*y^2=50").representation.nonlinearSystemSolver.status,"dependent_equations"));
+test("163 contexte JSON expose la méthode quadratique",()=>assert.equal(JSON.parse(P.analyze("x^2+y^2=25\n2*x^2+2*y^2+x-y=50").promptContext).nonlinearSystemSolver.method,"proportional_quadratic_elimination"));
