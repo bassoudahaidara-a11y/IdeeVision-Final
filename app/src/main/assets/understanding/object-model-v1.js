@@ -4,7 +4,7 @@
 const VERSION="1.0.0";
 const fold=s=>String(s||"").toLocaleLowerCase("fr-FR").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const COLORS=new Set(["rouge","bleu","bleue","vert","verte","jaune","noir","noire","blanc","blanche","gris","grise","orange","violet","violette"]);
-const SHAPES=new Map([["rond","spherical_or_round"],["ronde","spherical_or_round"],["carré","square"],["carrée","square"],["rectangulaire","rectangular"],["triangulaire","triangular"],["cylindrique","cylindrical"],["conique","conical"],["sphérique","spherical"],["plat","flat"],["plate","flat"]]);
+const SHAPES=new Map([["rond","spherical_or_round"],["ronde","spherical_or_round"],["carre","square"],["carree","square"],["rectangulaire","rectangular"],["triangulaire","triangular"],["cylindrique","cylindrical"],["conique","conical"],["spherique","spherical"],["plat","flat"],["plate","flat"]]);
 const MATERIALS=new Map([["bois","wood"],["métal","metal"],["metal","metal"],["fer","iron"],["acier","steel"],["cuivre","copper"],["plastique","plastic"],["verre","glass"],["aluminium","aluminium"],["carton","cardboard"],["caoutchouc","rubber"],["tissu","fabric"],["papier","paper"],["pierre","stone"]]);
 const LENGTH=new Set(["mm","cm","m","km"]),MASS=new Set(["mg","g","kg"]),VOLUME=new Set(["ml","l"]),TIME=new Set(["s","min","h"]);
 const CLASS={
@@ -22,7 +22,7 @@ function analyze(input,languageAnalysis){
  if(!languageAnalysis||languageAnalysis.source!==source||!languageAnalysis.structure)return {engine:"IdeeVisionObjectModel",version:VERSION,offline:true,source,ready:false,objects:[],issues:[{code:"language_analysis_missing_or_mismatched"}],policy:{unstatedPropertiesInvented:false,physicsApplied:false}};
  const tokens=languageAnalysis.sentences.flatMap((s,si)=>s.tokens.map(t=>({...t,sentenceIndex:si})));
  const objects=languageAnalysis.structure.objects.map((o,index)=>{
-  const lemma=fold(o.lemma||o.text),near=tokens.filter(t=>t.sentenceIndex===o.sentenceIndex&&t.start>=Math.max(0,o.start-5)&&t.end<=o.end+7);
+  const lemma=fold(o.lemma||o.text),near=tokens.filter(t=>t.sentenceIndex===o.sentenceIndex&&t.start>=Math.max(0,o.start-5)&&t.end<=o.end+16);
   const properties=[];
   for(const t of near){
    const w=fold(t.text);
