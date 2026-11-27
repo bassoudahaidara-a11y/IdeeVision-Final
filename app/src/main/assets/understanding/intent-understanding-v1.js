@@ -81,7 +81,7 @@ const priorities=matchesAll(s.text,PRIORITIES).map(x=>({level:x.value,evidence:x
 const sequence=matchesAll(s.text,SEQUENCE_MARKERS).map(x=>({order:x.value,evidence:x.evidence,sourceRange:{start:s.start+x.start,end:s.start+x.end}}));
 const target=s.text.replace(/^\s*(s'il te plaît|svp|stp)[, ]*/i,"").replace(/\b(explique[- ]moi|explique|crée|créer|construis|construire|fabrique|compare|résume|traduis|simule|modifie|supprime|vérifie|calcule|mesure|montre|donne|écris|génère|cherche|compile|assembler)\b/i,"").replace(/[?!.,;:]+$/g,"").trim();
 const ambiguity=intents.length>1?[{code:"multiple_intents_in_same_sentence",candidates:intents.map(x=>x.type)}]:intents.length===0?[{code:"intent_not_recognized",candidates:[]}]:[];
-return {text:s.text,intents,outputs,constraints,priorities,sequence,targetCandidate:target||null,ambiguity};
+return {text:s.text,start:s.start,end:s.end,intents,outputs,constraints,priorities,sequence,targetCandidate:target||null,ambiguity};
 }
 function analyze(input){
 const source=normalize(input);
@@ -107,7 +107,7 @@ grammar:{provided:!!grammarAnalysis,sourceMatches:grammarValid,predicateCount:gr
 policy:"Les analyses linguistiques sont jointes comme contexte ; elles ne changent pas les intentions détectées et ne déclenchent aucun raisonnement physique."
 }};
 }
-function diagnostics(){return {name:"Idée Vision — Compréhension initiale des intentions",version:VERSION,offline:true,externalDependencies:[],capabilities:["questions et instructions","descriptions et explications","création, modification et suppression","comparaison, mesure et simulation demandée","traduction, résumé, planification et vérification","construction et compilation","formats de sortie","contraintes et priorités","polaritė négative et ordre explicite","raccordement contrôlé aux analyses linguistiques"],limitations:["règles lexicales et couverture française encore limitées","intentions implicites et ambiguïtés complexes non résolues","cibles encore candidates","aucun raisonnement physique"]};}
+function diagnostics(){return {name:"Idée Vision — Compréhension initiale des intentions",version:VERSION,offline:true,externalDependencies:[],capabilities:["questions et instructions","descriptions et explications","création, modification et suppression","comparaison, mesure et simulation demandée","traduction, résumé, planification et vérification","construction et compilation","formats de sortie","contraintes et priorités","polaritė négative et ordre explicite","raccordement contrôlé aux analyses linguistiques"],limitations:["règles lexicales et couverture française encore limitées","intentions implicites non résolues","ambiguïtés complexes non résolues","cibles encore candidates","ordre des tâches seulement extrait à partir de marqueurs explicites","aucun raisonnement physique"]};}
 const api=Object.freeze({version:VERSION,normalize,splitSentences,analyze,analyzeWithContext,diagnostics});
 root.IdeeVisionIntentUnderstanding=api;
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
