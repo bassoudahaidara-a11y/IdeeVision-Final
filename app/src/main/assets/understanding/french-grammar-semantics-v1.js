@@ -26,7 +26,7 @@
   const FORMS = new Map([
     ["est",["être","present"]],["sont",["être","present"]],["suis",["être","present"]],["es",["être","present"]],["sommes",["être","present"]],["êtes",["être","present"]],["était",["être","imparfait"]],["étaient",["être","imparfait"]],["sera",["être","future"]],["seront",["être","future"]],
     ["a",["avoir","present"]],["ont",["avoir","present"]],["ai",["avoir","present"]],["as",["avoir","present"]],["avons",["avoir","present"]],["avez",["avoir","present"]],["avait",["avoir","imparfait"]],
-    ["contient",["contenir","present"]],["contiennent",["contenir","present"]],["pousse",["pousser","present"]],["poussent",["pousser","present"]],["tire",["tirer","present"]],["tombe",["tomber","present"]],["tombent",["tomber","present"]],
+    ["prend",["prendre","present"]],["prends",["prendre","present"]],["prennent",["prendre","present"]],["contient",["contenir","present"]],["contiennent",["contenir","present"]],["pousse",["pousser","present"]],["poussent",["pousser","present"]],["tire",["tirer","present"]],["tombe",["tomber","present"]],["tombent",["tomber","present"]],
     ["relie",["relier","present"]],["connecte",["connecter","present"]],["tourne",["tourner","present"]],["avance",["avancer","present"]],["descend",["descendre","present"]],["monte",["monter","present"]],
     ["ouvre",["ouvrir","present"]],["ferme",["fermer","present"]],["coule",["couler","present"]],["remplit",["remplir","present"]],["mesure",["mesurer","present"]],["utilise",["utiliser","present"]],
     ["est placé",["placer","past_participle"]],["est place",["placer","past_participle"]]
