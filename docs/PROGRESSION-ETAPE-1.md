@@ -11,7 +11,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 |---|---|---|
 | 1.1 | Fondations de compréhension du français | Module local créé et tests spécifiques présents ; intégration à l'application et élargissement linguistique encore à faire |
 | 1.2 | Analyse grammaticale et sémantique initiale | Module créé ; 25 tests spécifiques et vérification globale réussie |
-| 1.3 | Compréhension des intentions | À commencer |
+| 1.3 | Compréhension des intentions | Première version locale créée ; 30 tests ciblés ajoutés ; vérification globale en attente ; intégration UI et enrichissement à poursuivre |
 | 1.4 | Reconnaissance et représentation des objets | À approfondir |
 | 1.5 | Reconnaissance des actions | À approfondir |
 
@@ -24,3 +24,11 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 
 ## Limites à respecter
 Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiques. Les pronoms non résolus et les formulations ambiguës doivent rester signalés. Aucun résultat de cette étape ne doit être présenté comme une compréhension générale parfaite.
+
+
+## Groupe 1.3 — première livraison
+- Module : `app/src/main/assets/understanding/intent-understanding-v1.js`
+- Tests ciblés : `tests/intent-understanding-v1.test.js` (30 tests)
+- Documentation : `docs/GROUPE-1.3-INTENTIONS.md`
+- Capacités : question, instruction, description, explication, comparaison, création, modification, suppression, simulation demandée, mesure, traduction, résumé, planification et vérification ; extraction initiale des contraintes et formats.
+- Limite : règles lexicales initiales ; les intentions détectées restent candidates. Aucune loi physique n'est appliquée.
