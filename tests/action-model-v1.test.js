@@ -22,7 +22,7 @@ test("15 conserve les compléments prépositionnels",()=>assert.ok(analyze("La b
 test("16 conserve les marqueurs conditionnels",()=>assert.ok(analyze("Si le moteur chauffe, la roue tourne.").actions.some(a=>a.conditionMarkers.length)));
 test("17 ne présente pas un résultat lexical comme un fait physique",()=>assert.equal(analyze("Ouvre la porte.").actions[0].resultStateStatus,"lexical_result_candidate"));
 test("18 conserve l'ordre textuel des actions",()=>assert.ok(analyze("Le robot pousse la balle puis la roue tourne.").sequence.length>=2));
-test("19 distingue un connecteur explicite",()=>assert.ok(analyze("La balle tombe puis roule.").sequence.some(s=>s.markers.length)));
+test("19 distingue un connecteur explicite",()=>assert.ok(analyze("La balle tombe puis tourne.").sequence.some(s=>s.markers.length)));
 test("20 conserve plusieurs actions",()=>assert.ok(analyze("Le robot pousse la balle et ouvre la porte.").actions.length>=2));
 test("21 conserve les actions sur plusieurs phrases",()=>assert.ok(analyze("La porte s'ouvre. Le moteur tourne.").actions.length>=2));
 test("22 garde les positions exactes",()=>{const s="La balle tombe.";const a=analyze(s).actions[0];assert.equal(s.slice(a.evidence.start,a.evidence.end),a.verb);});
@@ -33,4 +33,4 @@ test("26 sortie JSON sérialisable",()=>assert.doesNotThrow(()=>JSON.stringify(a
 test("27 signale une description sans action",()=>assert.ok(analyze("Une bouteille rouge.").issues.some(i=>i.code==="no_action_occurrence")));
 test("28 diagnostics décrivent les limites",()=>assert.ok(A.diagnostics().limitations.length>=5));
 test("29 expose un candidat de transitivité",()=>assert.equal(analyze("Le robot pousse la balle.").actions[0].transitivity,"transitive_verb_candidate"));
-test("30 la séquence renvoie des identifiants d'action",()=>{const x=analyze("La balle tombe puis roule.");assert.ok(x.sequence.every(s=>x.actions.some(a=>a.id===s.actionId)));});
+test("30 la séquence renvoie des identifiants d'action",()=>{const x=analyze("La balle tombe puis tourne.");assert.ok(x.sequence.every(s=>x.actions.some(a=>a.id===s.actionId)));});
