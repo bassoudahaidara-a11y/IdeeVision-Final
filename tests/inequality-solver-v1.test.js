@@ -29,4 +29,4 @@ test("source préservée",()=>assert.equal(solve("x>2").inequalities[0].source,"
 test("statut solution",()=>assert.equal(solve("x>2").inequalities[0].status,"solution_set"));
 test("relation préservée",()=>assert.equal(solve("x>=2").inequalities[0].relation,">="));
 test("quadratique coeff",()=>assert.equal(solve("2x^2-8<=0").inequalities[0].coefficients.quadratic,2));
-test("racine double et demi-droite correcte",()=>assert.deepEqual(solve("x^2+2x+1>0").intervals.map(x=>[x.lower,x.upper]),[[-1,null],[null,-1]]));
+test("racine double et demi-droite correcte",()=>assert.deepEqual(solve("x^2+2x+1>0").intervals.map(x=>[x.lower,x.upper]),[[null,-1],[-1,null]]));
