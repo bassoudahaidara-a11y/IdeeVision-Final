@@ -13,7 +13,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.2 | Analyse grammaticale et sémantique initiale | Module local chargé dans l'application et raccordé au pipeline ; analyse encore heuristique |
 | 1.3 | Compréhension des intentions | Version locale v0.3 chargée dans l'application et raccordée au pipeline ; 40 tests ciblés ; couverture et ambiguïtés à approfondir |
 | 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
-| 1.5 | Reconnaissance des actions | Module v1 créé et raccordé au pipeline ; 30 tests ciblés ajoutés ; validation globale en cours |
+| 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -72,4 +72,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration au pipeline : `representation.actionModels`, `representation.actionSequence` et contexte JSON.
 - Capacités : classification prudente, polarité, rôles grammaticaux candidats, compléments, conditions, ordre textuel et connecteurs temporels.
 - Limites : lexique incomplet, rôles heuristiques, aucune causalité ou physique calculée.
+- Vérification : [workflow 45966384650](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45966384650) — 529 tests réussis, 0 échec.
 - APK non compilé.
