@@ -130,3 +130,12 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : les paraphrases et pronoms ne sont pas encore résolus ; aucun fait ou lien causal n'est inventé.
 - Vérification : [workflow 45977512671](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977512671) — 707 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.11 — première implémentation
+- Module : `knowledge-registry-v1.js`.
+- Tests ciblés : 28 ; intégration du pipeline : 4 tests supplémentaires.
+- Distingue affirmations textuelles, hypothèses, questions, inconnues, règles et inférences candidates.
+- Ne vérifie pas la vérité des affirmations et n'ajoute aucune connaissance externe.
+- Validation CI en attente.
+- APK non compilé.
