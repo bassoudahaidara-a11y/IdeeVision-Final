@@ -139,3 +139,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Ne vérifie pas la vérité des affirmations et n'ajoute aucune connaissance externe.
 - Validation CI en attente.
 - APK non compilé.
+
+
+## Groupe 1.12 — première implémentation
+- Module : `evidence-trace-v1.js`.
+- Tests ciblés : 28 ; tests d'intégration ajoutés : 4.
+- Chaque élément de connaissance reçoit une trace de provenance, une preuve textuelle, une phrase source et un statut non vérifié/candidat.
+- Aucune vérification externe n'est simulée ; aucune preuve de soutien n'est inventée.
+- Validation CI en attente ; APK non compilé.
