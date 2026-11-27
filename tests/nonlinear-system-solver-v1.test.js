@@ -24,10 +24,10 @@ test("17 isole x si son coefficient est non nul",()=>{const r=solve("x+y^2=5\nx+
 test("18 substitution avec x isolé donne deux solutions",()=>assert.deepEqual(solve("x+y^2=5\nx+y=3").solutions,[{x:1,y:2},{x:4,y:-1}]));
 test("19 deux carrés et une relation linéaire",()=>assert.equal(solve("x^2+y^2=25\ny=x").status,"two_real_solutions"));
 test("20 deux racines symétriques",()=>assert.ok(Math.abs(solve("x^2+y^2=25\ny=x").solutions[0].x+solve("x^2+y^2=25\ny=x").solutions[1].x)<1e-9));
-test("21 système sans solution réelle",()=>assert.equal(solve("x^2+y=1\nx+y=3").status,"no_real_solution"));
+test("21 système sans solution réelle",()=>assert.equal(solve("x^2-y^2=1\nx-y=0").status,"no_solution"));
 test("22 discriminant négatif",()=>assert.equal(solve("x^2+y=1\nx+y=3").discriminant,-7));
-test("23 tangence : solution unique",()=>{const r=solve("x^2+y=0.25\nx+y=1.25");assert.equal(r.status,"unique_solution");assert.deepEqual(r.solutions,[{x:0.5,y:0.75}]);});
-test("24 discriminant nul",()=>assert.equal(solve("x^2+y=0.25\nx+y=1.25").discriminant,0));
+test("23 tangence : solution unique",()=>{const r=solve("x^2+y=0.25\nx+y=0.5");assert.equal(r.status,"unique_solution");assert.deepEqual(r.solutions,[{x:0.5,y:0}]);});
+test("24 discriminant nul",()=>assert.equal(solve("x^2+y=0.25\nx+y=0.5").discriminant,0));
 test("25 dépendance exacte : infinité de solutions",()=>assert.equal(solve("x^2-y^2=0\nx-y=0").status,"infinite_solutions"));
 test("26 contrainte linéaire et polynôme constant incompatible",()=>assert.equal(solve("x^2+y=1\nx+y=3").status,"no_real_solution"));
 test("27 réduction linéaire après substitution",()=>assert.equal(solve("x^2+y=0\nx+y=0").status,"two_real_solutions"));
@@ -62,5 +62,5 @@ test("55 au moins quinze capacités documentées",()=>assert.ok(E.diagnostics().
 test("56 limites explicites",()=>assert.ok(E.diagnostics().limitations.length>=7));
 test("57 équation réduite correctement représentée",()=>assert.deepEqual(solve(base).reducedPolynomial,{variable:"x",constant:-2,linear:-1,quadratic:1}));
 test("58 équation linéaire et quadratique dans l'ordre inversé",()=>assert.equal(solve("x+y=3\nx^2+y=5").equations[1].role,"quadratic_constraint"));
-test("59 système avec une seule intersection",()=>assert.equal(solve("x^2+y=0.25\nx+y=1.25").solutions.length,1));
+test("59 système avec une seule intersection",()=>assert.equal(solve("x^2+y=0.25\nx+y=0.5").solutions.length,1));
 test("60 système à deux intersections distinctes",()=>assert.equal(solve(base).solutions.length,2));
