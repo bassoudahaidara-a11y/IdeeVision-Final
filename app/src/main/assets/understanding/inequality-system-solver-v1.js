@@ -4,16 +4,16 @@ const VERSION="1.0.0",EPS=1e-9;
 function clone(x){return x.map(v=>({...v}));}
 function cmp(a,b){return Math.abs(a-b)<=EPS?0:a<b?-1:1;}
 function lowerMax(a,b){
- if(a.lower===null)return {...b};
- if(b.lower===null)return {...a};
+ if(a.lower===null)return {lower:b.lower,lowerInclusive:b.lowerInclusive};
+ if(b.lower===null)return {lower:a.lower,lowerInclusive:a.lowerInclusive};
  const c=cmp(a.lower,b.lower);
  if(c>0)return {lower:a.lower,lowerInclusive:a.lowerInclusive};
  if(c<0)return {lower:b.lower,lowerInclusive:b.lowerInclusive};
  return {lower:a.lower,lowerInclusive:a.lowerInclusive&&b.lowerInclusive};
 }
 function upperMin(a,b){
- if(a.upper===null)return {...b};
- if(b.upper===null)return {...a};
+ if(a.upper===null)return {upper:b.upper,upperInclusive:b.upperInclusive};
+ if(b.upper===null)return {upper:a.upper,upperInclusive:a.upperInclusive};
  const c=cmp(a.upper,b.upper);
  if(c<0)return {upper:a.upper,upperInclusive:a.upperInclusive};
  if(c>0)return {upper:b.upper,upperInclusive:b.upperInclusive};
