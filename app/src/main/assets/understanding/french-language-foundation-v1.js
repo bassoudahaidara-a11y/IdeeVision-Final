@@ -51,7 +51,7 @@
     "ballon balle roue moteur hélice helice aile fuselage réservoir reservoir " +
     "boîte boite cube sphère sphere cylindre cône cone objet appareil machine " +
     "robot ordinateur téléphone telephone écran ecran clavier souris " +
-    "vis écrou ecrou boulon ressort engrenage levier poulie corde fil câble cable " +
+    "vis écrou ecrou boulon ressort engrenage levier poulie corde fil câble cable chariot " +
     "lampe lumière lumiere ampoule miroir lentille pile batterie circuit " +
     "personne homme femme enfant animal arbre fleur pierre terre sable " +
     "livre feuille papier crayon stylo sac chaussure vêtement vetement " +
