@@ -64,3 +64,8 @@ test("57 paramètre fourni doit être fini",()=>assert.equal(analyze("a*x+2>0",{
 test("58 aucun calcul physique",()=>assert.equal(analyze("a*x+2>0").policy.externalAIUsed,false));
 test("59 formule affine en paramètre",()=>assert.deepEqual(one("(a+3)*x+4>0").criticalParameterValues,[-3]));
 test("60 formule affine produit x et paramètre",()=>assert.equal(one("(a+2)*(x+1)>0").status,"parameter_cases"));
+
+test("61 coefficient négatif et supérieur strict garde la borne ouverte",()=>assert.equal(one("a*x+2>0").cases[0].solution.intervals[0].upperInclusive,false));
+test("62 coefficient négatif et supérieur large ferme la borne",()=>assert.equal(one("a*x+2>=0").cases[0].solution.intervals[0].upperInclusive,true));
+test("63 coefficient positif et inférieur strict garde la borne ouverte",()=>assert.equal(one("a*x+2<0").cases[2].solution.intervals[0].upperInclusive,false));
+test("64 coefficient positif et inférieur large ferme la borne",()=>assert.equal(one("a*x+2<=0").cases[2].solution.intervals[0].upperInclusive,true));
