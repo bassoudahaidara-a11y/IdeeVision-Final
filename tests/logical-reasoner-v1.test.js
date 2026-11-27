@@ -36,3 +36,5 @@ test("32 règle incomplète signalée",()=>assert.ok(a("Si le moteur tourne.").i
 test("33 absence de règle explicitée",()=>assert.ok(a("Le moteur tourne.").issues.some(x=>x.code==="no_conditional_rule_detected")));
 test("34 preuve textuelle conservée",()=>assert.equal(a("Si le moteur tourne, la roue avance.").rules[0].evidence,"Si le moteur tourne, la roue avance."));
 test("35 biconditionnel reconnu",()=>assert.ok(a("La roue avance si et seulement si le moteur tourne.").rules.some(x=>x.type==="biconditional")));
+
+test("36 inventaire conserve les atomes de la condition",()=>{const z=a("Si le moteur tourne et la batterie fonctionne, le robot avance.");assert.ok(z.atoms.some(x=>x.normalized.includes("moteur tourne")));assert.ok(z.atoms.some(x=>x.normalized.includes("batterie fonctionne")));});
