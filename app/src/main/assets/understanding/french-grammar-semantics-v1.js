@@ -51,7 +51,22 @@
   function tokenizeSentence(text, offset) {
     const base = baseApi();
     if (!base) throw new Error("Le moteur de fondation française doit être chargé avant l'analyse grammaticale.");
-    return base.tokenize(text).map(t => ({...t, role:base.classifyToken(t), absoluteStart:t.start+(offset||0), absoluteEnd:t.end+(offset||0)}));
+    const expanded = [];
+    for (const t of base.tokenize(text)) {
+      const match = fold(t.text).match(/^(l|d|j|m|t|s|n|c|qu)'(.+)$/u);
+      if (match) {
+        const prefixLength = match[1].length + 1;
+        const prefix = t.text.slice(0, prefixLength);
+        const suffix = t.text.slice(prefixLength);
+        const first = {text:prefix, normalized:fold(prefix), kind:"word", start:t.start, end:t.start+prefix.length};
+        const second = {text:suffix, normalized:fold(suffix), kind:"word", start:t.start+prefix.length, end:t.end};
+        expanded.push({...first, role:base.classifyToken(first), absoluteStart:first.start+(offset||0), absoluteEnd:first.end+(offset||0)});
+        expanded.push({...second, role:base.classifyToken(second), absoluteStart:second.start+(offset||0), absoluteEnd:second.end+(offset||0)});
+      } else {
+        expanded.push({...t, role:base.classifyToken(t), absoluteStart:t.start+(offset||0), absoluteEnd:t.end+(offset||0)});
+      }
+    }
+    return expanded;
   }
   function analyzeSentence(sentence) {
     const base = baseApi();
@@ -64,6 +79,13 @@
       const tokenIndex = tokens.findIndex(t => t.start === obj.start);
       if (tokenIndex >= 0) nounTokens.push({head:obj.text, lemma:obj.lemma, status:obj.status, start:obj.start, end:obj.end, tokenIndex, properties:obj.properties||[]});
     }
+    for (let i=0;i<tokens.length;i++) {
+      const t=tokens[i];
+      if (t.role==="known_noun" && !nounTokens.some(n=>n.start===t.start)) {
+        nounTokens.push({head:t.text,lemma:t.normalized,status:"recognized",start:t.start,end:t.end,tokenIndex:i,properties:[]});
+      }
+    }
+    nounTokens.sort((a,b)=>a.start-b.start);
     const nounPhrases = nounTokens.map(n => {
       let left=n.tokenIndex, right=n.tokenIndex;
       while(left>0 && (tokens[left-1].tag==="determiner" || tokens[left-1].tag==="adjective" || POSSESSIVES.has(fold(tokens[left-1].text)))) left--;
