@@ -118,3 +118,10 @@ test("89 pipeline expose les structures algébriques",()=>assert.equal(P.analyze
 test("90 étape système visible",()=>assert.equal(P.analyze("x=1\ny=2").stages.algebraicStructures.equationCount,2));
 test("91 contexte JSON contient les systèmes",()=>assert.equal(JSON.parse(P.analyze("x=1\ny=2").promptContext).algebraicStructures.system.equationCount,2));
 test("92 aucune résolution de système dans le pipeline",()=>assert.equal(P.analyze("x=1\ny=2").representation.algebraicStructures.policy.systemsSolved,false));
+
+test("93 pipeline expose le modèle des vecteurs et matrices",()=>assert.equal(P.analyze("v=(1,2,3)").representation.vectorMatrixModel.vectors[0].dimension,3));
+test("94 pipeline expose les dimensions matricielles",()=>assert.deepEqual(P.analyze("A=[[1,2],[3,4]]").representation.vectorMatrixModel.matrices[0].dimensions,[2,2]));
+test("95 étape vecteurs-matrices comptabilisée",()=>assert.equal(P.analyze("A=[[1,2],[3,4]]").stages.vectorMatrixModel.matrixCount,1));
+test("96 contexte JSON contient le modèle vecteurs-matrices",()=>assert.equal(JSON.parse(P.analyze("v=(1,2)").promptContext).vectorMatrixModel.vectors[0].name,"v"));
+test("97 pipeline conserve les opérations symboliques candidates",()=>assert.ok(P.analyze("u · v").representation.vectorMatrixModel.operations.some(x=>x.type==="dot_product")));
+test("98 aucune opération matricielle n'est calculée",()=>assert.equal(P.analyze("A=[[1,2],[3,4]]").representation.vectorMatrixModel.policy.computed,false));
