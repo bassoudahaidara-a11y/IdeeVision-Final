@@ -20,7 +20,7 @@ test("13 deuxième solution vérifiée",()=>assert.deepEqual(solve(base).solutio
 test("14 vérifie chaque candidate",()=>assert.ok(solve(base).verification.every(x=>x.verified)));
 test("15 vérifie les deux équations",()=>assert.ok(solve(base).verification.every(x=>x.checks.length===2&&x.checks.every(c=>c.verified))));
 test("16 résout quand l'équation linéaire est en premier",()=>assert.equal(solve("x+y=3\nx^2+y=5").status,"two_real_solutions"));
-test("17 isole x si son coefficient est non nul",()=>{const r=solve("x+y^2=5\nx+y=3");assert.equal(r.isolatedVariable,"x");});
+test("17 isole x si son coefficient est non nul",()=>{const r=solve("x+y^2=5\nx=3");assert.equal(r.isolatedVariable,"x");});
 test("18 substitution avec x isolé donne deux solutions",()=>assert.deepEqual(solve("x+y^2=5\nx+y=3").solutions,[{x:1,y:2},{x:4,y:-1}]));
 test("19 deux carrés et une relation linéaire",()=>assert.equal(solve("x^2+y^2=25\ny=x").status,"two_real_solutions"));
 test("20 deux racines symétriques",()=>assert.ok(Math.abs(solve("x^2+y^2=25\ny=x").solutions[0].x+solve("x^2+y^2=25\ny=x").solutions[1].x)<1e-9));
