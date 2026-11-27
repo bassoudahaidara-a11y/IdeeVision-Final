@@ -330,3 +330,13 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests d'intégration pipeline ajoutés : 6.
 - Validation CI réussie : [workflow 46011543849](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46011543849) — 1 885 tests réussis, 0 échec. Tests ciblés : 60 ; tests d'intégration ajoutés : 6.
 - APK non compilé.
+
+
+## Groupe 1.30 — élimination algébrique par résultant de Sylvester
+- Nouveau moteur : `app/src/main/assets/understanding/polynomial-resultant-engine-v1.js`.
+- Conversion contrôlée de deux équations polynomiales bivariées de degré total maximal deux en coefficients univariés.
+- Construction de la matrice de Sylvester et calcul déterministe du déterminant pour produire le polynôme résultant.
+- Le module est chargé dans l'application et intégré au pipeline, à `representation.polynomialResultant`, aux étapes et au contexte JSON.
+- Tests ciblés ajoutés : 35 ; tests d'intégration pipeline ajoutés : 6.
+- Limite explicitement conservée : le résultant est calculé, mais ses racines ne sont pas isolées et les solutions du système ne sont pas encore reconstruites ni vérifiées.
+- Validation CI : en attente ; aucun APK compilé.
