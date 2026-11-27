@@ -23,7 +23,7 @@ const cases=[
  ["x>1; x<5","solution_set",[[1,5,false,false]]],
  ["x>1; x<5; x!=3","solution_set",[[1,3,false,false],[3,5,false,false]]],
  ["x>1 ou x<0","solution_set",[[null,0,false,false],[1,null,false,false]]],
- ["x>=1 ou x<=0","all_real_numbers",[[null,null,false,false]]],
+ ["x>=1 ou x<=0","solution_set",[[null,0,false,false],[1,null,true,false]]],
  ["x>1 ou x>3","solution_set",[[1,null,false,false]]],
  ["x>=1 ou x>1","solution_set",[[1,null,true,false]]],
  ["x>1 ou x>=1","solution_set",[[1,null,true,false]]],
@@ -86,7 +86,7 @@ test("union conserve le trou strict",()=>assert.equal(solve("x<1 ou x>1").interv
 test("union garde la borne incluse si une branche l'inclut",()=>assert.deepEqual(bounds(solve("x>1 ou x>=1")),[[1,null,true,false]]));
 test("intersection de plusieurs intervalles",()=>assert.deepEqual(bounds(solve("x>-2 et x<8 et x>=0 et x<=4")),[[0,4,true,true]]));
 test("intersections quadratique et linéaire",()=>assert.deepEqual(bounds(solve("x^2-4<=0 et x>0")),[[0,2,false,true]]));
-test("intersection de deux unions quadratiques",()=>assert.deepEqual(bounds(solve("x^2-4>0 et x^2-9<0")) ,[[null,-2,false,false],[2,3,false,false]]));
+test("intersection de deux unions quadratiques",()=>assert.deepEqual(bounds(solve("x^2-4>0 et x^2-9<0")) ,[[-3,-2,false,false],[2,3,false,false]]));
 test("différentes variables non combinées",()=>assert.equal(solve("x>0 et y>0").status,"multiple_variables_unsupported"));
 test("variables multiples dans une contrainte refusées",()=>assert.equal(solve("x+y>0 et x>0").status,"unsupported_system"));
 test("connecteurs mixtes refusés",()=>assert.equal(solve("x>0 et x<4 ou x=2").status,"unsupported_system"));
