@@ -31,3 +31,16 @@ test("27 simulation sans déduction physique",()=>{assert.equal(I.analyze("Simul
 test("28 aucun but non exprimé inventé",()=>{assert.equal(I.analyze("Le moteur est bleu.").policy.unstatedGoalInvented,false);});
 test("29 phrases séparées",()=>{assert.equal(I.analyze("Explique le moteur. Compare les roues.").sentences.length,2);});
 test("30 limites documentées",()=>{assert.ok(I.diagnostics().limitations.length>=5);});
+
+const F=require("../app/src/main/assets/understanding/french-language-foundation-v1.js");
+const G=require("../app/src/main/assets/understanding/french-grammar-semantics-v1.js");
+test("31 plusieurs occurrences du même type sont conservées",()=>{const a=I.analyze("Compare le moteur, puis compare les roues.");assert.equal(a.intents.filter(x=>x.type==="comparison").length,2);});
+test("32 une intention niée n'est pas déclarée comme action principale",()=>{const a=I.analyze("Ne crée pas d'image.");assert.equal(a.primaryIntent,null);assert.equal(a.intents[0].polarity,"negative");});
+test("33 la contrainte sans image reste extraite",()=>{assert.ok(I.analyze("Ne crée pas d'image.").constraints.some(x=>x.type==="no_image"));});
+test("34 l'intention de compilation est reconnue",()=>{assert.ok(I.analyze("Compile le projet Android.").intents.some(x=>x.type==="construction"));});
+test("35 l'ordre explicite des étapes est conservé",()=>{const a=I.analyze("D'abord, prépare le plan. Ensuite, construis le modèle. Finalement, vérifie-le.");assert.ok(a.sequence.some(x=>x.order==="first"));assert.ok(a.sequence.some(x=>x.order==="next"));assert.ok(a.sequence.some(x=>x.order==="finally"));});
+test("36 les positions des marqueurs de séquence sont exactes",()=>{const a=I.analyze("Ensuite, compare les pièces.");const x=a.sequence[0];assert.equal(a.source.slice(x.sourceRange.start,x.sourceRange.end),x.evidence);});
+test("37 les offsets des phrases tiennent compte des espaces",()=>{const a=I.analyze("   Explique le moteur.   Compare les roues.");for(const s of a.sentences)assert.equal(a.source.slice(s.start,s.end),s.text);});
+test("38 le contexte relie les trois couches si les sources correspondent",()=>{const input="La bouteille contient de l'eau.";const l=F.analyze(input);const g=G.analyze(input);const a=I.analyzeWithContext(input,l,g);assert.equal(a.contextIntegration.status,"linked");assert.equal(a.contextIntegration.language.sourceMatches,true);assert.equal(a.contextIntegration.grammar.sourceMatches,true);});
+test("39 le contexte incompatible est signalé",()=>{const a=I.analyzeWithContext("Explique le moteur.",F.analyze("La bouteille contient de l'eau."),null);assert.equal(a.contextIntegration.status,"context_missing_or_source_mismatch");});
+test("40 le raccordement aux couches linguistiques ne lance pas la physique",()=>{const input="La balle tombe dans le tube.";const a=I.analyzeWithContext(input,F.analyze(input),G.analyze(input));assert.equal(a.policy.physicsApplied,false);assert.match(a.contextIntegration.policy,/aucun raisonnement physique/);});
