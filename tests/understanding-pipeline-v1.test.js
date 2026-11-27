@@ -9,6 +9,7 @@ const R=require("../app/src/main/assets/understanding/relation-graph-v1.js");
 const Q=require("../app/src/main/assets/understanding/reference-resolver-v1.js");
 const C=require("../app/src/main/assets/understanding/complex-clause-analyzer-v1.js");
 const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
+const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -68,3 +69,9 @@ test("48 pipeline expose les contradictions possibles",()=>assert.ok(P.analyze("
 test("49 étape logique comptabilisée",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").stages.logicalReasoning.ruleCount>0));
 test("50 contexte JSON contient le raisonnement logique",()=>assert.ok(JSON.parse(P.analyze("Si le moteur tourne, la roue avance.").promptContext).logicalReasoning.rules.length));
 test("51 moteur logique ne déduit aucune physique",()=>assert.equal(P.analyze("Si le moteur tourne, la roue avance.").representation.logicalReasoning.policy.physicalLawsInferred,false));
+
+test("52 pipeline expose les chaînes de raisonnement",()=>assert.ok(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").representation.reasoningChains.chains.length));
+test("53 pipeline expose les dépendances",()=>assert.ok(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").stages.reasoningChains.linkCount>0));
+test("54 pipeline expose la longueur maximale",()=>assert.ok(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").stages.reasoningChains.longestChain>=2));
+test("55 contexte JSON contient les chaînes",()=>assert.ok(JSON.parse(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").promptContext).reasoningChains.chains.length));
+test("56 pipeline ne transforme pas les conclusions en certitudes",()=>assert.equal(P.analyze("Si A, B. Si B, C.").representation.reasoningChains.policy.derivedClaimsRemainCandidates,true));
