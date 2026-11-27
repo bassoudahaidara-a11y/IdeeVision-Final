@@ -474,7 +474,7 @@ async function start(){
  const localUnderstanding = window.IdeeVisionUnderstandingPipeline ? window.IdeeVisionUnderstandingPipeline.analyze(idea) : null;
  window.lastLocalUnderstanding = localUnderstanding;
  const localUnderstandingContext = localUnderstanding && localUnderstanding.ready
-   ? 'Analyse locale Idée Vision (indices candidats, non certitudes) :\\n'+localUnderstanding.promptContext
+   ? 'Analyse locale Idée Vision (indices candidats, non certitudes) :\n'+localUnderstanding.promptContext
    : 'Pipeline de compréhension locale indisponible ou incomplet.';
  const cognitive = window.IdeeVisionCognitive ? window.IdeeVisionCognitive.analyze(idea) : null;
  window.lastCognitiveAnalysis = cognitive;
@@ -525,7 +525,7 @@ async function start(){
   const recentIntentions = cognitionSession ? cognitionSession.recent().slice(-4).map(x=>x.intent).join(', ') : '';
   let knowledgeContext='Base de connaissances locale non disponible.';
   if(knowledgeBase){try{const knowledge=await knowledgeBase.buildContext(idea,{limit:5,maxChars:6500});knowledgeContext=knowledge.context;window.lastKnowledgeHits=knowledge.hits;}catch(e){knowledgeContext='Base locale indisponible : '+e.message;}}
-  const base='User idea and drawing rules (French): '+idea+'\\nAnalyse locale : '+localUnderstandingContext+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\n'+orchestrationContext+'\n'+scientificContext+'\n'+mathContext+'\n'+geometryContext+'\n'+physicsContext+'\n'+simulationContext+'\n'+knowledgeContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
+  const base='User idea and drawing rules (French): '+idea+'\nAnalyse locale : '+localUnderstandingContext+'\nWhat you understood: '+und+'\nMode: '+(d.mode||'3D')+'\nPlan: '+(d.plan||'')+'\n'+cognitiveContext+'\n'+reasoningContext+'\n'+orchestrationContext+'\n'+scientificContext+'\n'+mathContext+'\n'+geometryContext+'\n'+physicsContext+'\n'+simulationContext+'\n'+knowledgeContext+'\nIntentions récentes de la session: '+recentIntentions+'\n'+previousContext+'\nRéférences liées à la demande: '+(referenceContext?referenceContext.referents.join(', '):'aucune')+(referenceContext&&referenceContext.unresolved?'\nDemander une précision sur la référence.':'');
   const bp=await chat([{role:'system',content:BLUEPRINT_SYS},{role:'user',content:base}],{max:1100,temp:.3});
   if(my!==run)return;
 
