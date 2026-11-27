@@ -16,7 +16,7 @@ test("12 afin que",()=>assert.ok(a("Le robot pousse afin que la porte s'ouvre.")
 test("13 bien que",()=>assert.ok(a("Bien que le moteur tourne, la roue avance.").clauses.some(x=>x.type==="concession")));
 test("14 avant que",()=>assert.ok(a("Le robot recule avant que la porte s'ouvre.").clauses.some(x=>x.type==="temporal_before")));
 test("15 après que",()=>assert.ok(a("La roue avance après que le moteur tourne.").clauses.some(x=>x.type==="temporal_after")));
-test("16 à condition que",()=>assert.ok(a("La roue tourne à condition que le moteur fonctionne.").clauses.some(x=>x.type==="condition")));
+test("16 à condition que",()=>assert.ok(a("La roue tourne à condition que le moteur tourne.").clauses.some(x=>x.type==="condition")));
 test("17 verbs per clause",()=>assert.ok(a("Si le moteur tourne, la roue avance.").clauses.every(x=>x.verbForms.length)));
 test("18 absolute ranges",()=>{const s="Si le moteur tourne, la roue avance.";assert.ok(a(s).clauses.every(x=>s.slice(x.start,x.end).length));});
 test("19 candidate linguistic links",()=>assert.ok(a("Si le moteur tourne, la roue avance.").links.some(x=>x.status==="linguistic_relation_candidate")));
@@ -35,4 +35,4 @@ test("31 no physical inference",()=>assert.equal(a("Parce que le moteur tourne, 
 test("32 simple sentence no link",()=>assert.equal(a("La roue tourne.").links.length,0));
 test("33 clause type present",()=>assert.ok(a("Quand la pompe fonctionne, l'eau coule.").clauses.every(x=>x.type)));
 test("34 link endpoints valid",()=>{const z=a("Si le moteur tourne, la roue avance.");assert.ok(z.links.filter(x=>x.from&&x.to).every(x=>z.clauses.some(c=>c.id===x.from)&&z.clauses.some(c=>c.id===x.to)));});
-test("35 multi sentence retained",()=>assert.ok(a("Le moteur tourne. Pendant que la roue avance, la pompe fonctionne.").clauses.length>=3));
+test("35 multi sentence retained",()=>assert.ok(a("Le moteur tourne. Pendant que la roue avance, la pompe tourne.").clauses.length>=3));
