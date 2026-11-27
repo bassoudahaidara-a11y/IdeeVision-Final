@@ -25,7 +25,7 @@ test("19 symbole d'unité ambigu refusé",()=>assert.equal(run("m*x^2+y^2=5\nx^2
 test("20 nombre incorrect d'équations refusé",()=>assert.equal(run("x^2+y^2=5").status,"two_equations_required"));
 test("21 trois équations refusées",()=>assert.equal(run("x^2+y^2=5\nx^2-y^2=3\nx+y=1").status,"two_equations_required"));
 test("22 nombre incorrect de variables refusé",()=>assert.equal(run("x^2+y^2+z^2=5\nx^2-y^2=3").status,"two_variables_required"));
-test("23 système linéaire aussi traité par élimination",()=>assert.equal(run("x+y=3\nx-y=1").status,"resultant_computed_not_solved"));
+test("23 système linéaire délégué hors du domaine quadratique",()=>assert.equal(run("x+y=3\nx-y=1").status,"resultant_degenerate_or_constant"));
 test("24 aucune solution n'est inventée",()=>assert.deepEqual(run(sample).policy.solutionsComputed,false));
 test("25 aucun eval ni IA externe",()=>assert.equal(run(sample).policy.evalUsed,false)&&assert.equal(run(sample).policy.externalAIUsed,false));
 test("26 sortie JSON sérialisable",()=>assert.doesNotThrow(()=>JSON.stringify(run(sample))));
