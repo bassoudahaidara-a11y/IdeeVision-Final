@@ -156,3 +156,15 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Les dates ne sont pas validées, les temps relatifs restent dépendants d'une référence et la chronologie reste candidate.
 - Validation CI en attente ; APK non compilé.
 
+
+
+## Validations confirmées — groupes 1.11 et 1.12
+- Groupe 1.11 : registre de connaissances intégré ; workflow [45977991154](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977991154) — 739 tests réussis, 0 échec.
+- Groupe 1.12 : traçabilité des preuves intégrée ; workflow [45978156979](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45978156979) — 771 tests réussis, 0 échec.
+
+## Groupe 1.13 — représentation temporelle
+- Module retenu : `app/src/main/assets/understanding/time-model-v1.js`.
+- Tests ciblés : `tests/time-model-v1.test.js` (28 tests) ; tests d'intégration pipeline : 4.
+- Le modèle décrit les temps relatifs, dates, heures, durées, répétitions, débuts/fins/interruption et relations temporelles candidates.
+- Validation finale du groupe en attente.
+- APK non compilé.
