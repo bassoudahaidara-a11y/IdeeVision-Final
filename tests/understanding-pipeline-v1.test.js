@@ -15,6 +15,8 @@ const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
 const T=require("../app/src/main/assets/understanding/time-model-v1.js");
 const S=require("../app/src/main/assets/understanding/spatial-model-v1.js");
 const U=require("../app/src/main/assets/understanding/quantity-model-v1.js");
+const MathModel=require("../app/src/main/assets/understanding/math-expression-model-v1.js");
+const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -107,13 +109,11 @@ test("75 contexte JSON contient les mesures",()=>assert.ok(JSON.parse(P.analyze(
 test("76 aucune conversion automatique",()=>assert.equal(P.analyze("La longueur est 100 cm.").representation.quantityModel.policy.unitConversionsPerformed,false));
 
 
-const MathModel=require("../app/src/main/assets/understanding/math-expression-model-v1.js");
 test("85 pipeline intègre le modèle mathématique symbolique",()=>assert.equal(P.analyze("F = m × a").representation.mathExpressions.kind,"equation"));
 test("86 modèle mathématique exposé comme étape",()=>assert.ok(P.analyze("x + 2 = 5").stages.mathExpressions.expressionCount>0));
 test("87 le contexte JSON contient les AST mathématiques",()=>assert.equal(JSON.parse(P.analyze("v = d/t").promptContext).mathExpressions.kind,"equation"));
 test("88 aucune équation n'est résolue automatiquement",()=>assert.equal(P.analyze("x + 2 = 5").representation.mathExpressions.policy.solved,false));
 
-const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
 test("89 pipeline expose les structures algébriques",()=>assert.equal(P.analyze("x+y=5\nx-y=1").representation.algebraicStructures.classification,"system_candidate"));
 test("90 étape système visible",()=>assert.equal(P.analyze("x=1\ny=2").stages.algebraicStructures.equationCount,2));
 test("91 contexte JSON contient les systèmes",()=>assert.equal(JSON.parse(P.analyze("x=1\ny=2").promptContext).algebraicStructures.system.equationCount,2));
