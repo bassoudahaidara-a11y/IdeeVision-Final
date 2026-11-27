@@ -16,7 +16,7 @@ test("10 équations sources exactes",()=>assert.equal(run(sample).source,sample)
 test("11 système avec termes xy",()=>assert.equal(run("x^2+x*y+y^2=7\nx^2-x*y+2*y^2=4").status,"resultant_computed_not_solved"));
 test("12 coefficients décimaux",()=>assert.equal(run("0.5*x^2+y^2=4\nx^2-y^2=2").status,"resultant_computed_not_solved"));
 test("13 parenthèses reconnues",()=>assert.equal(run("(x^2)+(y^2)=25\n(x^2)-(y^2)=9").status,"resultant_computed_not_solved"));
-test("14 multiplication implicite reconnue",()=>assert.equal(run("x^2+2xy+y^2=9\nx^2-xy+y^2=4").status,"resultant_computed_not_solved"));
+test("14 multiplication implicite reconnue",()=>assert.equal(run("x^2+2*x*y+y^2=9\nx^2-x*y+y^2=4").status,"resultant_computed_not_solved"));
 test("15 fractions numériques",()=>assert.equal(run("x^2/2+y^2=5\nx^2-y^2/2=3").status,"resultant_computed_not_solved"));
 test("16 puissance supérieure refusée",()=>assert.equal(run("x^3+y^2=5\nx^2-y^2=3").status,"unsupported_expression"));
 test("17 fonction non polynomiale refusée",()=>assert.equal(run("sin(x)+y^2=5\nx^2-y^2=3").status,"unsupported_expression"));
