@@ -1,0 +1,36 @@
+/* Idée Vision — Représentation du raisonnement logique v1 */
+(function(root){"use strict";
+const VERSION="1.0.0";
+const fold=s=>String(s||"").toLocaleLowerCase("fr-FR").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’‘]/g,"'").replace(/[.!?…,:;]/g," ").replace(/\s+/g," ").trim();
+const normalizeSource=s=>String(s==null?"":s).normalize("NFKC").replace(/[’‘]/g,"'").replace(/\s+/g," ").trim();
+function splitTop(text,word){const n=fold(text),out=[];let start=0;const re=new RegExp("(^|\\s)("+word+")(\\s|$)","g");let m;while((m=re.exec(n))){const at=m.index+m[1].length;if(at>start)out.push({text:text.slice(start,at).trim(),connector:word});start=at+m[2].length;}if(start<text.length)out.push({text:text.slice(start).trim(),connector:null});return out.filter(x=>x.text);}
+function atom(text,offset){const raw=String(text||"").trim(),n=fold(raw);if(!n)return null;const negative=/(^|\s)(ne|n'|pas|jamais|plus|aucun|aucune|sans)(\s|$)/.test(n)||/^non\b/.test(n);const clean=n.replace(/\b(ne|n'|pas|jamais|plus|aucun|aucune|sans|non)\b/g," ").replace(/\s+/g," ").trim();return {id:"atom-"+(offset+1),text:raw,normalized:clean||n,polarity:negative?"negative":"positive",status:"proposition_candidate"};}
+function expression(text,baseIndex){const raw=String(text||"").trim();let pieces=splitTop(raw,"ou");if(pieces.length>1)return {operator:"OR",children:pieces.map((p,i)=>expression(p.text,baseIndex+i)),status:"logical_structure_candidate"};pieces=splitTop(raw,"et");if(pieces.length>1)return {operator:"AND",children:pieces.map((p,i)=>expression(p.text,baseIndex+i)),status:"logical_structure_candidate"};return atom(raw,baseIndex);}
+function findConditional(s){const patterns=[
+{re:/^\s*si\s+(.+?),\s*(.+)$/iu,type:"if_then",sufficient:true},
+{re:/^\s*à condition que\s+(.+?),\s*(.+)$/iu,type:"condition_that",sufficient:true},
+{re:/^\s*a condition que\s+(.+?),\s*(.+)$/iu,type:"condition_that",sufficient:true},
+{re:/^(.+?)\s+à condition que\s+(.+?)[.!?…]?$/iu,type:"condition_that",sufficient:true,inverted:true},
+{re:/^(.+?)\s+a condition que\s+(.+?)[.!?…]?$/iu,type:"condition_that",sufficient:true,inverted:true},
+{re:/^(.+?)\s+(?:seulement|uniquement) si\s+(.+?)[.!?…]?$/iu,type:"only_if",necessary:true,inverted:true}
+];for(const p of patterns){const m=s.match(p.re);if(m)return {type:p.type,condition:(p.inverted?m[2]:m[1]).trim(),result:(p.inverted?m[1]:m[2]).trim(),necessary:!!p.necessary,sufficient:!!p.sufficient};}return null;}
+function analyze(input,grammar,complex){const source=normalizeSource(input);const base={engine:"IdeeVisionLogicalReasoner",version:VERSION,offline:true,source,ready:false,atoms:[],rules:[],expressions:[],contradictions:[],issues:[],policy:{truthValuesNotAssumed:true,physicalLawsInferred:false,linguisticRulesAreNotScientificProof:true}};
+if(!grammar||grammar.source!==source||!Array.isArray(grammar.sentences)){base.issues.push({code:"matching_grammar_analysis_required"});return base;}
+if(complex&&complex.source!==source){base.issues.push({code:"matching_complex_clause_analysis_required"});return base;}
+base.ready=true;let index=0;
+for(let si=0;si<grammar.sentences.length;si++){const s=grammar.sentences[si],text=s.text||"",conditional=findConditional(text);
+ if(conditional){const cond=expression(conditional.condition,index);index+=countAtoms(cond);const result=atom(conditional.result,index++);if(cond){base.expressions.push({sentenceIndex:si,kind:"condition",tree:cond});collectAtoms(cond,base.atoms);}if(result)base.atoms.push(result);base.rules.push({id:"rule-"+(base.rules.length+1),type:conditional.type,condition:cond,result:result?result.id:null,conditionText:conditional.condition,resultText:conditional.result,implication:"IF_THEN_CANDIDATE",sufficient:conditional.sufficient,necessary:conditional.necessary,status:"linguistic_rule_candidate",evidence:text});if(!cond||!result)base.issues.push({code:"incomplete_conditional_rule",sentenceIndex:si});}
+ else {const tree=expression(text,index);index+=countAtoms(tree);base.expressions.push({sentenceIndex:si,kind:"assertion_or_compound",tree});collectAtoms(tree,base.atoms);}
+ const biconditional=/\bsi et seulement si\b/iu.test(text);if(biconditional){const parts=text.split(/\bsi et seulement si\b/iu);if(parts.length===2)base.rules.push({id:"rule-"+(base.rules.length+1),type:"biconditional",left:parts[0].trim(),right:parts[1].trim(),implication:"IFF_CANDIDATE",necessary:true,sufficient:true,status:"linguistic_rule_candidate",evidence:text});}
+}
+const seen=new Map();for(const a of base.atoms){const k=a.normalized;if(!k)continue;if(!seen.has(k))seen.set(k,[]);seen.get(k).push(a);}for(const [key,list] of seen){const pos=list.find(x=>x.polarity==="positive"),neg=list.find(x=>x.polarity==="negative");if(pos&&neg)base.contradictions.push({type:"opposite_polarities_for_same_candidate",normalized:key,positiveAtom:pos.id,negativeAtom:neg.id,status:"possible_contradiction_requires_context"});}
+if(base.rules.some(r=>r.type==="only_if"))base.issues.push({code:"necessary_condition_interpretation_is_candidate",severity:"information"});
+if(!base.rules.length)base.issues.push({code:"no_conditional_rule_detected",severity:"information"});
+base.policy={truthValuesNotAssumed:true,physicalLawsInferred:false,linguisticRulesAreNotScientificProof:true,possibilityIsNotCertainty:true,contradictionsNeedContext:true,necessaryAndSufficientAreTextualCandidates:true,unknownFactsRemainUnknown:true};
+return base;
+}
+function countAtoms(x){if(!x)return 0;if(x.operator)return x.children.reduce((n,c)=>n+countAtoms(c),0);return 1;}
+function collectAtoms(x,out){if(!x)return;if(x.operator)x.children.forEach(c=>collectAtoms(c,out));else out.push(x);}
+function diagnostics(){return {name:"Idée Vision — Représentation logique locale",version:VERSION,offline:true,externalDependencies:[],capabilities:["propositions candidates","conditions SI-ALORS","conditions à condition que","conditions seulement si","conditions ET","conditions OU","négation logique candidate","arbres logiques imbriqués","distinction nécessaire/suffisante textuelle","règles conditionnelles","faits affirmés candidats","détection de polarités opposées","signalement de contradictions possibles","preuves textuelles","positions par phrase","possibilité distincte de certitude","règles biconditionnelles candidates","sortie JSON stable"],limitations:["pas de moteur de preuve formelle complet","analyse syntaxique dépendante des formulations reconnues","identité des propositions parfois ambiguë","contradiction possible à confirmer par contexte","aucune valeur de vérité inventée","aucune loi scientifique ou physique déduite"]};}
+const api=Object.freeze({version:VERSION,analyze,diagnostics,expression,findConditional});root.IdeeVisionLogicalReasoner=api;if(typeof module!=="undefined"&&module.exports)module.exports=api;
+})(typeof globalThis!=="undefined"?globalThis:this);
