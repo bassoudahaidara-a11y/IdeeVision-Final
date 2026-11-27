@@ -239,3 +239,12 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Les équations et inégalités ne sont pas résolues ; les fractions rationnelles symboliques et les restrictions de domaine avancées restent à traiter.
 - Validation globale réussie : [workflow 46000721925](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46000721925) — 1 234 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.22 — résolution contrôlée des équations
+- Module : `app/src/main/assets/understanding/equation-solver-v1.js`.
+- Tests : `tests/equation-solver-v1.test.js` et intégration pipeline.
+- Équations linéaires et quadratiques, discriminant, racines réelles vérifiées par substitution, contrôle des dénominateurs, systèmes linéaires carrés jusqu'à trois inconnues par élimination de Gauss.
+- Limites : pas de racines complexes ni de systèmes non linéaires ; symboles d'unités ambigus refusés.
+- Validation CI : en attente.
+- APK non compilé.
