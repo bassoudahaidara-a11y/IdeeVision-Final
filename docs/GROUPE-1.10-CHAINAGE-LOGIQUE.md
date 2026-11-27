@@ -30,6 +30,7 @@ Relier plusieurs règles conditionnelles en chaînes de dépendances explicites.
 - Tests ciblés : `tests/reasoning-chain-engine-v1.test.js` (30 tests).
 - Intégration : `representation.reasoningChains`, `stages.reasoningChains` et contexte JSON du pipeline.
 - Chargement local dans `index.html`, avant le pipeline.
+- Validation globale : [workflow 45977512671](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977512671) — 707 tests réussis, 0 échec.
 
 ## Limites connues
 - Les ponts automatiques sont volontairement stricts et reposent sur une correspondance textuelle normalisée.
