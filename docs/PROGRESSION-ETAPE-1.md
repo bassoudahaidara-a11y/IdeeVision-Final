@@ -246,5 +246,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests : `tests/equation-solver-v1.test.js` et intégration pipeline.
 - Équations linéaires et quadratiques, discriminant, racines réelles vérifiées par substitution, fractions à dénominateur numérique non nul, systèmes linéaires carrés jusqu'à trois inconnues par élimination de Gauss.
 - Limites : pas de racines complexes ni de systèmes non linéaires ; symboles d'unités ambigus refusés.
-- Validation CI : en attente.
+- Validation CI réussie : [workflow 46002406886](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46002406886) — 1305 tests réussis, 0 échec. Tests ciblés du résolveur : 28 ; tests d’intégration du pipeline ajoutés : 4.
 - APK non compilé.
