@@ -16,7 +16,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
 | 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
 | 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale réussie (590 tests, 0 échec) ; résolution à approfondir |
-| 1.18 | Vecteurs, matrices et opérations matricielles | Module v1 créé, chargé dans l’application et intégré au pipeline ; tests ciblés et validation globale en cours ; aucune opération numérique effectuée |
+| 1.18 | Vecteurs, matrices et opérations matricielles | Module v1 intégré au pipeline et chargé dans l’application ; 52 tests ciblés ; validation globale réussie (1029 tests, 0 échec) ; aucune opération numérique effectuée |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -203,5 +203,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Repérage candidat des additions, soustractions, multiplications, produits scalaire/vectoriel, transposées, normes, déterminants et inverses.
 - Les entrées inconnues et preuves textuelles sont conservées ; les matrices irrégulières sont signalées.
 - Aucune opération n'est calculée, aucune dimension n'est validée et aucun système n'est résolu.
-- Validation globale : en attente du résultat GitHub Actions.
+- Validation globale réussie : [workflow 45998401591](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45998401591) — 1029 tests réussis, 0 échec.
 - APK non compilé.
