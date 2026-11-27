@@ -17,6 +17,7 @@ const S=require("../app/src/main/assets/understanding/spatial-model-v1.js");
 const U=require("../app/src/main/assets/understanding/quantity-model-v1.js");
 const MathModel=require("../app/src/main/assets/understanding/math-expression-model-v1.js");
 const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
+const VectorMatrix=require("../app/src/main/assets/understanding/vector-matrix-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
