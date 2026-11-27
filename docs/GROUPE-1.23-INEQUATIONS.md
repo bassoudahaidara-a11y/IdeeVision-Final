@@ -13,4 +13,4 @@
 ## Limites
 Une seule variable, degré maximal deux, racines réelles uniquement. Les relations chaînées, dénominateurs polynomiaux, systèmes d'inéquations et variables ambiguës avec les unités sont refusés.
 
-Validation automatisée en attente. APK non compilé.
+Validation automatisée en attente : le workflow doit confirmer la suite complète des tests. APK non compilé.
