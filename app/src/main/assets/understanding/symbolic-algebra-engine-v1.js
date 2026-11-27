@@ -89,7 +89,7 @@ function analyze(input,mathModel,options){
  const basic=simple(parsed.ast,steps),poly=polyOf(basic.ast),limit=Number.isInteger(opts.maxTerms)?Math.max(1,Math.min(MAX_TERMS,opts.maxTerms)):MAX_TERMS;
  let ast=basic.ast,expanded=false,simplified=false,polynomial=null;
  if(poly.ok&&poly.terms.size<=limit){const canonical=fromPoly(poly.terms);const before=stringify(ast),after=stringify(canonical);if(before!==after){steps.push("Réduction et regroupement des termes semblables");simplified=true;}ast=canonical;expanded=/[(*]/.test(source)&&poly.terms.size>1;polynomial=[...poly.terms.entries()].map(([monomial,coefficient])=>({monomial,coefficient}));}
- else if(poly.code==="expansion_term_limit")issues.push({code:"expansion_term_limit",maxTerms:limit});
+ else if(poly.code==="expansion_term_limit"||poly.ok&&poly.terms.size>limit)issues.push({code:"expansion_term_limit",maxTerms:limit,actualTerms:poly.terms.size});
  const factor=poly.ok?commonFactor(poly.terms):null;let factoredAst=null;
  if(factor){factoredAst=node("binary",{operator:"*",left:factorAst(factor),right:fromPoly(factor.remaining)});}
  const factorText=factoredAst?stringify(factoredAst):null;
