@@ -19,6 +19,7 @@ const MathModel=require("../app/src/main/assets/understanding/math-expression-mo
 const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
 const VectorMatrix=require("../app/src/main/assets/understanding/vector-matrix-model-v1.js");
 const FunctionModel=require("../app/src/main/assets/understanding/function-model-v1.js");
+const NumericMath=require("../app/src/main/assets/understanding/numeric-math-engine-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -137,3 +138,11 @@ test("103 pipeline expose les variations",()=>assert.ok(P.analyze("f est croissa
 test("104 pipeline expose les limites et continuité",()=>{const r=P.analyze("lim x→0 f(x)\nf est continue en 0");assert.ok(r.representation.functionModel.limits.length);assert.ok(r.representation.functionModel.continuity.length);});
 test("105 contexte JSON contient le modèle des fonctions",()=>assert.ok(JSON.parse(P.analyze("f(x)=x^2").promptContext).functionModel.functions.length));
 test("106 aucune fonction n'est évaluée par le pipeline",()=>assert.equal(P.analyze("f(x)=x+1").representation.functionModel.policy.evaluated,false));
+
+
+test("107 pipeline intègre le moteur de calcul numérique",()=>assert.equal(P.analyze("2+3").representation.numericMath.result,5));
+test("108 pipeline expose le résultat numérique dans les étapes",()=>assert.equal(P.analyze("(2+3)*4").stages.numericMath.result,20));
+test("109 pipeline refuse de résoudre une équation",()=>assert.equal(P.analyze("x+2=5").representation.numericMath.evaluated,false));
+test("110 pipeline garde les variables non définies",()=>assert.ok(P.analyze("x+2").representation.numericMath.issues.some(x=>x.code==="unknown_variable")));
+test("111 pipeline ignore le calcul automatique d'une phrase",()=>assert.equal(P.analyze("La balle tombe.").representation.numericMath.evaluated,false));
+test("112 contexte JSON contient le résultat de calcul",()=>assert.equal(JSON.parse(P.analyze("3^2").promptContext).numericMath.result,9));
