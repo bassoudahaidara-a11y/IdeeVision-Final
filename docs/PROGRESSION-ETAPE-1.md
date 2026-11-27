@@ -17,7 +17,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
 | 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale réussie (590 tests, 0 échec) ; résolution à approfondir |
 | 1.18 | Vecteurs, matrices et opérations matricielles | Module v1 intégré au pipeline et chargé dans l’application ; 52 tests ciblés ; validation globale réussie (1029 tests, 0 échec) ; aucune opération numérique effectuée |
-| 1.19 | Compréhension symbolique des fonctions | Module v1 intégré au pipeline et chargé dans l’application ; 60 tests ciblés ; validation globale en cours ; aucun calcul de fonction ni tracé de graphe |
+| 1.19 | Compréhension symbolique des fonctions | Module v1 intégré au pipeline et chargé dans l’application ; 60 tests ciblés ; validation globale réussie (1097 tests, 0 échec) ; aucun calcul de fonction ni tracé de graphe |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -214,5 +214,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Représentation des définitions de fonctions, domaines, images, compositions, inverses, intervalles, variations, limites, continuité et demandes de graphes.
 - L'expression de chaque fonction est reliée au parseur mathématique symbolique existant.
 - Aucune fonction n'est évaluée ; aucun domaine, ensemble image, limite ou graphe n'est calculé.
-- Validation globale : en attente du résultat GitHub Actions.
+- Validation globale réussie : [workflow 45999437721](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45999437721) — 1097 tests réussis, 0 échec.
 - APK non compilé.
