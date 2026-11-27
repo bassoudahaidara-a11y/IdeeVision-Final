@@ -15,7 +15,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
 | 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
 | 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
-| 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale en cours |
+| 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale réussie (590 tests, 0 échec) ; résolution à approfondir |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -95,4 +95,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration : `representation.referenceResolution`, avec mentions, pronoms, clitiques candidats, antécédents possibles et statuts résolus-candidats/ambigus/non résolus.
 - Extension de vocabulaire : formes conjuguées de `prendre` reconnues par les modules français.
 - Limites : résolution heuristique, genre/nombre incomplets, aucune identité ou propriété physique inventée.
+- Vérification : [workflow 45971791289](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45971791289) — 590 tests réussis, 0 échec.
 - APK non compilé.
