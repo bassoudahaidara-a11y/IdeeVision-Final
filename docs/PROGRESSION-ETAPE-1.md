@@ -15,6 +15,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
 | 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
 | 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
+| 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale en cours |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -84,4 +85,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration : `representation.relationGraph`, avec nœuds objets/actions, arêtes spatiales, liens acteur/action/objet candidats et marqueurs temporels.
 - Limites : relations spatiales héritées de règles lexicales, rôles candidats, résolution interphrases incomplète ; aucune causalité ni physique.
 - Vérification de l'intégration : [workflow 45970892940](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45970892940) — 559 tests réussis, 0 échec. Une dernière vérification sera effectuée après nettoyage des tests de diagnostic.
+- APK non compilé.
+
+
+## Groupe 1.7 — première implémentation
+- Module : `app/src/main/assets/understanding/reference-resolver-v1.js`.
+- Tests ciblés : `tests/reference-resolver-v1.test.js` (26 tests).
+- Documentation : `docs/GROUPE-1.7-REFERENCES.md`.
+- Intégration : `representation.referenceResolution`, avec mentions, pronoms, clitiques candidats, antécédents possibles et statuts résolus-candidats/ambigus/non résolus.
+- Extension de vocabulaire : formes conjuguées de `prendre` reconnues par les modules français.
+- Limites : résolution heuristique, genre/nombre incomplets, aucune identité ou propriété physique inventée.
 - APK non compilé.
