@@ -18,6 +18,7 @@ const U=require("../app/src/main/assets/understanding/quantity-model-v1.js");
 const MathModel=require("../app/src/main/assets/understanding/math-expression-model-v1.js");
 const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
 const VectorMatrix=require("../app/src/main/assets/understanding/vector-matrix-model-v1.js");
+const FunctionModel=require("../app/src/main/assets/understanding/function-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -126,3 +127,13 @@ test("95 étape vecteurs-matrices comptabilisée",()=>assert.equal(P.analyze("A=
 test("96 contexte JSON contient le modèle vecteurs-matrices",()=>assert.equal(JSON.parse(P.analyze("v=(1,2)").promptContext).vectorMatrixModel.vectors[0].name,"v"));
 test("97 pipeline conserve les opérations symboliques candidates",()=>assert.ok(P.analyze("u · v").representation.vectorMatrixModel.operations.some(x=>x.type==="dot_product")));
 test("98 aucune opération matricielle n'est calculée",()=>assert.equal(P.analyze("A=[[1,2],[3,4]]").representation.vectorMatrixModel.policy.computed,false));
+
+
+test("99 pipeline expose les définitions de fonctions",()=>assert.equal(P.analyze("f(x)=x+1").representation.functionModel.functions[0].name,"f"));
+test("100 pipeline expose les domaines",()=>assert.ok(P.analyze("D_f=R").representation.functionModel.domains.length));
+test("101 pipeline expose les ensembles images",()=>assert.ok(P.analyze("Im(f)=R").stages.functionModel.imageCount>0));
+test("102 pipeline expose les compositions",()=>assert.ok(P.analyze("f ∘ g").representation.functionModel.compositions.length));
+test("103 pipeline expose les variations",()=>assert.ok(P.analyze("f est croissante sur [0;2]").stages.functionModel.variationCount>0));
+test("104 pipeline expose les limites et continuité",()=>{const r=P.analyze("lim x→0 f(x)\nf est continue en 0");assert.ok(r.representation.functionModel.limits.length);assert.ok(r.representation.functionModel.continuity.length);});
+test("105 contexte JSON contient le modèle des fonctions",()=>assert.ok(JSON.parse(P.analyze("f(x)=x^2").promptContext).functionModel.functions.length));
+test("106 aucune fonction n'est évaluée par le pipeline",()=>assert.equal(P.analyze("f(x)=x+1").representation.functionModel.policy.evaluated,false));
