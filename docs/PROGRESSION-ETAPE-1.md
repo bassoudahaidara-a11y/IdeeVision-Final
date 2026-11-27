@@ -13,7 +13,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.2 | Analyse grammaticale et sémantique initiale | Module local chargé dans l'application et raccordé au pipeline ; analyse encore heuristique |
 | 1.3 | Compréhension des intentions | Version locale v0.3 chargée dans l'application et raccordée au pipeline ; 40 tests ciblés ; couverture et ambiguïtés à approfondir |
 | 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
-| 1.5 | Reconnaissance des actions | À approfondir |
+| 1.5 | Reconnaissance des actions | Module v1 créé et raccordé au pipeline ; 30 tests ciblés ajoutés ; validation globale en cours |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -62,4 +62,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Les informations conservées comprennent catégorie candidate, occurrences, couleurs, formes, matériaux explicitement marqués, dimensions, autres quantités, états, relations et preuves textuelles.
 - Limites : association heuristique des propriétés, identité interphrases non résolue, vocabulaire incomplet. Aucune géométrie 3D ni physique n'est déduite.
 - Vérification : [workflow 45965959735](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45965959735) — 493 tests réussis, 0 échec.
+- APK non compilé.
+
+
+## Groupe 1.5 — première implémentation
+- Module : `app/src/main/assets/understanding/action-model-v1.js`.
+- Tests ciblés : `tests/action-model-v1.test.js` (30 tests).
+- Documentation : `docs/GROUPE-1.5-ACTIONS.md`.
+- Intégration au pipeline : `representation.actionModels`, `representation.actionSequence` et contexte JSON.
+- Capacités : classification prudente, polarité, rôles grammaticaux candidats, compléments, conditions, ordre textuel et connecteurs temporels.
+- Limites : lexique incomplet, rôles heuristiques, aucune causalité ou physique calculée.
 - APK non compilé.
