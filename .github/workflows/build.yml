@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Installer le support IndexedDB des tests
+        run: npm install --no-save fake-indexeddb@6
       - name: Vérifier la syntaxe des moteurs JavaScript
         shell: bash
         run: |
