@@ -255,5 +255,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests ciblés : `tests/inequality-solver-v1.test.js` ; intégration pipeline : quatre tests supplémentaires.
 - Inégalités linéaires et quadratiques d'une variable, opérateurs stricts et larges, étude de signe, racines critiques et représentation en intervalles.
 - Limites : degré maximal deux, une variable, racines réelles ; systèmes d'inéquations et dénominateurs polynomiaux refusés.
-- Validation CI : en attente.
+- Validation CI réussie : [workflow 46004514117](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46004514117) — 1400 tests, 0 échec. Tests ciblés : 92 ; intégration pipeline : 4 tests supplémentaires.
 - APK non compilé.
