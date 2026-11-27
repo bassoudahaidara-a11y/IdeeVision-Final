@@ -21,6 +21,7 @@ const VectorMatrix=require("../app/src/main/assets/understanding/vector-matrix-m
 const FunctionModel=require("../app/src/main/assets/understanding/function-model-v1.js");
 const NumericMath=require("../app/src/main/assets/understanding/numeric-math-engine-v1.js");
 const SymbolicAlgebra=require("../app/src/main/assets/understanding/symbolic-algebra-engine-v1.js");
+const EquationSolver=require("../app/src/main/assets/understanding/equation-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -155,3 +156,8 @@ test("115 pipeline développe les identités polynomiales",()=>assert.equal(P.an
 test("116 pipeline conserve les équations sans les résoudre",()=>assert.equal(P.analyze("x+1=2").representation.symbolicAlgebra.issues[0].code,"relation_not_transformed"));
 test("117 pipeline conserve les phrases ordinaires",()=>assert.equal(P.analyze("La balle tombe.").representation.symbolicAlgebra.simplified,false));
 test("118 contexte JSON contient le résultat symbolique",()=>assert.equal(JSON.parse(P.analyze("x+x").promptContext).symbolicAlgebra.simplifiedExpression,"2 * x"));
+
+test("119 pipeline intègre la résolution",()=>assert.equal(P.analyze("2x+3=7").representation.equationSolver.solutions[0],2));
+test("120 étape quadratique exposée",()=>assert.equal(P.analyze("x^2-1=0").stages.equationSolver.status,"two_real_solutions"));
+test("121 contexte JSON contient le résolveur",()=>assert.equal(JSON.parse(P.analyze("x+1=2").promptContext).equationSolver.solutions[0],1));
+test("122 phrase ordinaire non résolue",()=>assert.equal(P.analyze("La balle tombe.").representation.equationSolver.status,"no_equation_detected"));
