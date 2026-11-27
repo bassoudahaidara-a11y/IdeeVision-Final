@@ -9,9 +9,9 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 
 | Groupe | Sujet | État |
 |---|---|---|
-| 1.1 | Fondations de compréhension du français | Module local créé et tests spécifiques présents ; intégration à l'application et élargissement linguistique encore à faire |
-| 1.2 | Analyse grammaticale et sémantique initiale | Module créé ; 25 tests spécifiques et vérification globale réussie |
-| 1.3 | Compréhension des intentions | Version locale v0.3 renforcée ; 40 tests ciblés ; vérification globale réussie ; liaison de contexte 1.1/1.2 disponible ; intégration réelle à l'interface et enrichissement à poursuivre |
+| 1.1 | Fondations de compréhension du français | Module local chargé dans l'application et raccordé au pipeline ; couverture linguistique à élargir |
+| 1.2 | Analyse grammaticale et sémantique initiale | Module local chargé dans l'application et raccordé au pipeline ; analyse encore heuristique |
+| 1.3 | Compréhension des intentions | Version locale v0.3 chargée dans l'application et raccordée au pipeline ; 40 tests ciblés ; couverture et ambiguïtés à approfondir |
 | 1.4 | Reconnaissance et représentation des objets | À approfondir |
 | 1.5 | Reconnaissance des actions | À approfondir |
 
@@ -41,3 +41,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Fonction de raccordement contrôlé aux analyses linguistiques des groupes 1.1 et 1.2, avec contrôle de concordance de la phrase source.
 - Tests ciblés : 40 ; workflow : [45965139627](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45965139627), toutes les étapes réussies.
 - L'intégration à l'interface de l'application reste à faire. Le groupe 1.3 n'est donc pas déclaré définitivement terminé.
+
+
+## Pipeline local des groupes 1.1 à 1.3
+- Fichier : `app/src/main/assets/understanding/understanding-pipeline-v1.js`.
+- Tests : `tests/understanding-pipeline-v1.test.js` (20 tests).
+- L'application charge les quatre modules de compréhension et exécute le pipeline au début de `start()`.
+- La représentation locale rassemble objets, actions, relations, quantités, groupes nominaux, prédicats, pronoms, intentions, contraintes et formats.
+- Le contexte structuré est transmis à l'étape existante de préparation de scène.
+- Vérification : [workflow 45965448342](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45965448342) — 464 tests réussis, 0 échec.
+- Limite importante : le pipeline est local, mais le reste du flux de génération de scène utilise encore Groq et Three.js CDN. L'application complète n'est donc pas encore hors ligne. Ces dépendances seront traitées séparément, sans les confondre avec le moteur de compréhension.
+- Aucun APK compilé.
