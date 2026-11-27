@@ -248,3 +248,12 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : pas de racines complexes ni de systèmes non linéaires ; symboles d'unités ambigus refusés.
 - Validation CI réussie : [workflow 46002406886](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46002406886) — 1305 tests réussis, 0 échec. Tests ciblés du résolveur : 67 ; tests d’intégration du pipeline ajoutés : 4.
 - APK non compilé.
+
+
+## Groupe 1.23 — résolution des inéquations
+- Module : `app/src/main/assets/understanding/inequality-solver-v1.js`.
+- Tests ciblés : `tests/inequality-solver-v1.test.js` ; intégration pipeline : quatre tests supplémentaires.
+- Inégalités linéaires et quadratiques d'une variable, opérateurs stricts et larges, étude de signe, racines critiques et représentation en intervalles.
+- Limites : degré maximal deux, une variable, racines réelles ; systèmes d'inéquations et dénominateurs polynomiaux refusés.
+- Validation CI : en attente.
+- APK non compilé.
