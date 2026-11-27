@@ -75,3 +75,8 @@ test("53 pipeline expose les dépendances",()=>assert.ok(P.analyze("Si la batter
 test("54 pipeline expose la longueur maximale",()=>assert.ok(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").stages.reasoningChains.longestChain>=2));
 test("55 contexte JSON contient les chaînes",()=>assert.ok(JSON.parse(P.analyze("Si la batterie est chargée, le moteur reçoit énergie. Si le moteur reçoit énergie, le moteur tourne.").promptContext).reasoningChains.chains.length));
 test("56 pipeline ne transforme pas les conclusions en certitudes",()=>assert.equal(P.analyze("Si A, B. Si B, C.").representation.reasoningChains.policy.derivedClaimsRemainCandidates,true));
+
+test("57 pipeline intègre le registre de connaissances",()=>assert.equal(P.analyze("Le moteur tourne.").representation.knowledgeRegistry.ready,true));
+test("58 étape du registre comptabilisée",()=>assert.ok(P.analyze("Supposons que le moteur tourne.").stages.knowledgeRegistry.assumptionCount>0));
+test("59 contexte JSON contient le registre",()=>assert.ok(JSON.parse(P.analyze("La masse reste inconnue.").promptContext).knowledgeRegistry.unknowns.length));
+test("60 le pipeline ne certifie pas les affirmations",()=>assert.equal(P.analyze("Le moteur tourne.").representation.knowledgeRegistry.policy.textualClaimsAreNotVerifiedFacts,true));
