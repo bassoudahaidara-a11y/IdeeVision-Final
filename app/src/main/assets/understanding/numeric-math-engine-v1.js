@@ -48,7 +48,7 @@ function analyze(input,MathModel,options){
  const source=String(input==null?"":input),opts=options&&typeof options==="object"?options:{},variables=opts.variables&&typeof opts.variables==="object"?opts.variables:{};
  const parsed=MathModel?MathModel.parse(source):null,issues=[];
  if(!parsed){issues.push({code:"math_parser_unavailable"});return {engine:"IdeeVisionNumericMath",version:VERSION,source,ready:false,evaluated:false,result:null,issues,variables:{...variables}};}
- if(parsed.kind!=="expression"){issues.push({code:parsed.kind==="equation"?"equation_not_solved":"inequality_not_solved"});return {engine:"IdeeVisionNumericMath",version:VERSION,source,ready:true,evaluated:false,result:null,ast:parsed.ast,issues,variables:{...variables},policy:{equationsSolved:false,inequalitiesSolved:false}};}
+ if(parsed.kind!=="expression"){issues.push({code:parsed.kind==="equation"?"equation_not_solved":"inequality_not_solved"});return {engine:"IdeeVisionNumericMath",version:VERSION,source,ready:true,evaluated:false,result:null,ast:parsed.ast,issues,variables:{...variables},policy:{evaluated:false,solved:false,equationsSolved:false,inequalitiesSolved:false,unitConversionsPerformed:false}};}
  issues.push(...parsed.issues);
  const result=parsed.issues.length?null:evaluateNode(parsed.ast,variables,issues);
  const evaluated=result!==null&&issues.length===0;
