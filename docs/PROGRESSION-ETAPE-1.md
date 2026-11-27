@@ -108,3 +108,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : découpage heuristique, dépendance aux verbes reconnus, aucune causalité ou conséquence physique déduite.
 - Vérification : [workflow 45976362989](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45976362989) — 630 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.9 — première implémentation
+- Module : `app/src/main/assets/understanding/logical-reasoner-v1.js`.
+- Tests ciblés : `tests/logical-reasoner-v1.test.js` (35 tests).
+- Documentation : `docs/GROUPE-1.9-RAISONNEMENT-LOGIQUE.md`.
+- Intégration : `representation.logicalReasoning`, `stages.logicalReasoning` et contexte JSON.
+- Capacités : conditions SI-ALORS, conditions nécessaires/suffisantes candidates, ET/OU, négation, arbres logiques, contradictions possibles et biconditionnels candidats.
+- Limites : raisonnement symbolique initial, formulations limitées, aucune valeur de vérité ou loi physique inventée.
+- Vérification : [workflow 45976934181](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45976934181) — 671 tests réussis, 0 échec.
+- APK non compilé.
