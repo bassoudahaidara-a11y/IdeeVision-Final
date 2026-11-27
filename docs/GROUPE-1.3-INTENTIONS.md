@@ -29,3 +29,12 @@ Règles lexicales initiales, couverture française limitée, intentions implicit
 - Fonction `analyzeWithContext` pour relier les résultats des groupes linguistiques 1.1 et 1.2 lorsque leurs sources sont identiques ; les données incompatibles sont signalées.
 - Toujours aucun raisonnement physique, aucun accès réseau et aucune dépendance externe.
 - Suite de tests globale validée : workflow 45965139627, toutes les étapes réussies.
+
+
+## Intégration du pipeline local v1
+- Les modules 1.1, 1.2 et 1.3 sont chargés avant le script principal de l'application.
+- `IdeeVisionUnderstandingPipeline.analyze(idea)` est appelé au démarrage de l'analyse d'une idée.
+- Le résultat est conservé dans `window.lastLocalUnderstanding` et son contexte JSON est transmis à la préparation de la scène.
+- 20 tests supplémentaires couvrent les objets, actions, relations, quantités, prédicats, intentions, contraintes, cohérence des sources et politiques sans physique.
+- Vérification globale : 464 tests réussis, 0 échec (workflow 45965448342).
+- Limite : l'application conserve encore des appels Groq pour la génération de scène ; cette intégration ne rend pas toute l'application hors ligne.
