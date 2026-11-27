@@ -3,6 +3,7 @@ const test=require("node:test");const assert=require("node:assert/strict");
 const F=require("../app/src/main/assets/understanding/french-language-foundation-v1.js");
 const G=require("../app/src/main/assets/understanding/french-grammar-semantics-v1.js");
 const I=require("../app/src/main/assets/understanding/intent-understanding-v1.js");
+const O=require("../app/src/main/assets/understanding/object-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 test("2 pipeline renvoie une structure stable",()=>assert.equal(P.analyze("La balle tombe.").ready,true));
@@ -24,3 +25,8 @@ test("17 diagnostics indiquent les limites",()=>assert.ok(P.diagnostics().limita
 test("18 les intentions gardent les positions",()=>{const a=P.analyze("Crée un modèle.");const x=a.representation.intents[0];assert.equal(a.source.slice(x.sourceRange.start,x.sourceRange.end),x.evidence);});
 test("19 le pipeline garde les pronoms non résolus",()=>{const a=P.analyze("Il le pousse.");assert.ok(Array.isArray(a.representation.pronouns));});
 test("20 le contexte du prompt est du JSON valide",()=>{const a=P.analyze("La balle tombe.");assert.doesNotThrow(()=>JSON.parse(a.promptContext));});
+
+test("21 pipeline intègre le modèle descriptif des objets",()=>assert.ok(P.analyze("Une bouteille rouge.").representation.objectModels.length));
+test("22 le modèle d'objets est une étape séparée",()=>assert.ok(P.analyze("Une bouteille.").stages.objects.objectCount>0));
+test("23 le contexte JSON contient les modèles d'objets",()=>{const a=P.analyze("Une table en bois.");assert.ok(JSON.parse(a.promptContext).objectModels.length>0);});
+test("24 la politique garde les identités interphrases non résolues",()=>assert.equal(P.analyze("Une bouteille. Elle est rouge.").policy.objectIdentityAcrossSentencesResolved,false));
