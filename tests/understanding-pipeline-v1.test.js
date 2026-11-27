@@ -6,6 +6,7 @@ const I=require("../app/src/main/assets/understanding/intent-understanding-v1.js
 const O=require("../app/src/main/assets/understanding/object-model-v1.js");
 const A=require("../app/src/main/assets/understanding/action-model-v1.js");
 const R=require("../app/src/main/assets/understanding/relation-graph-v1.js");
+const Q=require("../app/src/main/assets/understanding/reference-resolver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -46,3 +47,9 @@ test("32 le graphe est une étape distincte",()=>assert.ok(P.analyze("Le robot p
 test("33 le contexte JSON contient le graphe",()=>assert.ok(JSON.parse(P.analyze("La balle est dans le tube.").promptContext).relationGraph.edges.length>0));
 test("34 le graphe conserve les liens action-objet",()=>assert.ok(P.analyze("Le robot pousse la balle.").representation.relationGraph.edges.some(e=>e.type==="action_target")));
 test("35 le graphe ne déduit aucune causalité",()=>assert.equal(P.analyze("Le moteur tourne.").representation.relationGraph.policy.causalityInferred,false));
+
+test("36 pipeline intègre la résolution des références",()=>assert.ok(P.analyze("Une bouteille. Elle roule.").representation.referenceResolution.references.length));
+test("37 la résolution est une étape distincte",()=>assert.ok(P.analyze("Une bouteille. Elle roule.").stages.references.referenceCount>0));
+test("38 le contexte JSON contient les références",()=>assert.ok(JSON.parse(P.analyze("Une bouteille. Elle roule.").promptContext).referenceResolution.references.length>0));
+test("39 le pipeline conserve le candidat de pronom",()=>assert.equal(P.analyze("Une bouteille. Elle roule.").representation.referenceResolution.references[0].status,"resolved_candidate"));
+test("40 le pipeline ne transfère pas les propriétés",()=>assert.equal(P.analyze("Une bouteille rouge. Elle roule.").representation.referenceResolution.policy.physicalPropertiesTransferred,false));
