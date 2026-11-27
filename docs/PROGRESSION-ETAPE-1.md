@@ -268,5 +268,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Préservation des sources et de l'ordre des contraintes ; vérification de la variable commune.
 - Refus explicite des systèmes multi-variables, des connecteurs mixtes sans parenthèses et des contraintes individuelles non prises en charge.
 - Intégration au pipeline dans `representation.inequalitySystemSolver`, `stages.inequalitySystemSolver` et le contexte JSON ; script chargé dans l'application.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46006235547](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46006235547) — 1 508 tests réussis, 0 échec. Tests ciblés du résolveur : 102 (60 cas paramétrés et 42 tests directs) ; intégration pipeline : 7 tests supplémentaires.
 - APK non compilé.
