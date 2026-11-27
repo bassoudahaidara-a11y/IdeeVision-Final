@@ -8,6 +8,7 @@ const A=require("../app/src/main/assets/understanding/action-model-v1.js");
 const R=require("../app/src/main/assets/understanding/relation-graph-v1.js");
 const Q=require("../app/src/main/assets/understanding/reference-resolver-v1.js");
 const C=require("../app/src/main/assets/understanding/complex-clause-analyzer-v1.js");
+const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -60,3 +61,10 @@ test("42 pipeline expose les liens entre propositions",()=>assert.ok(P.analyze("
 test("43 étape complexe comptabilisée",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").stages.complexClauses.clauseCount>=2));
 test("44 contexte JSON contient l'analyse complexe",()=>assert.ok(JSON.parse(P.analyze("Si le moteur tourne, la roue avance.").promptContext).complexClauses.clauses.length>=2));
 test("45 analyse complexe ne déduit aucune physique",()=>assert.equal(P.analyze("Parce que le moteur tourne, la roue avance.").representation.complexClauses.policy.physicalConsequencesInferred,false));
+
+test("46 pipeline expose le raisonnement logique",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").representation.logicalReasoning.rules.length));
+test("47 pipeline expose les conditions combinées",()=>assert.equal(P.analyze("Si la batterie est chargée et le moteur tourne, le robot avance.").representation.logicalReasoning.rules[0].condition.operator,"AND"));
+test("48 pipeline expose les contradictions possibles",()=>assert.ok(P.analyze("Le moteur tourne. Le moteur ne tourne pas.").representation.logicalReasoning.contradictions.length));
+test("49 étape logique comptabilisée",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").stages.logicalReasoning.ruleCount>0));
+test("50 contexte JSON contient le raisonnement logique",()=>assert.ok(JSON.parse(P.analyze("Si le moteur tourne, la roue avance.").promptContext).logicalReasoning.rules.length));
+test("51 moteur logique ne déduit aucune physique",()=>assert.equal(P.analyze("Si le moteur tourne, la roue avance.").representation.logicalReasoning.policy.physicalLawsInferred,false));
