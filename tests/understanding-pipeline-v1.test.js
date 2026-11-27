@@ -23,6 +23,7 @@ const NumericMath=require("../app/src/main/assets/understanding/numeric-math-eng
 const SymbolicAlgebra=require("../app/src/main/assets/understanding/symbolic-algebra-engine-v1.js");
 const EquationSolver=require("../app/src/main/assets/understanding/equation-solver-v1.js");
 const InequalitySolver=require("../app/src/main/assets/understanding/inequality-solver-v1.js");
+const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequality-system-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
