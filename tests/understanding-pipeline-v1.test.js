@@ -24,6 +24,7 @@ const SymbolicAlgebra=require("../app/src/main/assets/understanding/symbolic-alg
 const EquationSolver=require("../app/src/main/assets/understanding/equation-solver-v1.js");
 const InequalitySolver=require("../app/src/main/assets/understanding/inequality-solver-v1.js");
 const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequality-system-solver-v1.js");
+const RationalInequalitySolver=require("../app/src/main/assets/understanding/rational-inequality-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -176,3 +177,10 @@ test("130 pipeline expose l'intersection vide",()=>assert.equal(P.analyze("x>5 e
 test("131 pipeline expose la disjonction comme union",()=>assert.equal(P.analyze("x<0 ou x>2").representation.inequalitySystemSolver.intervals.length,2));
 test("132 pipeline conserve les inégalités d'un système",()=>assert.equal(P.analyze("x>1 et x<5").representation.inequalitySystemSolver.inequalities.length,2));
 test("133 pipeline ne combine pas des variables différentes",()=>assert.equal(P.analyze("x>1 et y<5").representation.inequalitySystemSolver.status,"multiple_variables_unsupported"));
+
+test("134 pipeline intègre les inéquations rationnelles",()=>assert.equal(P.analyze("(x-1)/(x+2)>0").representation.rationalInequalitySolver.inequalities[0].excludedValues[0],-2));
+test("135 étape rationnelle comptabilise les valeurs interdites",()=>assert.equal(P.analyze("1/(x-3)>0").stages.rationalInequalitySolver.excludedValueCount,1));
+test("136 contexte JSON contient les solutions rationnelles",()=>assert.equal(JSON.parse(P.analyze("1/x>0").promptContext).rationalInequalitySolver.inequalities[0].intervals[0].lower,0));
+test("137 pipeline conserve les racines interdites",()=>assert.deepEqual(P.analyze("(x-1)/(x-1)>0").representation.rationalInequalitySolver.inequalities[0].excludedValues,[1]));
+test("138 pipeline distingue les inéquations ordinaires sans dénominateur",()=>assert.equal(P.analyze("x>2").representation.rationalInequalitySolver.inequalities[0].status,"solution_set"));
+test("139 phrase ordinaire non interprétée comme inéquation rationnelle",()=>assert.equal(P.analyze("La balle tombe.").representation.rationalInequalitySolver.status,"no_inequality_detected"));
