@@ -36,5 +36,5 @@ Résoudre des inéquations contenant des fractions rationnelles en conservant le
 - 61 cas paramétrés de tableaux de signes et de domaines.
 - Tests directs des pôles, zéros, intervalles, opérations rationnelles, limites et sérialisation.
 - Six tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46007360331](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46007360331) — 1 617 tests globaux réussis, 0 échec ; 104 tests ciblés du moteur (61 cas paramétrés et 43 tests directs) et 6 tests d'intégration pipeline.
 - APK non compilé.
