@@ -27,6 +27,7 @@ const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequ
 const RationalInequalitySolver=require("../app/src/main/assets/understanding/rational-inequality-solver-v1.js");
 const ParametricInequalitySolver=require("../app/src/main/assets/understanding/parametric-inequality-solver-v1.js");
 const ParametricEquationSystemSolver=require("../app/src/main/assets/understanding/parametric-equation-system-solver-v1.js");
+const NonlinearSystemSolver=require("../app/src/main/assets/understanding/nonlinear-system-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -200,3 +201,10 @@ test("148 étape du système paramétrique comptabilisée",()=>assert.equal(P.an
 test("149 contexte JSON contient les formules de Cramer",()=>assert.equal(JSON.parse(P.analyze("paramètre a : a*x+y=2\nx+a*y=2").promptContext).parametricEquationSystemSolver.cramer.x.denominator,"a^2 - 1"));
 test("150 pipeline conserve les systèmes singuliers permanents",()=>assert.equal(P.analyze("paramètre a : a*x+y=2\n2*a*x+2*y=5").representation.parametricEquationSystemSolver.status,"singular_for_all_parameters"));
 test("151 phrase ordinaire non interprétée comme système paramétrique",()=>assert.equal(P.analyze("La balle tombe.").representation.parametricEquationSystemSolver.status,"no_system_detected"));
+
+test("152 pipeline intègre la résolution non linéaire",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").representation.nonlinearSystemSolver.status,"two_real_solutions"));
+test("153 pipeline expose les solutions vérifiées",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").representation.nonlinearSystemSolver.solutions.length,2));
+test("154 étape non linéaire comptabilisée",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").stages.nonlinearSystemSolver.solutionCount,2));
+test("155 contexte JSON contient les solutions non linéaires",()=>assert.equal(JSON.parse(P.analyze("x^2+y=5\\nx+y=3").promptContext).nonlinearSystemSolver.solutions.length,2));
+test("156 pipeline conserve le cas sans solution réelle",()=>assert.equal(P.analyze("x^2+y=1\\nx+y=3").representation.nonlinearSystemSolver.status,"no_real_solution"));
+test("157 phrase ordinaire non interprétée comme système",()=>assert.equal(P.analyze("La balle tombe.").representation.nonlinearSystemSolver.status,"no_system_detected"));
