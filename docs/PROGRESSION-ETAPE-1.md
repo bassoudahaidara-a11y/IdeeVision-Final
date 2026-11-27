@@ -147,3 +147,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Chaque élément de connaissance reçoit une trace de provenance, une preuve textuelle, une phrase source et un statut non vérifié/candidat.
 - Aucune vérification externe n'est simulée ; aucune preuve de soutien n'est inventée.
 - Validation CI en attente ; APK non compilé.
+
+
+## Groupe 1.13 — première implémentation
+- Module : `temporal-model-v1.js`.
+- Tests ciblés : 40 ; tests d'intégration ajoutés : 4.
+- Représentation des événements, dates, heures, durées, temps relatifs, marqueurs de séquence, simultanéité et récurrence explicitement exprimés.
+- Les dates ne sont pas validées, les temps relatifs restent dépendants d'une référence et la chronologie reste candidate.
+- Validation CI en attente ; APK non compilé.
