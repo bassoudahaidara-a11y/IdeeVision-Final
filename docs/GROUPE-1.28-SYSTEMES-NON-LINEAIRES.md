@@ -48,5 +48,5 @@ Le moteur trouve et vérifie les deux solutions :
 ## Tests
 - 60 tests ciblés dans `tests/nonlinear-system-solver-v1.test.js`.
 - 6 tests d'intégration dans `tests/understanding-pipeline-v1.test.js`.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46010749455](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46010749455) — 1 819 tests globaux réussis, 0 échec ; 60 tests ciblés et 6 tests d'intégration pipeline.
 - APK non compilé.
