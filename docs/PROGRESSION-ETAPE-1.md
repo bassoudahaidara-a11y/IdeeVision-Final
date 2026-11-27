@@ -16,6 +16,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
 | 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
 | 1.7 | Résolution des références et identités | Résolveur prudent v1 intégré au pipeline ; 26 tests ciblés ; validation globale réussie (590 tests, 0 échec) ; résolution à approfondir |
+| 1.18 | Vecteurs, matrices et opérations matricielles | Module v1 créé, chargé dans l’application et intégré au pipeline ; tests ciblés et validation globale en cours ; aucune opération numérique effectuée |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -192,4 +193,15 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration au pipeline : repérage des équations, inégalités, systèmes candidats, variables communes, formes polynomiales simples et degré syntaxique candidat.
 - Le moteur ne résout ni les équations ni les systèmes et n'effectue aucun calcul numérique.
 - Validation globale réussie : [workflow 45997727386](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45997727386) — 971 tests réussis, 0 échec.
+- APK non compilé.
+
+
+## Groupe 1.18 — première implémentation
+- Module : \`app/src/main/assets/understanding/vector-matrix-model-v1.js\`.
+- Tests ciblés : 52 tests ; intégration pipeline : 6 tests.
+- Représentation des vecteurs (composantes, symboles et dimensions) et des matrices (lignes, colonnes, entrées et dimensions).
+- Repérage candidat des additions, soustractions, multiplications, produits scalaire/vectoriel, transposées, normes, déterminants et inverses.
+- Les entrées inconnues et preuves textuelles sont conservées ; les matrices irrégulières sont signalées.
+- Aucune opération n'est calculée, aucune dimension n'est validée et aucun système n'est résolu.
+- Validation globale : en attente du résultat GitHub Actions.
 - APK non compilé.
