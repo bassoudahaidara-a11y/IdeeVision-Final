@@ -56,7 +56,7 @@ const valid=(x)=>!!x&&typeof x==="object"&&normalize(x.source||"")===source;
 const languageValid=valid(languageAnalysis),grammarValid=valid(grammarAnalysis);
 return {...base,contextIntegration:{
 status:languageValid&&grammarValid?"linked":languageValid?"language_only":grammarValid?"grammar_only":"context_missing_or_source_mismatch",
-language:{provided:!!languageAnalysis,sourceMatches:languageValid,objectCount:languageValid&&Array.isArray(languageAnalysis.objects)?languageAnalysis.objects.length:null},
+language:{provided:!!languageAnalysis,sourceMatches:languageValid,objectCount:languageValid&&languageAnalysis.structure&&Array.isArray(languageAnalysis.structure.objects)?languageAnalysis.structure.objects.length:null},
 grammar:{provided:!!grammarAnalysis,sourceMatches:grammarValid,predicateCount:grammarValid&&grammarAnalysis.structure&&Array.isArray(grammarAnalysis.structure.predicates)?grammarAnalysis.structure.predicates.length:null},
 policy:"Les analyses linguistiques sont jointes comme contexte ; elles ne changent pas les intentions détectées et ne déclenchent aucun raisonnement physique."
 }};
