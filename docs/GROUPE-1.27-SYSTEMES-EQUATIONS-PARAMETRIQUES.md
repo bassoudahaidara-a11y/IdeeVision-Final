@@ -51,5 +51,5 @@ Le déterminant vaut `a² - 1`. Les valeurs critiques sont donc `a = -1` et `a =
 ## Tests
 - 60 tests ciblés dans `tests/parametric-equation-system-solver-v1.test.js`.
 - 6 tests d'intégration dans `tests/understanding-pipeline-v1.test.js`.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46009375449](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46009375449) — 1 753 tests globaux réussis, 0 échec ; 60 tests ciblés et 6 tests d'intégration pipeline.
 - APK non compilé.
