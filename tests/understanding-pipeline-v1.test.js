@@ -13,6 +13,7 @@ const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.
 const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js");
 const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
 const T=require("../app/src/main/assets/understanding/time-model-v1.js");
+const S=require("../app/src/main/assets/understanding/spatial-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -93,3 +94,8 @@ test("66 étape temporelle comptabilisée",()=>assert.ok(P.analyze("Le test aura
 test("67 contexte JSON contient les événements temporels",()=>assert.ok(JSON.parse(P.analyze("La balle tombe demain.").promptContext).timeModel.events.length>0));
 test("68 aucune chronologie réelle n'est affirmée",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.policy.textualOrderIsNotProofOfRealExecution,true));
 
+
+test("69 pipeline intègre le modèle spatial",()=>assert.equal(P.analyze("La balle est dans le tube.").representation.spatialModel.ready,true));
+test("70 étape spatiale comptabilisée",()=>assert.ok(P.analyze("La balle est à gauche du tube.").stages.spatialModel.relationCount>0));
+test("71 contexte JSON contient les relations spatiales",()=>assert.ok(JSON.parse(P.analyze("La balle est dans le tube.").promptContext).spatialModel.relations.length>0));
+test("72 les coordonnées ne reçoivent pas de repère inventé",()=>assert.equal(P.analyze("Position x=2, y=3, z=4.").representation.spatialModel.policy.coordinateFrameMustBeExplicit,true));
