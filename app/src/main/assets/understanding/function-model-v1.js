@@ -23,7 +23,7 @@ function analyze(input,MathModel){
  add(images,"image",/(?:Im\s*\(\s*([fgh])\s*\)|image\s+de\s+([fgh]))\s*(?:=|est|:)?\s*([^;\n.]*)/giu,m=>({functionName:m[1]||m[2]||null,expression:(m[3]||"").trim()}));
  add(compositions,"composition",/\b([fgh])\s*∘\s*([fgh])\b|\b([fgh])\s*\(\s*([fgh])\s*\(\s*([a-z])\s*\)\s*\)/gu,m=>({outer:m[1]||m[3]||null,inner:m[2]||m[4]||null,notation:m[0]}));
  add(inverses,"inverse_function",/\b([fgh])\s*(?:\^\s*-1|⁻¹)\s*\(\s*([a-z])\s*\)/gu,m=>({functionName:m[1],variable:m[2]}));
- add(variations,"variation",/\b(f|g|h)\b[^.\n]{0,35}\b(croissante|décroissante|strictement croissante|strictement décroissante|constante|monotone)\b(?:\s+sur\s+([^\n.;]+))?/giu,m=>({functionName:m[1],behavior:m[2].toLocaleLowerCase("fr-FR"),interval:(m[3]||"").trim()||null}));
+ add(variations,"variation",/\b(f|g|h)\b[^.\n]{0,35}\b(strictement croissante|strictement décroissante|croissante|décroissante|constante|monotone)\b(?:\s+sur\s+([^\n.;]+))?/giu,m=>({functionName:m[1],behavior:m[2].toLocaleLowerCase("fr-FR"),interval:(m[3]||"").trim()||null}));
  add(limits,"limit",/(?:lim\s*[_({]?\s*([a-z])\s*(?:→|->|tend\s+vers)\s*([^)}\]]+)[)}\]]?\s*|limite\s+de\s+([fgh])\s+en\s+([^\s,;]+))/giu,m=>({variable:m[1]||null,target:(m[2]||m[4]||"").trim(),functionName:m[3]||null,notation:m[0]}));
  add(continuity,"continuity",/\b(f|g|h)\b[^.\n]{0,40}\b(continue|continuité|discontinue)\b(?:\s+(?:en|sur)\s+([^\n.;,]+))?/giu,m=>({functionName:m[1],property:m[2].toLocaleLowerCase("fr-FR"),location:(m[3]||"").trim()||null}));
  add(graphs,"graph",/\b(courbe représentative|représentation graphique|graphe de|tracer la courbe de|dessiner la courbe de)\s*(?:la\s+)?(?:fonction\s+)?([fgh])?\b/giu,m=>({functionName:m[2]||null,requested:m[1]}));
