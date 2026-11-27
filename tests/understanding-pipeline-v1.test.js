@@ -22,6 +22,7 @@ const FunctionModel=require("../app/src/main/assets/understanding/function-model
 const NumericMath=require("../app/src/main/assets/understanding/numeric-math-engine-v1.js");
 const SymbolicAlgebra=require("../app/src/main/assets/understanding/symbolic-algebra-engine-v1.js");
 const EquationSolver=require("../app/src/main/assets/understanding/equation-solver-v1.js");
+const InequalitySolver=require("../app/src/main/assets/understanding/inequality-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -161,3 +162,8 @@ test("119 pipeline intègre la résolution",()=>assert.equal(P.analyze("2x+3=7")
 test("120 étape quadratique exposée",()=>assert.equal(P.analyze("x^2-1=0").stages.equationSolver.status,"two_real_solutions"));
 test("121 contexte JSON contient le résolveur",()=>assert.equal(JSON.parse(P.analyze("x+1=2").promptContext).equationSolver.solutions[0],1));
 test("122 phrase ordinaire non résolue",()=>assert.equal(P.analyze("La balle tombe.").representation.equationSolver.status,"no_equation_detected"));
+
+test("123 pipeline intègre la résolution des inéquations",()=>assert.equal(P.analyze("x>2").representation.inequalitySolver.intervals[0].lower,2));
+test("124 étape des inéquations exposée",()=>assert.equal(P.analyze("x^2-4<=0").stages.inequalitySolver.status,"solution_set"));
+test("125 contexte JSON contient le résolveur d’inéquations",()=>assert.equal(JSON.parse(P.analyze("x>=3").promptContext).inequalitySolver.intervals[0].lower,3));
+test("126 phrase ordinaire non interprétée comme inéquation",()=>assert.equal(P.analyze("La balle tombe.").representation.inequalitySolver.status,"no_inequality_detected"));
