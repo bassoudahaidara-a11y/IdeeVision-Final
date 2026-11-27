@@ -74,7 +74,7 @@ test("numérateur conservé",()=>assert.deepEqual(solve("(x-1)/(x+2)>0").numerat
 test("dénominateur conservé",()=>assert.deepEqual(solve("(x-1)/(x+2)>0").denominator,[2,1]));
 test("degrés des polynômes exposés",()=>assert.deepEqual(solve("(x^2-1)/(x-2)>0").degree,{numerator:2,denominator:1}));
 test("pôles jamais inclus",()=>{const r=solve("1/(x-3)>=0");assert.ok(!r.intervals.some(x=>x.lower===3&&x.lowerInclusive||x.upper===3&&x.upperInclusive));});
-test("racine numérateur incluse pour large",()=>assert.ok(solve("(x-1)/(x+2)>=0").intervals[0].upperInclusive));
+test("racine numérateur incluse pour large",()=>assert.ok(solve("(x-1)/(x+2)>=0").intervals[1].lowerInclusive));
 test("racine numérateur exclue pour strict",()=>assert.ok(!solve("(x-1)/(x+2)>0").intervals[0].upperInclusive));
 test("fraction dans le membre droit",()=>assert.equal(solve("x>1/(x-2)").status,"solution_set"));
 test("opérations rationnelles addition",()=>assert.equal(solve("1/x+1/(x-1)>0").status,"solution_set"));
