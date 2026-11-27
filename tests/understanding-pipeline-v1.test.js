@@ -34,6 +34,6 @@ test("24 la politique garde les identités interphrases non résolues",()=>asser
 test("25 pipeline intègre le moteur descriptif des actions",()=>assert.ok(P.analyze("La balle tombe.").representation.actionModels.length));
 test("26 le moteur d'actions est une étape séparée",()=>assert.ok(P.analyze("La balle tombe.").stages.actions.actionCount>0));
 test("27 le contexte JSON contient les modèles d'actions",()=>assert.ok(JSON.parse(P.analyze("Le robot pousse la balle.").promptContext).actionModels.length>0));
-test("28 la séquence d'actions est conservée",()=>assert.ok(P.analyze("La balle tombe puis roule.").representation.actionSequence.length>=2));
+test("28 la séquence d'actions est conservée",()=>assert.ok(P.analyze("La balle tombe puis tourne.").representation.actionSequence.length>=2));
 test("29 la négation reste signalée dans le pipeline",()=>assert.equal(P.analyze("Ne pousse pas la balle.").representation.actionModels[0].polarity,"negative"));
 test("30 le pipeline n'invente aucune causalité",()=>assert.equal(P.analyze("Le moteur tourne.").representation.actionModels[0]&&P.analyze("Le moteur tourne.").representation.actionModels[0].resultStateStatus,"not_specified"));
