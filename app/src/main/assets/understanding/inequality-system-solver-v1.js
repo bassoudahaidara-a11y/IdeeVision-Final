@@ -52,10 +52,10 @@ function normalize(items){
  return out;
 }
 function splitClauses(source){
- const lines=String(source).split(/[\\n;]+/).map(x=>x.trim()).filter(Boolean),clauses=[],connectors=[];
+ const lines=String(source).split(/[\n;]+/).map(x=>x.trim()).filter(Boolean),clauses=[],connectors=[];
  for(const line of lines){
   if(!/[<>≤≥≠!]/.test(line))continue;
-  const parts=line.split(/\\s+(et aussi|et|simultanément|ou)\\s+/i).map(x=>x.trim()).filter(Boolean);
+  const parts=line.split(/\s+(et aussi|et|simultanément|ou)\s+/i).map(x=>x.trim()).filter(Boolean);
   for(let i=0;i<parts.length;i++){
    if(/^(et aussi|et|simultanément|ou)$/i.test(parts[i])){connectors.push(parts[i].toLowerCase());continue;}
    if(/[<>≤≥≠!]/.test(parts[i]))clauses.push(parts[i]);
