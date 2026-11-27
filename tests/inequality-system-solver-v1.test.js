@@ -23,7 +23,7 @@ const cases=[
  ["x>1; x<5","solution_set",[[1,5,false,false]]],
  ["x>1; x<5; x!=3","solution_set",[[1,3,false,false],[3,5,false,false]]],
  ["x>1 ou x<0","solution_set",[[null,0,false,false],[1,null,false,false]]],
- ["x>=1 ou x<=0","solution_set",[[null,0,false,false],[1,null,true,false]]],
+ ["x>=1 ou x<=0","solution_set",[[null,0,false,true],[1,null,true,false]]],
  ["x>1 ou x>3","solution_set",[[1,null,false,false]]],
  ["x>=1 ou x>1","solution_set",[[1,null,true,false]]],
  ["x>1 ou x>=1","solution_set",[[1,null,true,false]]],
