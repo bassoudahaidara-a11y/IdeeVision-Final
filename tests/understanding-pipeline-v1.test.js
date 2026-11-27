@@ -202,9 +202,9 @@ test("149 contexte JSON contient les formules de Cramer",()=>assert.equal(JSON.p
 test("150 pipeline conserve les systèmes singuliers permanents",()=>assert.equal(P.analyze("paramètre a : a*x+y=2\n2*a*x+2*y=5").representation.parametricEquationSystemSolver.status,"singular_for_all_parameters"));
 test("151 phrase ordinaire non interprétée comme système paramétrique",()=>assert.equal(P.analyze("La balle tombe.").representation.parametricEquationSystemSolver.status,"no_system_detected"));
 
-test("152 pipeline intègre la résolution non linéaire",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").representation.nonlinearSystemSolver.status,"two_real_solutions"));
-test("153 pipeline expose les solutions vérifiées",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").representation.nonlinearSystemSolver.solutions.length,2));
-test("154 étape non linéaire comptabilisée",()=>assert.equal(P.analyze("x^2+y=5\\nx+y=3").stages.nonlinearSystemSolver.solutionCount,2));
-test("155 contexte JSON contient les solutions non linéaires",()=>assert.equal(JSON.parse(P.analyze("x^2+y=5\\nx+y=3").promptContext).nonlinearSystemSolver.solutions.length,2));
-test("156 pipeline conserve le cas sans solution réelle",()=>assert.equal(P.analyze("x^2+y=1\\nx+y=3").representation.nonlinearSystemSolver.status,"no_real_solution"));
+test("152 pipeline intègre la résolution non linéaire",()=>assert.equal(P.analyze("x^2+y=5\nx+y=3").representation.nonlinearSystemSolver.status,"two_real_solutions"));
+test("153 pipeline expose les solutions vérifiées",()=>assert.equal(P.analyze("x^2+y=5\nx+y=3").representation.nonlinearSystemSolver.solutions.length,2));
+test("154 étape non linéaire comptabilisée",()=>assert.equal(P.analyze("x^2+y=5\nx+y=3").stages.nonlinearSystemSolver.solutionCount,2));
+test("155 contexte JSON contient les solutions non linéaires",()=>assert.equal(JSON.parse(P.analyze("x^2+y=5\nx+y=3").promptContext).nonlinearSystemSolver.solutions.length,2));
+test("156 pipeline conserve le cas sans solution réelle",()=>assert.equal(P.analyze("x^2+y=1\nx+y=3").representation.nonlinearSystemSolver.status,"no_real_solution"));
 test("157 phrase ordinaire non interprétée comme système",()=>assert.equal(P.analyze("La balle tombe.").representation.nonlinearSystemSolver.status,"no_system_detected"));
