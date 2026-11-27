@@ -320,3 +320,13 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Six tests d'intégration pipeline.
 - Validation CI réussie : [workflow 46010749455](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46010749455) — 1 819 tests réussis, 0 échec. Tests ciblés : 60 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
+
+
+## Groupe 1.29 — systèmes de deux équations quadratiques
+- Extension du résolveur local : comparaison des parties quadratiques en (x^2), (xy) et (y^2).
+- Si les parties quadratiques sont proportionnelles, élimination par combinaison linéaire pour obtenir une contrainte linéaire, puis isolation, substitution, résolution quadratique et vérification dans les deux sources.
+- Détection des équations dépendantes et incompatibles ; refus explicite des parties quadratiques non proportionnelles.
+- Tests ciblés : 60 dans `tests/nonlinear-quadratic-pair-solver-v1.test.js).
+- Tests d'intégration pipeline ajoutés : 6.
+- Validation CI en attente.
+- APK non compilé.
