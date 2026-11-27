@@ -112,3 +112,9 @@ test("85 pipeline intègre le modèle mathématique symbolique",()=>assert.equal
 test("86 modèle mathématique exposé comme étape",()=>assert.ok(P.analyze("x + 2 = 5").stages.mathExpressions.expressionCount>0));
 test("87 le contexte JSON contient les AST mathématiques",()=>assert.equal(JSON.parse(P.analyze("v = d/t").promptContext).mathExpressions.kind,"equation"));
 test("88 aucune équation n'est résolue automatiquement",()=>assert.equal(P.analyze("x + 2 = 5").representation.mathExpressions.policy.solved,false));
+
+const Algebraic=require("../app/src/main/assets/understanding/algebraic-structures-v1.js");
+test("89 pipeline expose les structures algébriques",()=>assert.equal(P.analyze("x+y=5\nx-y=1").representation.algebraicStructures.classification,"system_candidate"));
+test("90 étape système visible",()=>assert.equal(P.analyze("x=1\ny=2").stages.algebraicStructures.equationCount,2));
+test("91 contexte JSON contient les systèmes",()=>assert.equal(JSON.parse(P.analyze("x=1\ny=2").promptContext).algebraicStructures.system.equationCount,2));
+test("92 aucune résolution de système dans le pipeline",()=>assert.equal(P.analyze("x=1\ny=2").representation.algebraicStructures.policy.systemsSolved,false));
