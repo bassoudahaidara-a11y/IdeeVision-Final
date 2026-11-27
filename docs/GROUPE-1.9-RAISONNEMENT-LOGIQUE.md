@@ -27,10 +27,10 @@ Construire une représentation symbolique locale de conditions et de proposition
 
 ## Implémentation
 - Module : `app/src/main/assets/understanding/logical-reasoner-v1.js`.
-- Tests ciblés : `tests/logical-reasoner-v1.test.js` (35 tests).
+- Tests ciblés : `tests/logical-reasoner-v1.test.js` (36 tests).
 - Intégration : `representation.logicalReasoning`, `stages.logicalReasoning` et contexte JSON du pipeline.
 - Chargement local dans `index.html`, avant le pipeline.
-- Validation globale : 671 tests réussis, 0 échec.
+- Validation globale : [workflow 45977060459](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977060459) — 672 tests réussis, 0 échec.
 
 ## Limites connues
 - Il s'agit d'une représentation symbolique initiale, pas encore d'un moteur complet de démonstration formelle.
