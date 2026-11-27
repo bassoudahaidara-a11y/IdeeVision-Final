@@ -157,3 +157,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Les dates relatives restent non résolues sans date de référence ; aucun fuseau horaire ni déroulement réel n'est supposé.
 - Validation CI : [workflow 45979415031](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45979415031) — 803 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.14 — première implémentation
+- Module : `spatial-model-v1.js`.
+- Tests ciblés : 30 ; tests d'intégration pipeline : 4.
+- Représentation des relations spatiales, coordonnées, distances, orientations et directions explicitement écrites.
+- Les points de vue et repères manquants restent non résolus ; aucune géométrie ni physique n'est inventée.
+- Validation CI en attente ; APK non compilé.
