@@ -20,6 +20,7 @@ const Algebraic=require("../app/src/main/assets/understanding/algebraic-structur
 const VectorMatrix=require("../app/src/main/assets/understanding/vector-matrix-model-v1.js");
 const FunctionModel=require("../app/src/main/assets/understanding/function-model-v1.js");
 const NumericMath=require("../app/src/main/assets/understanding/numeric-math-engine-v1.js");
+const SymbolicAlgebra=require("../app/src/main/assets/understanding/symbolic-algebra-engine-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -146,3 +147,11 @@ test("109 pipeline refuse de résoudre une équation",()=>assert.equal(P.analyze
 test("110 pipeline garde les variables non définies",()=>assert.ok(P.analyze("x+2").representation.numericMath.issues.some(x=>x.code==="unknown_variable")));
 test("111 pipeline ignore le calcul automatique d'une phrase",()=>assert.equal(P.analyze("La balle tombe.").representation.numericMath.evaluated,false));
 test("112 contexte JSON contient le résultat de calcul",()=>assert.equal(JSON.parse(P.analyze("3^2").promptContext).numericMath.result,9));
+
+
+test("113 pipeline intègre la simplification symbolique",()=>assert.equal(P.analyze("x+x").representation.symbolicAlgebra.simplifiedExpression,"2 * x"));
+test("114 pipeline expose les transformations dans les étapes",()=>assert.ok(P.analyze("(x+1)^2").stages.symbolicAlgebra.steps>0));
+test("115 pipeline développe les identités polynomiales",()=>assert.equal(P.analyze("(x+1)^2").representation.symbolicAlgebra.polynomial.length,3));
+test("116 pipeline conserve les équations sans les résoudre",()=>assert.equal(P.analyze("x+1=2").representation.symbolicAlgebra.issues[0].code,"relation_not_transformed"));
+test("117 pipeline conserve les phrases ordinaires",()=>assert.equal(P.analyze("La balle tombe.").representation.symbolicAlgebra.simplified,false));
+test("118 contexte JSON contient le résultat symbolique",()=>assert.equal(JSON.parse(P.analyze("x+x").promptContext).symbolicAlgebra.simplifiedExpression,"2 * x"));
