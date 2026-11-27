@@ -65,7 +65,7 @@ test("58 résultat sérialisable",()=>assert.doesNotThrow(()=>JSON.stringify(a("
 test("59 limite de termes configurable",()=>assert.equal(a("(x+y)^4",{maxTerms:2}).issues[0].code,"expansion_term_limit"));
 test("60 limite de termes bornée",()=>assert.equal(a("x+x",{maxTerms:9999}).policy.maxExpansionTerms,256));
 test("61 nombre constant devient AST numérique",()=>assert.equal(a("2+3").simplifiedAst.type,"number"));
-test("62 ne résout aucune équation",()=>assert.equal(a("x=2").policy,undefined));
+test("62 ne résout aucune équation",()=>assert.equal(a("x=2").policy.equationsSolved,false));
 test("63 diagnostics listent les limites",()=>assert.ok(S.diagnostics().limitations.length>=5));
 test("64 transformation déclarée équivalente",()=>assert.equal(a("(x+1)^2").policy.transformationsAlgebraicallyEquivalent,true));
 test("65 domaine à suivre explicitement",()=>assert.equal(a("x/x").policy.domainRestrictionsMayNeedSeparateTracking,true));
