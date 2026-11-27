@@ -155,3 +155,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Représentation des événements, dates, heures, durées, temps relatifs, marqueurs de séquence, simultanéité et récurrence explicitement exprimés.
 - Les dates ne sont pas validées, les temps relatifs restent dépendants d'une référence et la chronologie reste candidate.
 - Validation CI en attente ; APK non compilé.
+
+
+## Groupe 1.13 — première implémentation
+- Module : `time-model-v1.js`.
+- Tests ciblés : 28 ; tests d'intégration ajoutés : 4.
+- Représentation des marqueurs relatifs, dates, heures, durées, répétitions, états temporels et relations candidates.
+- Les dates relatives ne sont pas converties sans date de référence ; aucun fuseau horaire n'est supposé.
+- Validation CI en attente ; APK non compilé.
