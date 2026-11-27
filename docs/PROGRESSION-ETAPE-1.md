@@ -226,5 +226,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Contrôles des divisions par zéro, domaines simples, valeurs non finies et précision.
 - Le moteur parcourt un AST mathématique ; il n'utilise pas \`eval\` et n'exécute pas de code arbitraire.
 - Les équations, inégalités, unités, matrices et simplifications symboliques générales ne sont pas encore calculées.
-- Validation globale : en attente du résultat GitHub Actions.
+- Validation globale réussie : [workflow 46000047129](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46000047129) — 1 163 tests réussis, 0 échec.
 - APK non compilé.
