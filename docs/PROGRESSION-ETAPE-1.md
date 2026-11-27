@@ -244,7 +244,7 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 ## Groupe 1.22 — résolution contrôlée des équations
 - Module : `app/src/main/assets/understanding/equation-solver-v1.js`.
 - Tests : `tests/equation-solver-v1.test.js` et intégration pipeline.
-- Équations linéaires et quadratiques, discriminant, racines réelles vérifiées par substitution, contrôle des dénominateurs, systèmes linéaires carrés jusqu'à trois inconnues par élimination de Gauss.
+- Équations linéaires et quadratiques, discriminant, racines réelles vérifiées par substitution, fractions à dénominateur numérique non nul, systèmes linéaires carrés jusqu'à trois inconnues par élimination de Gauss.
 - Limites : pas de racines complexes ni de systèmes non linéaires ; symboles d'unités ambigus refusés.
 - Validation CI : en attente.
 - APK non compilé.
