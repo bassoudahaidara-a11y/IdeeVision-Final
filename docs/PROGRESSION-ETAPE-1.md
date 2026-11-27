@@ -328,5 +328,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Détection des équations dépendantes et incompatibles ; refus explicite des parties quadratiques non proportionnelles.
 - Tests ciblés : 60 dans `tests/nonlinear-quadratic-pair-solver-v1.test.js).
 - Tests d'intégration pipeline ajoutés : 6.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46011543849](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46011543849) — 1 885 tests réussis, 0 échec. Tests ciblés : 60 ; tests d'intégration ajoutés : 6.
 - APK non compilé.
