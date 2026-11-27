@@ -36,6 +36,14 @@ function scan(source,grammar,actions,clauses){
  if(!markers.length)issues.push({code:"no_explicit_time_marker",severity:"information"});
  return {engine:"IdeeVisionTimeModel",version:VERSION,offline:true,source,ready:true,events,markers,durations,dates,times,repetitions,states,relations,issues,metrics:{eventCount:events.length,markerCount:markers.length,durationCount:durations.length,dateCount:dates.length,clockTimeCount:times.length,repetitionCount:repetitions.length,relationCount:relations.length},policy:{textualOrderIsNotProofOfRealExecution:true,relativeDatesAreNotResolvedWithoutReferenceDate:true,missingTimesRemainUnknown:true,calendarDatesAreNotAssumedToHaveTimezone:true,temporalRelationsAreLinguisticCandidates:true,noPhysicalPrediction:true}};
 }
+function analyze(input,grammar,actionModel,complexClauses){
+ const source=norm(input);
+ if(!grammar||grammar.source!==source||!Array.isArray(grammar.sentences)||!actionModel||actionModel.source!==source||!Array.isArray(actionModel.actions)){
+  return {engine:"IdeeVisionTimeModel",version:VERSION,offline:true,source,ready:false,events:[],markers:[],durations:[],dates:[],times:[],repetitions:[],states:[],relations:[],issues:[{code:"matching_grammar_and_action_analyses_required"}],policy:{relativeDatesAreNotResolvedWithoutReferenceDate:true,missingTimesRemainUnknown:true,noPhysicalPrediction:true}};
+ }
+ if(complexClauses&&complexClauses.source!==source)return {engine:"IdeeVisionTimeModel",version:VERSION,offline:true,source,ready:false,events:[],markers:[],durations:[],dates:[],times:[],repetitions:[],states:[],relations:[],issues:[{code:"complex_clause_source_mismatch"}],policy:{relativeDatesAreNotResolvedWithoutReferenceDate:true,missingTimesRemainUnknown:true,noPhysicalPrediction:true}};
+ return scan(source,grammar,actionModel,complexClauses);
+}
 function diagnostics(){return {name:"Idée Vision — Modèle descriptif du temps",version:VERSION,offline:true,externalDependencies:[],capabilities:["temps grammatical candidat","passé présent futur candidats","marqueurs temporels relatifs","jours de semaine","dates calendaires","heures explicites","durées explicites","début d'action","fin d'action","actions en cours","actions interrompues","état terminé ou incomplet explicite","ordre chronologique exprimé","simultanéité exprimée","délais et bornes temporelles candidates","répétitions","intervalles candidats","événements sans date","preuves et positions textuelles","ambiguïtés et dates non résolues"],limitations:["temps grammaticaux reconnus selon les formes disponibles","dates relatives non calculées sans date de référence","aucun fuseau horaire supposé","liens événementiels temporels encore candidats","ne prédit pas l'évolution physique"]};}
 const api=Object.freeze({version:VERSION,analyze,diagnostics});root.IdeeVisionTimeModel=api;if(typeof module!=="undefined"&&module.exports)module.exports=api;
 })(typeof globalThis!=="undefined"?globalThis:this);
