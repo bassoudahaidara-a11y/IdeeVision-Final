@@ -228,3 +228,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Les équations, inégalités, unités, matrices et simplifications symboliques générales ne sont pas encore calculées.
 - Validation globale réussie : [workflow 46000047129](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46000047129) — 1 163 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.21 — première implémentation
+- Moteur : \`app/src/main/assets/understanding/symbolic-algebra-engine-v1.js\`.
+- Tests ciblés : 65 ; tests d'intégration pipeline : 6.
+- Réduction de termes semblables, règles élémentaires, développement polynomial par distributivité, puissances entières limitées et factorisation par facteur monomial commun.
+- Simplification de fractions à dénominateur numérique constant non nul.
+- Source, AST, étapes de transformation et variables inconnues conservés.
+- Les équations et inégalités ne sont pas résolues ; les fractions rationnelles symboliques et les restrictions de domaine avancées restent à traiter.
+- Validation globale : en attente du résultat GitHub Actions.
+- APK non compilé.
