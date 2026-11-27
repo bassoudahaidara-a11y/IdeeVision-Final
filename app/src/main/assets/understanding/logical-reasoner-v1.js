@@ -7,12 +7,12 @@ function splitTop(text,word){const n=fold(text),out=[];let start=0;const re=new 
 function atom(text,offset){const raw=String(text||"").trim(),n=fold(raw);if(!n)return null;const negative=/(^|\s)(ne|n'|pas|jamais|plus|aucun|aucune|sans)(\s|$)/.test(n)||/^non\b/.test(n);const clean=n.replace(/\b(ne|n'|pas|jamais|plus|aucun|aucune|sans|non)\b/g," ").replace(/\s+/g," ").trim();return {id:"atom-"+(offset+1),text:raw,normalized:clean||n,polarity:negative?"negative":"positive",status:"proposition_candidate"};}
 function expression(text,baseIndex){const raw=String(text||"").trim();let pieces=splitTop(raw,"ou");if(pieces.length>1)return {operator:"OR",children:pieces.map((p,i)=>expression(p.text,baseIndex+i)),status:"logical_structure_candidate"};pieces=splitTop(raw,"et");if(pieces.length>1)return {operator:"AND",children:pieces.map((p,i)=>expression(p.text,baseIndex+i)),status:"logical_structure_candidate"};return atom(raw,baseIndex);}
 function findConditional(s){const patterns=[
-{re:/^\\s*si\\s+(.+?),\\s*(.+)$/iu,type:"if_then",sufficient:true},
-{re:/^\\s*à condition que\\s+(.+?),\\s*(.+)$/iu,type:"condition_that",sufficient:true},
-{re:/^\\s*a condition que\\s+(.+?),\\s*(.+)$/iu,type:"condition_that",sufficient:true},
-{re:/^(.+?)\\s+à condition que\\s+(.+?)[.!?…]?$/iu,type:"condition_that",necessary:false,sufficient:true,inverted:true},
-{re:/^(.+?)\\s+a condition que\\s+(.+?)[.!?…]?$/iu,type:"condition_that",necessary:false,sufficient:true,inverted:true},
-{re:/^(.+?)\\s+(?:seulement|uniquement) si\\s+(.+?)[.!?…]?$/iu,type:"only_if",necessary:true,inverted:true}
+{re:/^\s*si\s+(.+?),\s*(.+)$/iu,type:"if_then",sufficient:true},
+{re:/^\s*à condition que\s+(.+?),\s*(.+)$/iu,type:"condition_that",sufficient:true},
+{re:/^\s*a condition que\s+(.+?),\s*(.+)$/iu,type:"condition_that",sufficient:true},
+{re:/^(.+?)\s+à condition que\s+(.+?)[.!?…]?$/iu,type:"condition_that",sufficient:true,inverted:true},
+{re:/^(.+?)\s+a condition que\s+(.+?)[.!?…]?$/iu,type:"condition_that",sufficient:true,inverted:true},
+{re:/^(.+?)\s+(?:seulement|uniquement) si\s+(.+?)[.!?…]?$/iu,type:"only_if",necessary:true,inverted:true}
 ];for(const p of patterns){const m=s.match(p.re);if(m)return {type:p.type,condition:(p.inverted?m[2]:m[1]).trim(),result:(p.inverted?m[1]:m[2]).trim(),necessary:!!p.necessary,sufficient:!!p.sufficient};}return null;}
 function analyze(input,grammar,complex){const source=normalizeSource(input);const base={engine:"IdeeVisionLogicalReasoner",version:VERSION,offline:true,source,ready:false,atoms:[],rules:[],expressions:[],contradictions:[],issues:[],policy:{truthValuesNotAssumed:true,physicalLawsInferred:false,linguisticRulesAreNotScientificProof:true}};
 if(!grammar||grammar.source!==source||!Array.isArray(grammar.sentences)){base.issues.push({code:"matching_grammar_analysis_required"});return base;}
