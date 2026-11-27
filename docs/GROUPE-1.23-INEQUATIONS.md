@@ -13,4 +13,4 @@
 ## Limites
 Une seule variable, degré maximal deux, racines réelles uniquement. Les relations chaînées, dénominateurs polynomiaux, systèmes d'inéquations et variables ambiguës avec les unités sont refusés.
 
-Validation automatisée en attente : le workflow doit confirmer la suite complète des tests. APK non compilé.
+Validation CI réussie : [workflow 46004514117](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46004514117) — 1400 tests réussis, 0 échec. Couverture ciblée : 92 tests du résolveur et 4 tests d’intégration supplémentaires. APK non compilé.
