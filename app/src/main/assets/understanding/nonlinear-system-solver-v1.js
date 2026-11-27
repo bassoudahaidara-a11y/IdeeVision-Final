@@ -37,15 +37,28 @@ function analyze(input,M,N){const source=String(input==null?"":input),lines=sour
  if(names.length!==2)return {...base,status:"two_variables_required",variables:names,issues:[{code:"exactly_two_variables_required"}]};
  const rows=lines.map(s=>equation(s,M,names));if(rows.some(r=>r.error))return {...base,status:"unsupported_expression",variables:names,equations:lines.map((source,i)=>({source,error:rows[i].error||null})),issues:rows.filter(r=>r.error).map(r=>({code:r.error}))};
  const degrees=rows.map(r=>r.degree);if(degrees.every(d=>d<=1))return {...base,status:"linear_system_delegate",variables:names,equations:lines.map((source,i)=>({source,degree:degrees[i]})),issues:[{code:"use_linear_equation_solver"}]};
- if(!degrees.some(d=>d===1)||!degrees.some(d=>d===2))return {...base,status:"unsupported_system_shape",variables:names,equations:lines.map((source,i)=>({source,degree:degrees[i]})),issues:[{code:"one_linear_and_one_quadratic_equation_required"}]};
- const li=degrees.indexOf(1),qi=1-li,L=rows[li],Q=rows[qi],co=[0,0,0];
- for(const [k,v] of L.terms){const e=k.split(",").map(Number);if(e[0]+e[1]===0)co[0]=v;else if(e[0]===1)co[1]=v;else if(e[1]===1)co[2]=v;}
- let isolatedIndex=1,remainingIndex=0;if(Math.abs(co[2])<EPS){if(Math.abs(co[1])<EPS)return {...base,status:"degenerate_linear_equation",variables:names,issues:[{code:"linear_equation_has_no_variable_coefficient"}]};isolatedIndex=0;remainingIndex=1;}
+ let Lterms=null,Q=null,method="linear_substitution",roles=[];
+ if(degrees.includes(1)&&degrees.includes(2)){
+  const li=degrees.indexOf(1),qi=1-li;Lterms=rows[li].terms;Q=rows[qi];roles=rows.map((r,i)=>({source:r.source,degree:r.degree,role:i===li?"linear_constraint":"quadratic_constraint"}));
+ }else if(degrees[0]===2&&degrees[1]===2){
+  const keys=["2,0","1,1","0,2"],a=rows[0].terms,b=rows[1].terms;
+  const pivot=keys.find(k=>Math.abs(a.get(k)||0)>EPS||Math.abs(b.get(k)||0)>EPS);
+  if(!pivot)return {...base,status:"degenerate_quadratic_equations",variables:names,issues:[{code:"quadratic_terms_missing"}]};
+  const av=a.get(pivot)||0,bv=b.get(pivot)||0;
+  if(Math.abs(av)<EPS)return {...base,status:"unsupported_system_shape",variables:names,issues:[{code:"quadratic_parts_not_proportional"}]};
+  const ratio=bv/av;
+  if(!keys.every(k=>Math.abs((b.get(k)||0)-ratio*(a.get(k)||0))<1e-8))return {...base,status:"unsupported_system_shape",variables:names,issues:[{code:"quadratic_parts_not_proportional"}]};
+  Lterms=plus(b,a,-ratio);Q=rows[0];method="proportional_quadratic_elimination";
+  if(degree(Lterms)<=0)return {...base,status:Math.abs(Lterms.get("0,0")||0)<EPS?"dependent_equations":"inconsistent_equations",variables:names,equations:rows.map(r=>({source:r.source,degree:r.degree})),issues:[{code:Math.abs(Lterms.get("0,0")||0)<EPS?"quadratic_equations_dependent":"quadratic_equations_inconsistent"}]};
+  roles=rows.map(r=>({source:r.source,degree:r.degree,role:"quadratic_constraint"}));
+ }else return {...base,status:"unsupported_system_shape",variables:names,equations:lines.map((source,i)=>({source,degree:degrees[i]})),issues:[{code:"one_linear_one_quadratic_or_proportional_quadratics_required"}]};
+ const co=[Lterms.get("0,0")||0,Lterms.get("1,0")||0,Lterms.get("0,1")||0];
+ let isolatedIndex=1,remainingIndex=0;if(Math.abs(co[2])<EPS){if(Math.abs(co[1])<EPS)return {...base,status:"degenerate_linear_equation",variables:names,issues:[{code:"elimination_did_not_produce_a_linear_constraint"}]};isolatedIndex=0;remainingIndex=1;}
  const denom=co[isolatedIndex+1];if(Math.abs(denom)<EPS)return {...base,status:"degenerate_linear_equation",variables:names,issues:[{code:"cannot_isolate_variable"}]};
  const alpha=clean(-co[0]/denom),beta=clean(-co[remainingIndex+1]/denom),reduced=substitute(Q.terms,isolatedIndex,alpha,beta);
  if(reduced.error)return {...base,status:"unsupported_expression",variables:names,issues:[{code:reduced.error}]};
- const rootsResult=roots(reduced),eqOut=rows.map((r,i)=>({source:r.source,degree:r.degree,role:i===li?"linear_constraint":"quadratic_constraint"}));
- const common={...base,variables:names,equations:eqOut,method:"linear_substitution",isolatedVariable:names[isolatedIndex],remainingVariable:names[remainingIndex],substitution:{variable:names[isolatedIndex],expression:String(alpha)+(beta<0?" - ":" + ")+String(Math.abs(beta))+"*"+names[remainingIndex],coefficients:{constant:alpha,linear:beta}},reducedPolynomial:{variable:names[remainingIndex],constant:reduced[0],linear:reduced[1],quadratic:reduced[2]},policy:{externalAIUsed:false,evalUsed:false,realSolutionsOnly:true,solutionsVerified:true,sourcePreserved:true}};
+ const rootsResult=roots(reduced),eqOut=roles;
+ const common={...base,variables:names,equations:eqOut,method,elimination:method==="proportional_quadratic_elimination"?{quadraticRatio:clean((rows[1].terms.get(["2,0","1,1","0,2"].find(k=>Math.abs(rows[0].terms.get(k)||0)>EPS))||0)/(rows[0].terms.get(["2,0","1,1","0,2"].find(k=>Math.abs(rows[0].terms.get(k)||0)>EPS))||1)),linearConstraint:{constant:co[0],x:co[1],y:co[2]}}:null,isolatedVariable:names[isolatedIndex],remainingVariable:names[remainingIndex],substitution:{variable:names[isolatedIndex],expression:String(alpha)+(beta<0?" - ":" + ")+String(Math.abs(beta))+"*"+names[remainingIndex],coefficients:{constant:alpha,linear:beta}},reducedPolynomial:{variable:names[remainingIndex],constant:reduced[0],linear:reduced[1],quadratic:reduced[2]},policy:{externalAIUsed:false,evalUsed:false,realSolutionsOnly:true,solutionsVerified:true,sourcePreserved:true}};
  if(Math.abs(reduced[0])+Math.abs(reduced[1])+Math.abs(reduced[2])<EPS)return {...common,status:"infinite_solutions",solutionSet:"the_linear_constraint",solutions:[],verification:[],issues:[]};
  if(rootsResult.none)return {...common,status:"no_real_solution",discriminant:rootsResult.discriminant,solutions:[],verification:[],issues:[]};
  if(!rootsResult.values.length)return {...common,status:"no_solution",discriminant:null,solutions:[],verification:[],issues:[]};
