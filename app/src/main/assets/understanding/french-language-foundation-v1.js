@@ -24,7 +24,7 @@
     ["contient","contenir"],["contiennent","contenir"],["contient","contenir"],
     ["comprend","comprendre"],["comprennent","comprendre"],
     ["possède","posséder"],["possede","posséder"],["possèdent","posséder"],
-    ["tient","tenir"],["tiennent","tenir"],["porte","porter"],["portent","porter"],
+    ["tient","tenir"],["tiennent","tenir"],["porte","porter"],["portent","porter"],["prend","prendre"],["prends","prendre"],["prennent","prendre"],
     ["place","placer"],["places","placer"],["placer","placer"],["pose","poser"],["poser","poser"],
     ["relie","relier"],["relier","relier"],["connecte","connecter"],["connecter","connecter"],
     ["traverse","traverser"],["traverser","traverser"],["entre","entrer"],["sort","sortir"],
