@@ -56,7 +56,7 @@ test("48 aucune évaluation dynamique",()=>assert.equal(solve(circle).policy.eva
 test("49 aucune IA externe",()=>assert.equal(solve(circle).policy.externalAIUsed,false));
 test("50 racines réelles seulement",()=>assert.equal(solve(circle).policy.realSolutionsOnly,true));
 test("51 méthode documentée dans diagnostics",()=>assert.ok(E.diagnostics().capabilities.some(x=>x.includes("proportionnelles"))));
-test("52 limite de proportionnalité documentée",()=>assert.ok(E.diagnostics().limitations.some(x=>x.includes("proportionnels"))));
+test("52 limite de proportionnalité documentée",()=>assert.ok(E.diagnostics().limitations.some(x=>x.includes("proportionnelles"))));
 test("53 résultat avec source de chaque équation",()=>assert.ok(solve(circle).equations.every(e=>typeof e.source==="string")));
 test("54 résultat contient la substitution",()=>assert.equal(solve(circle).substitution.variable,"y"));
 test("55 polynôme réduit quadratique",()=>assert.equal(solve(circle).reducedPolynomial.quadratic,2));
