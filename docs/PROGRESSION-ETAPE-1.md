@@ -280,5 +280,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Étude de signe sur les intervalles critiques, bornes strictes/larges et unions disjointes.
 - Intégration dans `representation.rationalInequalitySolver`, `stages.rationalInequalitySolver` et le contexte JSON ; module chargé par l'application.
 - Six tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46007360331](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46007360331) — 1 617 tests réussis, 0 échec. Tests ciblés : 104 (61 cas paramétrés et 43 tests directs) ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
