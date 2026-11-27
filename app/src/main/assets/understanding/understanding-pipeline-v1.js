@@ -49,7 +49,7 @@ function analyze(input){
  const vectorMatrixModel=V.analyze(String(input==null?"":input));
  const functionModel=FN.analyze(String(input==null?"":input),X);
  const rawMath=String(input==null?"":input).trim();
- const numericEligible=/^[0-9\\s.,()+\\-*/×·÷^√πφA-Za-z_]+$/.test(rawMath);
+ const numericEligible=/^[0-9\s.,()+\-*\/×·÷^√πφA-Za-z_]+$/.test(rawMath);
  const numericMath=numericEligible?NUM.analyze(rawMath,X):{engine:"IdeeVisionNumericMath",version:NUM.version,offline:true,source:rawMath,ready:true,evaluated:false,result:null,issues:[{code:"not_a_standalone_math_expression"}],policy:{evaluated:false}};
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
