@@ -117,5 +117,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration : `representation.logicalReasoning`, `stages.logicalReasoning` et contexte JSON.
 - Capacités : conditions SI-ALORS, conditions nécessaires/suffisantes candidates, ET/OU, négation, arbres logiques, contradictions possibles et biconditionnels candidats.
 - Limites : raisonnement symbolique initial, formulations limitées, aucune valeur de vérité ou loi physique inventée.
-- Vérification : [workflow 45976934181](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45976934181) — 671 tests réussis, 0 échec.
+- Vérification : [workflow 45977060459](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977060459) — 672 tests réussis, 0 échec.
 - APK non compilé.
