@@ -4,8 +4,8 @@
 const VERSION="1.0.0";
 const IDENT=/^[\p{L}_][\p{L}\p{N}_]*$/u;
 function splitTop(s,delims){
- const out=[];let start=0,depth=0;
- for(let i=0;i<s.length;i++){const c=s[i];if("([{".includes(c))depth++;else if(")]}".includes(c))depth--;else if(depth===0&&delims.includes(c)){out.push({text:s.slice(start,i).trim(),start,end:i});start=i+1;}}
+ const out=[];let start=0,depth=0;const commaDecimals=s.includes(";");
+ for(let i=0;i<s.length;i++){const c=s[i];if("([{".includes(c))depth++;else if(")]}".includes(c))depth--;else if(depth===0&&delims.includes(c)&&!(commaDecimals&&c===","&&/[0-9]/.test(s[i-1]||"")&&/[0-9]/.test(s[i+1]||""))){out.push({text:s.slice(start,i).trim(),start,end:i});start=i+1;}}
  out.push({text:s.slice(start).trim(),start,end:s.length});return out.filter(x=>x.text);
 }
 function matchingOuter(s){
