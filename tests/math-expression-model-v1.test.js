@@ -33,13 +33,13 @@ test("29 décimale avec virgule",()=>assert.equal(a("2,5*x").ast.left.value,2.5)
 test("30 notation scientifique",()=>assert.equal(a("3e8").ast.value,300000000));
 test("31 parenthèse manquante signalée",()=>assert.ok(a("(x+2").issues.some(x=>x.code==="unclosed_group")));
 test("32 caractère non pris en charge signalé",()=>assert.ok(a("x @ 2").issues.some(x=>x.code==="unsupported_character")));
-test("33 jeton superflu signalé",()=>assert.ok(a("x + + y").issues.some(x=>x.code==="unexpected_token"||x.code==="expected_expression")));
+test("33 jeton superflu signalé",()=>assert.ok(a("x + * y").issues.some(x=>x.code==="unexpected_token"||x.code==="expected_expression")));
 test("34 conserve les positions source",()=>{const r=a("  x + 2  ");assert.equal(r.source.slice(r.ast.start,r.ast.end),"x + 2");});
 test("35 conserve les unités candidates",()=>assert.ok(a("v = 20 m/s").unitCandidates.length>0));
 test("36 distingue les constantes et variables",()=>{const r=a("π + x");assert.equal(r.constants.length,1);assert.equal(r.variables.length,1);});
 test("37 ne calcule pas les expressions",()=>assert.equal(a("2+2").policy.evaluated,false));
 test("38 ne résout pas les équations",()=>assert.equal(a("x+2=5").policy.solved,false));
-test("39 sortie JSON sérialisable",()=>assert.doesNotThrow(()=>JSON.stringify(a("(a+b)/c")));
+test("39 sortie JSON sérialisable",()=>assert.doesNotThrow(()=>JSON.stringify(a("(a+b)/c"))));
 test("40 syntaxe vide signalée",()=>assert.equal(a("").kind,"unparsed"));
 test("41 identifiant inconnu conservé",()=>assert.equal(a("masse = m").variables[0].name,"masse"));
 test("42 accolades conservées en groupe",()=>assert.equal(a("{x+1}").ast.type,"group"));
