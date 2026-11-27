@@ -55,7 +55,7 @@ test("49 ne résout pas les équations",()=>assert.equal(run("x=2").policy.solve
 test("50 aucune conversion d'unité",()=>assert.equal(run("2+2").policy.unitConversionsPerformed,false));
 test("51 aucune simplification symbolique prétendue",()=>assert.ok(E.diagnostics().limitations.some(x=>x.includes("symboliques"))));
 test("52 erreur syntaxique empêche l'évaluation",()=>assert.equal(run("(2+3").evaluated,false));
-test("53 fonction avec mauvais nombre d'arguments",()=>assert.ok(run("sin(1,2)").issues.some(x=>x.code==="function_argument_count")));
+test("53 fonction avec mauvais nombre d'arguments",()=>assert.ok(run("sin()").issues.some(x=>x.code==="function_argument_count")));
 test("54 racine d'un nombre positif",()=>assert.equal(run("√144").result,12));
 test("55 division avec priorité",()=>assert.equal(run("10+8/2").result,14));
 test("56 puissance avant addition",()=>assert.equal(run("2+3^2").result,11));
