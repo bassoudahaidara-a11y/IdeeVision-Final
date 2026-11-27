@@ -35,4 +35,4 @@ Domaine actuel : deux équations, deux variables, degré total au plus deux, coe
 - Tests d'intégration pipeline ajoutés : 6.
 - Aucun eval, aucune IA externe.
 - Aucun APK compilé.
-- Validation CI : en attente au moment de la rédaction.
+- Validation CI réussie : workflow 46013399363 — 1 926 tests réussis, 0 échec. Syntaxe de tous les moteurs JavaScript vérifiée.
