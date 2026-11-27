@@ -11,6 +11,7 @@ const C=require("../app/src/main/assets/understanding/complex-clause-analyzer-v1
 const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
 const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.js");
 const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js");
+const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -81,3 +82,7 @@ test("57 pipeline intègre le registre de connaissances",()=>assert.equal(P.anal
 test("58 étape du registre comptabilisée",()=>assert.ok(P.analyze("Supposons que le moteur tourne.").stages.knowledgeRegistry.assumptionCount>0));
 test("59 contexte JSON contient le registre",()=>assert.ok(JSON.parse(P.analyze("La masse reste inconnue.").promptContext).knowledgeRegistry.unknowns.length));
 test("60 le pipeline ne certifie pas les affirmations",()=>assert.equal(P.analyze("Le moteur tourne.").representation.knowledgeRegistry.policy.textualClaimsAreNotVerifiedFacts,true));
+test("61 pipeline intègre la traçabilité des preuves",()=>assert.equal(P.analyze("Le moteur tourne.").representation.evidenceTrace.ready,true));
+test("62 étape de traçabilité comptabilisée",()=>assert.ok(P.analyze("Le moteur tourne.").stages.evidenceTrace.recordCount>0));
+test("63 contexte JSON contient les traces",()=>assert.ok(JSON.parse(P.analyze("Le moteur tourne.").promptContext).evidenceTrace.records.length>0));
+test("64 les traces ne prétendent pas vérifier les faits",()=>assert.equal(P.analyze("Le moteur tourne.").representation.evidenceTrace.policy.textualEvidenceIsNotExternalProof,true));
