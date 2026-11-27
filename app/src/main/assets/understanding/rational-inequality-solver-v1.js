@@ -67,7 +67,7 @@ function solveOne(source,M){
   return {source,status:yes?"all_real_numbers":"empty_set",variables:[],numerator:n,denominator:d,intervals:yes?[{lower:null,upper:null,lowerInclusive:false,upperInclusive:false}]:[],excludedValues:roots(d),issues:[]};
  }
  const l=rat(ast.left,name),r=rat(ast.right,name);
- if(!l.ok||!r.ok)return {source,status:"unsupported_expression",variables:names,intervals:[],excludedValues:[],issues:[{code:l.code||r.code}]};
+ if(!l.ok||!r.ok){const code=l.code||r.code;return {source,status:code==="polynomial_degree_exceeds_two"?"unsupported_degree":"unsupported_expression",variables:names,intervals:[],excludedValues:[],issues:[{code}]};}
  const numerator=add(mul(l.n,r.d),mul(r.n,l.d),-1),denominator=mul(l.d,r.d);
  if(degree(numerator)>MAX_DEGREE||degree(denominator)>MAX_DEGREE)return {source,status:"unsupported_degree",variables:names,intervals:[],excludedValues:[],issues:[{code:"resulting_polynomial_degree_exceeds_two"}]};
  if(zero(denominator))return {source,status:"undefined_expression",variables:names,intervals:[],excludedValues:[],issues:[{code:"identically_zero_denominator"}]};
