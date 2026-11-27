@@ -137,7 +137,7 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests ciblés : 28 ; intégration du pipeline : 4 tests supplémentaires.
 - Distingue affirmations textuelles, hypothèses, questions, inconnues, règles et inférences candidates.
 - Ne vérifie pas la vérité des affirmations et n'ajoute aucune connaissance externe.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 45977991154](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977991154) — 739 tests, 0 échec.
 - APK non compilé.
 
 
@@ -146,32 +146,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Tests ciblés : 28 ; tests d'intégration ajoutés : 4.
 - Chaque élément de connaissance reçoit une trace de provenance, une preuve textuelle, une phrase source et un statut non vérifié/candidat.
 - Aucune vérification externe n'est simulée ; aucune preuve de soutien n'est inventée.
-- Validation CI en attente ; APK non compilé.
-
-
-## Groupe 1.13 — première implémentation
-- Module : `temporal-model-v1.js`.
-- Tests ciblés : 40 ; tests d'intégration ajoutés : 4.
-- Représentation des événements, dates, heures, durées, temps relatifs, marqueurs de séquence, simultanéité et récurrence explicitement exprimés.
-- Les dates ne sont pas validées, les temps relatifs restent dépendants d'une référence et la chronologie reste candidate.
-- Validation CI en attente ; APK non compilé.
-
-
-
-## Validations confirmées — groupes 1.11 et 1.12
-- Groupe 1.11 : registre de connaissances intégré ; workflow [45977991154](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977991154) — 739 tests réussis, 0 échec.
-- Groupe 1.12 : traçabilité des preuves intégrée ; workflow [45978156979](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45978156979) — 771 tests réussis, 0 échec.
-
-## Groupe 1.13 — représentation temporelle
-- Module retenu : `time-model-v1.js`.
-- Tests ciblés : 28 ; tests d’intégration : 4.
-- Représente les dates, heures, durées, marqueurs relatifs, répétitions, états et relations temporelles candidates.
-- Les dates relatives restent non résolues sans référence ; aucun fuseau horaire ni déroulement réel n’est supposé.
+- Validation CI réussie : [workflow 45978156979](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45978156979) — 771 tests, 0 échec.
 - APK non compilé.
 
-## Groupe 1.13 — représentation temporelle
-- Module retenu : `app/src/main/assets/understanding/time-model-v1.js`.
-- Tests ciblés : `tests/time-model-v1.test.js` (28 tests) ; tests d'intégration pipeline : 4.
-- Le modèle décrit les temps relatifs, dates, heures, durées, répétitions, débuts/fins/interruption et relations temporelles candidates.
-- Validation finale du groupe en attente.
+
+## Groupe 1.13 — compréhension et représentation du temps
+- Module : `app/src/main/assets/understanding/time-model-v1.js`.
+- Tests ciblés : 28 ; tests d'intégration pipeline : 4.
+- Représente les temps relatifs, dates, heures, durées, répétitions, états temporels, événements et relations temporelles candidates.
+- Les dates relatives restent non résolues sans date de référence ; aucun fuseau horaire ni déroulement réel n'est supposé.
+- Validation CI : [workflow 45979415031](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45979415031) — 803 tests réussis, 0 échec.
 - APK non compilé.
