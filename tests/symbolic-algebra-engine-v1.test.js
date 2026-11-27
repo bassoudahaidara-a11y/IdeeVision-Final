@@ -29,7 +29,7 @@ test("22 développe (x+1)(x+2)",()=>{const m=p("(x+1)*(x+2)");assert.equal(m.get
 test("23 développe carré binôme",()=>{const m=p("(x+1)^2");assert.equal(m.get("x^2"),1);assert.equal(m.get("x^1"),2);assert.equal(m.get(""),1);});
 test("24 développe différence de carrés",()=>{const m=p("(x-y)*(x+y)");assert.equal(m.get("x^2"),1);assert.equal(m.get("y^2"),-1);});
 test("25 développe (x-1)^2",()=>{const m=p("(x-1)^2");assert.equal(m.get("x^2"),1);assert.equal(m.get("x^1"),-2);assert.equal(m.get(""),1);});
-test("26 développe produit à deux variables",()=>{const m=p("(x+y)*(z+w)");assert.equal(m.size,4);});
+test("26 développe produit à deux variables",()=>{const m=p("(x+y)*(z+q)");assert.equal(m.size,4);});
 test("27 développe cube simple",()=>{const m=p("(x+1)^3");assert.equal(m.get("x^3"),1);assert.equal(m.get("x^2"),3);assert.equal(m.get("x^1"),3);assert.equal(m.get(""),1);});
 test("28 multiplication implicite",()=>{const m=p("2x");assert.equal(m.get("x^1"),2);});
 test("29 puissance variable",()=>assert.equal(p("x^4").get("x^4"),1));
