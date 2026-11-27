@@ -52,7 +52,7 @@ const cases=[
  ["(x+2)/(2*x-4)>0","solution_set",[[null,-2,false,false],[2,null,false,false]],[2]],
  ["(x+2)/(2*x-4)<0","solution_set",[[-2,2,false,false]], [2]],
  ["(2*x+4)/(x-2)>=0","solution_set",[[null,-2,false,true],[2,null,false,false]],[2]],
- ["(x-4)/(x+1)>1","solution_set",[[-1,2,false,false]],[ -1]],
+ ["(x-4)/(x+1)>1","solution_set",[[null,-1,false,false]],[-1]],
  ["(x-4)/(x+1)<=1","solution_set",[[-1,null,false,false]],[-1]],
  ["(x+1)/(x-1)>2","solution_set",[[1,3,false,false]],[1]],
  ["(x+1)/(x-1)<2","solution_set",[[null,1,false,false],[3,null,false,false]],[1]],
