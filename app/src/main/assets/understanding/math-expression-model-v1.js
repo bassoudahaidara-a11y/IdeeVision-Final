@@ -29,7 +29,7 @@ function tokenize(input){
   if(")]}".includes(c)){tokens.push({type:"close",value:c,start,end:i+1,raw:c});i++;continue;}
   if(c==="√"){tokens.push({type:"sqrt",value:"sqrt",start,end:i+1,raw:c});i++;continue;}
   if(c==="²"||c==="³"){tokens.push({type:"operator",value:"^",start,end:i+1,raw:c});tokens.push({type:"number",value:c==="²"?2:3,raw:c,start,end:i+1,superscript:true});i++;continue;}
-  if(c===";"){tokens.push({type:"separator",value:c,start,end:i+1,raw:c});i++;continue;}
+  if(c===";"||c===","){tokens.push({type:"separator",value:c,start,end:i+1,raw:c});i++;continue;}
   issues.push({code:"unsupported_character",character:c,start,end:start+1});i++;
  }
  tokens.push({type:"eof",value:"",start:s.length,end:s.length,raw:""});
