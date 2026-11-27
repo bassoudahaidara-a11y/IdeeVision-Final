@@ -119,3 +119,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : raisonnement symbolique initial, formulations limitées, aucune valeur de vérité ou loi physique inventée.
 - Vérification : [workflow 45977060459](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977060459) — 672 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.10 — première implémentation
+- Module : `app/src/main/assets/understanding/reasoning-chain-engine-v1.js`.
+- Tests ciblés : `tests/reasoning-chain-engine-v1.test.js` (30 tests).
+- Documentation : `docs/GROUPE-1.10-CHAINAGE-LOGIQUE.md`.
+- Intégration : `representation.reasoningChains`, `stages.reasoningChains` et contexte JSON.
+- Capacités : chaînes de règles, liens textuels exacts, dépendances orientées, conclusions candidates, règles isolées et ponts possibles à confirmer.
+- Limites : les paraphrases et pronoms ne sont pas encore résolus ; aucun fait ou lien causal n'est inventé.
+- Vérification : en cours.
+- APK non compilé.
