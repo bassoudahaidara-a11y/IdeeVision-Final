@@ -32,11 +32,22 @@ function rat(n,name){
 }
 function test(v,op){if(op===">")return v>EPS;if(op==="<")return v< -EPS;if(op===">="||op==="≥")return v>=-EPS;if(op==="<="||op==="≤")return v<=EPS;if(op==="≠"||op==="!=")return Math.abs(v)>EPS;return false;}
 function normalize(items){
- const a=items.slice().sort((x,y)=>(x.lower===null?-Infinity:x.lower)-(y.lower===null?-Infinity:y.lower)),o=[];
- for(const z of a){const p=o[o.length-1];if(!p){o.push({...z});continue;}
-  const touches=p.upper===null||z.lower===null||(z.lower<p.upper+EPS&&(z.lower<=p.upper+EPS));
-  if(touches&&(p.upper===null||z.lower===null||z.lower<p.upper-EPS||p.upperInclusive||z.lowerInclusive)){
-   if(p.upper===null||z.upper===null){p.upper=null;p.upperInclusive=false;}else if(z.upper>p.upper+EPS){p.upper=z.upper;p.upperInclusive=z.upperInclusive;}else if(Math.abs(z.upper-p.upper)<=EPS)p.upperInclusive=p.upperInclusive||z.upperInclusive;
+ const a=items.slice().sort((x,y)=>{
+  const lx=x.lower===null?-Infinity:x.lower,ly=y.lower===null?-Infinity:y.lower;
+  if(Math.abs(lx-ly)>EPS)return lx-ly;
+  const ux=x.upper===null?Infinity:x.upper,uy=y.upper===null?Infinity:y.upper;
+  return ux-uy;
+ }),o=[];
+ for(const z of a){
+  const p=o[o.length-1];if(!p){o.push({...z});continue;}
+  const sameLower=p.lower!==null&&z.lower!==null&&Math.abs(p.lower-z.lower)<=EPS;
+  if(sameLower)p.lowerInclusive=p.lowerInclusive||z.lowerInclusive;
+  const overlaps=p.upper===null||z.lower===null||z.lower<p.upper-EPS;
+  const touches=p.upper!==null&&z.lower!==null&&Math.abs(z.lower-p.upper)<=EPS&&(p.upperInclusive||z.lowerInclusive);
+  if(overlaps||touches){
+   if(p.upper===null||z.upper===null){p.upper=null;p.upperInclusive=false;}
+   else if(z.upper>p.upper+EPS){p.upper=z.upper;p.upperInclusive=z.upperInclusive;}
+   else if(Math.abs(z.upper-p.upper)<=EPS)p.upperInclusive=p.upperInclusive||z.upperInclusive;
   }else o.push({...z});
  }
  return o;
