@@ -4,8 +4,10 @@ function vars(n,a=[]){if(!n)return a;if(n.type==="variable"||n.type==="unit_or_v
 function dens(n,a=[]){if(!n)return a;if(n.type==="binary"&&(n.operator==="/"||n.operator==="÷"))a.push(n.right);["left","right","argument","expression"].forEach(k=>dens(n[k],a));return a;}
 const ev=(n,v,N)=>{const issues=[],value=N.evaluateNode(n,v,issues);return {ok:value!==null&&!issues.length,value};};
 function one(s,M,S,N){const p=M.parse(s),a=un(p.ast);if(p.kind!=="equation"||p.issues.length||!a||a.type!=="binary"||!["=","=="].includes(a.operator))return {source:s,status:"unsupported_or_invalid",solutions:[],issues:[{code:"invalid_equation"}]};
- const names=[...new Set(vars(a))].sort();if(names.length!==1||p.unitCandidates.length>0)return {source:s,status:"unsupported_variable_count_or_ambiguity",variables:names,solutions:[],issues:[{code:"single_unambiguous_variable_required"}]};
+ const names=[...new Set(vars(a))].sort();if(p.unitCandidates.length>0)return {source:s,status:"unsupported_variable_count_or_ambiguity",variables:names,solutions:[],issues:[{code:"ambiguous_unit_symbol"}]};
  const l=S.polyOf(a.left),r=S.polyOf(a.right);if(!l.ok||!r.ok)return {source:s,status:"unsupported_expression",solutions:[],issues:[{code:"non_polynomial_side"}]};
+ if(names.length===0){const lv=ev(a.left,{},N),rv=ev(a.right,{},N);if(!lv.ok||!rv.ok)return {source:s,status:"unsupported_expression",solutions:[],issues:[{code:"constant_evaluation_failed"}]};return {source:s,status:Math.abs(lv.value-rv.value)<1e-9?"infinite_solutions":"no_solution",method:"constant_equation",variables:[],coefficients:{constant:lv.value-rv.value,linear:0,quadratic:0},degree:0,discriminant:null,solutions:[],verification:[],domainRestrictions:0,issues:[]};}
+ if(names.length!==1)return {source:s,status:"unsupported_variable_count_or_ambiguity",variables:names,solutions:[],issues:[{code:"single_unambiguous_variable_required"}]};
  const terms=new Map(l.terms);for(const [k,v] of r.terms)terms.set(k,(terms.get(k)||0)-v);
  const c=[0,0,0];for(const [k,v] of terms){if(!k)c[0]+=v;else{const z=/^(.+)\^(\d+)$/.exec(k);if(!z||z[1]!==names[0]||+z[2]>2)return {source:s,status:"unsupported_degree",solutions:[],issues:[{code:"degree_or_variable_limit"}]};c[+z[2]]+=v;}}
  const [d,b,q]=c;let roots=[],disc=null,status,method;
