@@ -23,4 +23,4 @@ Combiner plusieurs inéquations déjà analysables sans confondre conjonction, d
 - Aucun moteur d'IA externe ni `eval` n'est utilisé.
 
 ## Vérification
-Les tests couvrent les intersections et unions, les extrémités strictes/non strictes, les cas vides, les points isolés, les contraintes quadratiques, les variables différentes et l'intégration du pipeline. La validation finale dépend du workflow CI.
+Les tests couvrent les intersections et unions, les extrémités strictes/non strictes, les cas vides, les points isolés, les contraintes quadratiques, les variables différentes et l'intégration du pipeline. Validation CI réussie : [workflow 46006235547](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46006235547) — 1 508 tests globaux réussis, 0 échec ; 102 tests ciblés du moteur et 7 tests d'intégration du pipeline.
