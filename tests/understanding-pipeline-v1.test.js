@@ -7,6 +7,7 @@ const O=require("../app/src/main/assets/understanding/object-model-v1.js");
 const A=require("../app/src/main/assets/understanding/action-model-v1.js");
 const R=require("../app/src/main/assets/understanding/relation-graph-v1.js");
 const Q=require("../app/src/main/assets/understanding/reference-resolver-v1.js");
+const C=require("../app/src/main/assets/understanding/complex-clause-analyzer-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -53,3 +54,9 @@ test("37 la résolution est une étape distincte",()=>assert.ok(P.analyze("Une b
 test("38 le contexte JSON contient les références",()=>assert.ok(JSON.parse(P.analyze("Une bouteille. Elle roule.").promptContext).referenceResolution.references.length>0));
 test("39 le pipeline conserve le candidat de pronom",()=>assert.equal(P.analyze("Une bouteille. Elle roule.").representation.referenceResolution.references[0].status,"resolved_candidate"));
 test("40 le pipeline ne transfère pas les propriétés",()=>assert.equal(P.analyze("Une bouteille rouge. Elle roule.").representation.referenceResolution.policy.physicalPropertiesTransferred,false));
+
+test("41 pipeline expose les propositions complexes",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").representation.complexClauses.clauses.length>=2));
+test("42 pipeline expose les liens entre propositions",()=>assert.ok(P.analyze("Le moteur tourne pendant que la roue avance.").representation.complexClauses.links.length>0));
+test("43 étape complexe comptabilisée",()=>assert.ok(P.analyze("Si le moteur tourne, la roue avance.").stages.complexClauses.clauseCount>=2));
+test("44 contexte JSON contient l'analyse complexe",()=>assert.ok(JSON.parse(P.analyze("Si le moteur tourne, la roue avance.").promptContext).complexClauses.clauses.length>=2));
+test("45 analyse complexe ne déduit aucune physique",()=>assert.equal(P.analyze("Parce que le moteur tourne, la roue avance.").representation.complexClauses.policy.physicalConsequencesInferred,false));
