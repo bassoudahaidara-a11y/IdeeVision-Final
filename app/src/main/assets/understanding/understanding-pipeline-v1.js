@@ -19,7 +19,6 @@ function analyze(input){
  if(!M)missing.push("reasoning_chain_engine");
  if(!K)missing.push("knowledge_registry");
  if(!E)missing.push("evidence_trace");
- if(!T)missing.push("time_model");
  if(!T)missing.push("temporal_model");
  if(missing.length)return {engine:"IdeeVisionUnderstandingPipeline",version:VERSION,offline:true,source,ready:false,stages:{},issues:missing.map(code=>({code})),policy:{physicsApplied:false,externalAIUsed:false}};
  const language=F.analyze(source);
@@ -34,7 +33,6 @@ function analyze(input){
  const reasoningChains=M.analyze(source,logicalReasoning);
  const knowledgeRegistry=K.analyze(source,grammar,logicalReasoning,reasoningChains);
  const evidenceTrace=E.analyze(source,knowledgeRegistry,grammar);
- const timeModel=T.analyze(source,grammar,actionModel,complexClauses);
  const temporalModel=T.analyze(source,grammar,actionModel);
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
