@@ -294,3 +294,16 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Six tests d'intégration pipeline.
 - Validation CI réussie : [workflow 46008384703](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46008384703) — 1 687 tests réussis, 0 échec. Tests ciblés : 64 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
+
+
+## Groupe 1.27 — résolution des systèmes d'équations avec paramètres
+- Module : `app/src/main/assets/understanding/parametric-equation-system-solver-v1.js`.
+- Tests ciblés : `tests/parametric-equation-system-solver-v1.test.js` (60 tests).
+- Étude des systèmes linéaires 2×2 avec un paramètre et coefficients affines.
+- Déterminant polynomial, valeurs critiques, intervalles de solution unique, formules de Cramer.
+- Analyse du rang aux valeurs critiques : système incompatible ou infinité de solutions.
+- Substitution facultative d'une valeur numérique du paramètre.
+- Intégration dans `representation.parametricEquationSystemSolver`, `stages.parametricEquationSystemSolver` et le contexte JSON ; script chargé dans l'application.
+- Six tests d'intégration pipeline.
+- Validation CI en attente.
+- APK non compilé.
