@@ -307,3 +307,16 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Six tests d'intégration pipeline.
 - Validation CI réussie : [workflow 46009375449](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46009375449) — 1 753 tests réussis, 0 échec. Tests ciblés : 60 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
+
+
+## Groupe 1.28 — résolution contrôlée des systèmes non linéaires
+- Module : `app/src/main/assets/understanding/nonlinear-system-solver-v1.js`.
+- Tests ciblés : `tests/nonlinear-system-solver-v1.test.js` (60 tests).
+- Résolution d'un système 2×2 composé d'une équation linéaire et d'une équation quadratique, par isolation puis substitution.
+- Réduction à un polynôme d'une variable, discriminant, racines réelles et reconstruction des deux inconnues.
+- Vérification numérique des solutions dans les deux équations sources.
+- Détection des solutions uniques, doubles, doubles intersections, absence de racine réelle, incompatibilité et identité donnant une infinité de solutions.
+- Intégration dans `representation.nonlinearSystemSolver`, `stages.nonlinearSystemSolver` et le contexte JSON ; module chargé après le moteur numérique.
+- Six tests d'intégration pipeline.
+- Validation CI en attente.
+- APK non compilé.
