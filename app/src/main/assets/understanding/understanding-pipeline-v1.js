@@ -52,7 +52,8 @@ function analyze(input){
  const rawMath=String(input==null?"":input).trim();
  const numericEligible=/^[0-9\s.,()+\-*\/×·÷^√πφA-Za-z_]+$/.test(rawMath);
  const numericMath=numericEligible?NUM.analyze(rawMath,X):{engine:"IdeeVisionNumericMath",version:NUM.version,offline:true,source:rawMath,ready:true,evaluated:false,result:null,issues:[{code:"not_a_standalone_math_expression"}],policy:{evaluated:false}};
- const symbolicAlgebra=numericEligible?SYM.analyze(rawMath,X):{engine:"IdeeVisionSymbolicAlgebra",version:SYM.version,offline:true,source:rawMath,ready:true,simplified:false,issues:[{code:"not_a_standalone_math_expression"}]};
+ const symbolicEligible=numericEligible||/[=<>≤≥≠]/.test(rawMath);
+ const symbolicAlgebra=symbolicEligible?SYM.analyze(rawMath,X):{engine:"IdeeVisionSymbolicAlgebra",version:SYM.version,offline:true,source:rawMath,ready:true,simplified:false,issues:[{code:"not_a_standalone_math_expression"}]};
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
  const relations=language.structure.relations.map(x=>({type:x.type,evidence:x.evidence||x.text||"",status:x.status||"candidate",start:x.start,end:x.end}));
