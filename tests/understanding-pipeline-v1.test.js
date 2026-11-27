@@ -14,6 +14,7 @@ const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js")
 const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
 const T=require("../app/src/main/assets/understanding/time-model-v1.js");
 const S=require("../app/src/main/assets/understanding/spatial-model-v1.js");
+const U=require("../app/src/main/assets/understanding/quantity-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -99,3 +100,8 @@ test("69 pipeline intègre le modèle spatial",()=>assert.equal(P.analyze("La ba
 test("70 étape spatiale comptabilisée",()=>assert.ok(P.analyze("La balle est à gauche du tube.").stages.spatialModel.relationCount>0));
 test("71 contexte JSON contient les relations spatiales",()=>assert.ok(JSON.parse(P.analyze("La balle est dans le tube.").promptContext).spatialModel.relations.length>0));
 test("72 les coordonnées ne reçoivent pas de repère inventé",()=>assert.equal(P.analyze("Position x=2, y=3, z=4.").representation.spatialModel.policy.coordinateFrameMustBeExplicit,true));
+
+test("73 pipeline intègre le modèle des quantités",()=>assert.equal(P.analyze("Le tube mesure 20 cm.").representation.quantityModel.ready,true));
+test("74 étape des quantités comptabilisée",()=>assert.ok(P.analyze("La masse est entre 5 et 10 kg.").stages.quantityModel.rangeCount>0));
+test("75 contexte JSON contient les mesures",()=>assert.ok(JSON.parse(P.analyze("Le tube mesure 20 cm.").promptContext).quantityModel.quantities.length>0));
+test("76 aucune conversion automatique",()=>assert.equal(P.analyze("La longueur est 100 cm.").representation.quantityModel.policy.unitConversionsPerformed,false));
