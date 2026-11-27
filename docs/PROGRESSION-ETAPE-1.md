@@ -237,5 +237,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Simplification de fractions à dénominateur numérique constant non nul.
 - Source, AST, étapes de transformation et variables inconnues conservés.
 - Les équations et inégalités ne sont pas résolues ; les fractions rationnelles symboliques et les restrictions de domaine avancées restent à traiter.
-- Validation globale : en attente du résultat GitHub Actions.
+- Validation globale réussie : [workflow 46000721925](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46000721925) — 1 234 tests réussis, 0 échec.
 - APK non compilé.
