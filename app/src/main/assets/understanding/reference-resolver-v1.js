@@ -20,27 +20,29 @@ function analyze(input,grammarAnalysis,objectModel){
  if(!grammarAnalysis||grammarAnalysis.source!==source||!grammarAnalysis.structure||!objectModel||objectModel.source!==source||objectModel.ready===false)
  return {engine:"IdeeVisionReferenceResolver",version:VERSION,offline:true,source,ready:false,mentions:[],references:[],issues:[{code:"matching_grammar_and_object_models_required"}],policy:{ambiguousReferencesRemainUnresolved:true,identityInvented:false}};
  const nps=grammarAnalysis.structure.nounPhrases||[];
- const tokens=grammarAnalysis.sentences.flatMap(s=>s.tokens);
+ const sentenceStarts=[];let sentenceMatch;const sentenceRe=/[^.!?…]+(?:[.!?…]+|$)/gu;
+ while((sentenceMatch=sentenceRe.exec(source))){const value=sentenceMatch[0].trim();if(value)sentenceStarts.push(sentenceMatch.index+sentenceMatch[0].indexOf(value));}
  const mentions=objectModel.objects.map(o=>{
-  const np=nps.find(n=>n.headStart===o.evidence.start)||null;
+  const occ=o.occurrences[0]||o.evidence,sentenceIndex=occ.sentenceIndex||0,base=sentenceStarts[sentenceIndex]||0;
+  const np=nps.find(n=>n.headStart===occ.start && (grammarAnalysis.sentences[sentenceIndex]||{}).nounPhrases.some(x=>x.headStart===n.headStart))||null;
   const det=np?fold(np.determiner):"";
   const gender=np&&np.expectedGender?np.expectedGender:(FEMININE.has(det)?"f":MASCULINE.has(det)?"m":null);
   const number=PLURAL.has(det)?"plural":"singular";
-  return {id:o.id,text:o.name,lemma:o.lemma||null,start:o.evidence.start,end:o.evidence.end,gender,number,sentenceIndex:o.occurrences[0]?o.occurrences[0].sentenceIndex:0,determiner:np?np.determiner:null,sourceStatus:o.status};
+  return {id:o.id,text:o.name,lemma:o.lemma||null,start:base+occ.start,end:base+occ.end,gender,number,sentenceIndex,determiner:np?np.determiner:null,sourceStatus:o.status};
  });
  const candidates=[];
- for(const p of grammarAnalysis.structure.pronouns||[]){
-  const key=fold(p.text),spec=PRONOUNS.get(key);
-  if(spec)candidates.push({text:p.text,start:p.start,end:p.end,spec,origin:"grammar_pronoun"});
- }
- for(let i=0;i<tokens.length;i++){
-  const t=tokens[i],key=fold(t.text);
-  if(!["la","le","les","lui","leur","en","y","l'"].includes(key))continue;
-  const next=tokens.slice(i+1,i+3).find(x=>x.tag==="verb_candidate");
-  if(!next)continue;
-  if(candidates.some(p=>p.start===t.start))continue;
-  const spec=PRONOUNS.get(key)||{gender:null,number:null,role:"direct_object"};
-  candidates.push({text:t.text,start:t.start,end:t.end,spec,origin:"clitic_candidate"});
+ for(let si=0;si<grammarAnalysis.sentences.length;si++){
+  const base=sentenceStarts[si]||0,sent=grammarAnalysis.sentences[si];
+  for(const p of sent.pronouns||[]){const key=fold(p.text),spec=PRONOUNS.get(key);if(spec)candidates.push({text:p.text,start:base+p.start,end:base+(p.end||p.start+p.text.length),sentenceIndex:si,spec,origin:"grammar_pronoun"});}
+  const tokens=sent.tokens||[];
+  for(let i=0;i<tokens.length;i++){
+   const t=tokens[i],key=fold(t.text);
+   if(!["la","le","les","lui","leur","en","y","l'"].includes(key))continue;
+   const next=tokens.slice(i+1,i+3).find(x=>x.tag==="verb_candidate");if(!next)continue;
+   if(candidates.some(p=>p.start===base+t.start))continue;
+   const spec=PRONOUNS.get(key)||{gender:null,number:null,role:"direct_object"};
+   candidates.push({text:t.text,start:base+t.start,end:base+t.end,sentenceIndex:si,spec,origin:"clitic_candidate"});
+  }
  }
  candidates.sort((a,b)=>a.start-b.start);
  const references=candidates.map((p,index)=>{
