@@ -215,3 +215,10 @@ test("160 pipeline expose les deux solutions vérifiées",()=>assert.equal(P.ana
 test("161 pipeline conserve le refus des parties non proportionnelles",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2-y^2=10").representation.nonlinearSystemSolver.status,"unsupported_system_shape"));
 test("162 pipeline signale les équations quadratiques dépendantes",()=>assert.equal(P.analyze("x^2+y^2=25\n2*x^2+2*y^2=50").representation.nonlinearSystemSolver.status,"dependent_equations"));
 test("163 contexte JSON expose la méthode quadratique",()=>assert.equal(JSON.parse(P.analyze("x^2+y^2=25\n2*x^2+2*y^2+x-y=50").promptContext).nonlinearSystemSolver.method,"proportional_quadratic_elimination"));
+
+test("164 pipeline intègre le moteur de résultant",()=>assert.equal(P.analyze("x^2+y^2=25\\nx^2-y^2=9").representation.polynomialResultant.status,"resultant_computed_not_solved"));
+test("165 étape de résultant expose le degré éliminé",()=>assert.ok(P.analyze("x^2+y^2=25\\nx^2-y^2=9").stages.polynomialResultant.resultantDegree>0));
+test("166 contexte JSON contient le résultant",()=>assert.ok(JSON.parse(P.analyze("x^2+y^2=25\\nx^2-y^2=9").promptContext).polynomialResultant.resultant.coefficientsAscending.length>1));
+test("167 pipeline refuse les degrés supérieurs au domaine du résultant",()=>assert.equal(P.analyze("x^3+y^2=5\\nx^2-y^2=3").representation.polynomialResultant.status,"unsupported_expression"));
+test("168 phrase ordinaire sans résultant",()=>assert.equal(P.analyze("La balle tombe.").representation.polynomialResultant.status,"two_equations_required"));
+test("169 le pipeline ne prétend pas avoir résolu le système par résultant",()=>assert.equal(P.analyze("x^2+y^2=25\\nx^2-y^2=9").representation.polynomialResultant.policy.solutionsComputed,false));
