@@ -12,7 +12,7 @@ const L=require("../app/src/main/assets/understanding/logical-reasoner-v1.js");
 const M=require("../app/src/main/assets/understanding/reasoning-chain-engine-v1.js");
 const K=require("../app/src/main/assets/understanding/knowledge-registry-v1.js");
 const E=require("../app/src/main/assets/understanding/evidence-trace-v1.js");
-const T=require("../app/src/main/assets/understanding/temporal-model-v1.js");
+const T=require("../app/src/main/assets/understanding/time-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
