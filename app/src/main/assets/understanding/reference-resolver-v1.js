@@ -19,12 +19,12 @@ function analyze(input,grammarAnalysis,objectModel){
  const source=String(input==null?"":input).normalize("NFKC").replace(/[’‘]/g,"'").replace(/\s+/g," ").trim();
  if(!grammarAnalysis||grammarAnalysis.source!==source||!grammarAnalysis.structure||!objectModel||objectModel.source!==source||objectModel.ready===false)
  return {engine:"IdeeVisionReferenceResolver",version:VERSION,offline:true,source,ready:false,mentions:[],references:[],issues:[{code:"matching_grammar_and_object_models_required"}],policy:{ambiguousReferencesRemainUnresolved:true,identityInvented:false}};
- const nps=grammarAnalysis.structure.nounPhrases||[];
+ 
  const sentenceStarts=[];let sentenceMatch;const sentenceRe=/[^.!?…]+(?:[.!?…]+|$)/gu;
  while((sentenceMatch=sentenceRe.exec(source))){const value=sentenceMatch[0].trim();if(value)sentenceStarts.push(sentenceMatch.index+sentenceMatch[0].indexOf(value));}
  const mentions=objectModel.objects.map(o=>{
   const occ=o.occurrences[0]||o.evidence,sentenceIndex=occ.sentenceIndex||0,base=sentenceStarts[sentenceIndex]||0;
-  const np=nps.find(n=>n.headStart===occ.start && (grammarAnalysis.sentences[sentenceIndex]||{}).nounPhrases.some(x=>x.headStart===n.headStart))||null;
+  const np=((grammarAnalysis.sentences[sentenceIndex]||{}).nounPhrases||[]).find(n=>n.headStart===occ.start)||null;
   const det=np?fold(np.determiner):"";
   const gender=np&&np.expectedGender?np.expectedGender:(FEMININE.has(det)?"f":MASCULINE.has(det)?"m":null);
   const number=PLURAL.has(det)?"plural":"singular";
