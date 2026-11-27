@@ -89,7 +89,7 @@ test("63 contexte JSON contient les traces",()=>assert.ok(JSON.parse(P.analyze("
 test("64 les traces ne prétendent pas vérifier les faits",()=>assert.equal(P.analyze("Le moteur tourne.").representation.evidenceTrace.policy.textualEvidenceIsNotExternalProof,true));
 
 test("65 pipeline intègre le modèle temporel",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.ready,true));
-test("66 étape temporelle comptabilisée",()=>assert.ok(P.analyze("Le test aura lieu demain à 14h.").stages.timeModel.expressionCount>0));
+test("66 étape temporelle comptabilisée",()=>assert.ok(P.analyze("Le test aura lieu demain à 14h.").stages.timeModel.markerCount>0));
 test("67 contexte JSON contient les événements temporels",()=>assert.ok(JSON.parse(P.analyze("La balle tombe demain.").promptContext).timeModel.events.length>0));
-test("68 aucune chronologie réelle n'est affirmée",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.policy.temporalOrderIsTextualOnly,true));
+test("68 aucune chronologie réelle n'est affirmée",()=>assert.equal(P.analyze("La balle tombe demain.").representation.timeModel.policy.textualOrderIsNotProofOfRealExecution,true));
 
