@@ -97,3 +97,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : résolution heuristique, genre/nombre incomplets, aucune identité ou propriété physique inventée.
 - Vérification : [workflow 45971791289](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45971791289) — 590 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.8 — première implémentation
+- Module : `app/src/main/assets/understanding/complex-clause-analyzer-v1.js`.
+- Tests ciblés : `tests/complex-clause-analyzer-v1.test.js` (35 tests).
+- Documentation : `docs/GROUPE-1.8-PHRASES-COMPLEXES.md`.
+- Intégration : `representation.complexClauses`, `stages.complexClauses` et contexte JSON.
+- Capacités : repérage de conditions, relations temporelles, simultanéité, causes et buts exprimés, concessions, coordination, négation connue et liens candidats entre propositions.
+- Limites : découpage heuristique, dépendance aux verbes reconnus, aucune causalité ou conséquence physique déduite.
+- Vérification : [workflow 45976362989](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45976362989) — 630 tests réussis, 0 échec.
+- APK non compilé.
