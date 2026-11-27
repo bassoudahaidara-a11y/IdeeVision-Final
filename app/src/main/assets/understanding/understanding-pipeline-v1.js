@@ -34,7 +34,8 @@ function analyze(input){
  if(!RATI)missing.push("rational_inequality_solver");
  if(!PARM)missing.push("parametric_inequality_solver");
  if(!PEQ)missing.push("parametric_equation_system_solver");
- if(!NLS)missing.push("nonlinear_system_solver");\n if(!PR)missing.push("polynomial_resultant_engine");
+ if(!NLS)missing.push("nonlinear_system_solver");
+ if(!PR)missing.push("polynomial_resultant_engine");
  
  if(missing.length)return {engine:"IdeeVisionUnderstandingPipeline",version:VERSION,offline:true,source,ready:false,stages:{},issues:missing.map(code=>({code})),policy:{physicsApplied:false,externalAIUsed:false}};
  const language=F.analyze(source);
