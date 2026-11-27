@@ -339,4 +339,4 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Le module est chargé dans l'application et intégré au pipeline, à `representation.polynomialResultant`, aux étapes et au contexte JSON.
 - Tests ciblés ajoutés : 35 ; tests d'intégration pipeline ajoutés : 6.
 - Limite explicitement conservée : le résultant est calculé, mais ses racines ne sont pas isolées et les solutions du système ne sont pas encore reconstruites ni vérifiées.
-- Validation CI : en attente ; aucun APK compilé.
+- Validation CI réussie : [workflow 46013399363](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46013399363) — 1 926 tests réussis, 0 échec ; syntaxe JavaScript vérifiée. Aucun APK compilé.
