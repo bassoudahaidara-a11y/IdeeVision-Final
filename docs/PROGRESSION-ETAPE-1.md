@@ -257,3 +257,16 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Limites : degré maximal deux, une variable, racines réelles ; systèmes d'inéquations et dénominateurs polynomiaux refusés.
 - Validation CI réussie : [workflow 46004514117](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46004514117) — 1400 tests, 0 échec. Tests ciblés : 92 ; intégration pipeline : 4 tests supplémentaires.
 - APK non compilé.
+
+
+## Groupe 1.24 — systèmes d'inéquations et combinaison de contraintes
+- Module : `app/src/main/assets/understanding/inequality-system-solver-v1.js`.
+- Tests ciblés : `tests/inequality-system-solver-v1.test.js` ; tests d'intégration ajoutés à `tests/understanding-pipeline-v1.test.js`.
+- Analyse de contraintes séparées par lignes, points-virgules ou connecteurs français « et », « et aussi », « simultanément » et « ou ».
+- Réutilisation du résolveur individuel des inéquations linéaires et quadratiques ; intersection pour les conjonctions et union pour les disjonctions.
+- Gestion des bornes ouvertes/fermées, des intervalles disjoints, des points isolés, de l'ensemble vide et de l'ensemble des réels.
+- Préservation des sources et de l'ordre des contraintes ; vérification de la variable commune.
+- Refus explicite des systèmes multi-variables, des connecteurs mixtes sans parenthèses et des contraintes individuelles non prises en charge.
+- Intégration au pipeline dans `representation.inequalitySystemSolver`, `stages.inequalitySystemSolver` et le contexte JSON ; script chargé dans l'application.
+- Validation CI en attente.
+- APK non compilé.
