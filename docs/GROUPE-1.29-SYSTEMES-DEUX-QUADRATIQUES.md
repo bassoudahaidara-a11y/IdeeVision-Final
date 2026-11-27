@@ -44,5 +44,5 @@ Les deux candidates sont vérifiées dans les deux équations sources.
 ## Tests
 - 60 tests ciblés : `tests/nonlinear-quadratic-pair-solver-v1.test.js`.
 - 6 tests d'intégration du pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46011543849](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46011543849) — 1 885 tests globaux réussis, 0 échec ; 60 tests ciblés et 6 tests d'intégration pipeline.
 - APK non compilé.
