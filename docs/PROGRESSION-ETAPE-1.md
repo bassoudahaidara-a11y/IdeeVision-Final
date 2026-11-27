@@ -216,3 +216,15 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Aucune fonction n'est évaluée ; aucun domaine, ensemble image, limite ou graphe n'est calculé.
 - Validation globale réussie : [workflow 45999437721](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45999437721) — 1097 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.20 — première implémentation
+- Moteur : \`app/src/main/assets/understanding/numeric-math-engine-v1.js\`.
+- Tests ciblés : 60 ; tests d'intégration pipeline : 6.
+- Calcul contrôlé des opérations arithmétiques, priorités, parenthèses, décimaux, fractions, puissances, racines, constantes et fonctions usuelles.
+- Substitution uniquement des variables numériques explicitement fournies.
+- Contrôles des divisions par zéro, domaines simples, valeurs non finies et précision.
+- Le moteur parcourt un AST mathématique ; il n'utilise pas \`eval\` et n'exécute pas de code arbitraire.
+- Les équations, inégalités, unités, matrices et simplifications symboliques générales ne sont pas encore calculées.
+- Validation globale : en attente du résultat GitHub Actions.
+- APK non compilé.
