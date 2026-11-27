@@ -270,3 +270,15 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration au pipeline dans `representation.inequalitySystemSolver`, `stages.inequalitySystemSolver` et le contexte JSON ; script chargé dans l'application.
 - Validation CI réussie : [workflow 46006235547](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46006235547) — 1 508 tests réussis, 0 échec. Tests ciblés du résolveur : 102 (60 cas paramétrés et 42 tests directs) ; intégration pipeline : 7 tests supplémentaires.
 - APK non compilé.
+
+
+## Groupe 1.25 — inéquations rationnelles et valeurs interdites
+- Module : `app/src/main/assets/understanding/rational-inequality-solver-v1.js`.
+- Tests ciblés : `tests/rational-inequality-solver-v1.test.js` (61 cas paramétrés et tests directs).
+- Représentation des expressions rationnelles sous forme numérateur/dénominateur ; opérations rationnelles +, -, ×, ÷ et puissances entières limitées.
+- Recherche des racines du numérateur et du dénominateur ; les zéros du dénominateur sont conservés comme valeurs interdites, même en présence de facteurs communs.
+- Étude de signe sur les intervalles critiques, bornes strictes/larges et unions disjointes.
+- Intégration dans `representation.rationalInequalitySolver`, `stages.rationalInequalitySolver` et le contexte JSON ; module chargé par l'application.
+- Six tests d'intégration pipeline.
+- Validation CI en attente.
+- APK non compilé.
