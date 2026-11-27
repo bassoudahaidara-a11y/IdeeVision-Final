@@ -35,7 +35,7 @@ function analyze(input,languageAnalysis,grammarAnalysis){
    const n=languageAnalysis.structure.objects.find(o=>o.sentenceIndex===a.sentenceIndex&&o.start>p.end);
    return {marker:p.text,object:n?n.text:null,status:n?"prepositional_complement_candidate":"unresolved",start:p.start,end:n?n.end:p.end};
   });
-  const conditionMarkers=following.filter(t=>["si","quand","lorsque","pendant","jusqu"].includes(fold(t.text))).map(t=>({marker:t.text,start:t.start,end:t.end,status:"condition_or_time_candidate"}));
+  const conditionMarkers=tokens.filter(t=>t.sentenceIndex===a.sentenceIndex&&["si","quand","lorsque","pendant","jusqu"].includes(fold(t.text))).map(t=>({marker:t.text,start:t.start,end:t.end,status:"condition_or_time_candidate"}));
   const modifiers=preceding.concat(following).filter(t=>t.sentenceIndex===a.sentenceIndex&&t.role==="negation").map(t=>({text:t.text,start:t.start,end:t.end}));
   return {id:"action-"+(index+1),verb:a.verb,lemma:a.lemma,type:typeOf(lemma),polarity:negated?"negative":"positive",tense:predicate?predicate.tense:"unresolved",actor:explicitActor||{text:null,status:"unresolved"},directObject:directObject||{text:null,status:"unresolved"},complementCandidates,conditionMarkers,modifiers,resultStateCandidate:RESULT.get(lemma)||null,resultStateStatus:RESULT.has(lemma)?"lexical_result_candidate":"not_specified",transitivity:TRANSITIVE.has(lemma)?"transitive_verb_candidate":"unresolved_or_intransitive_candidate",occurrence:{start:a.start,end:a.end,sentenceIndex:a.sentenceIndex},evidence:{start:a.start,end:a.end,text:a.verb},status:predicate?"roles_linked_as_grammatical_candidates":"verb_recognized_roles_unresolved"};
  });
