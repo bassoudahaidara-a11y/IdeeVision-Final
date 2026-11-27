@@ -64,7 +64,8 @@ function analyze(input){
  const symbolicAlgebra=symbolicEligible?SYM.analyze(rawMath,X):{engine:"IdeeVisionSymbolicAlgebra",version:SYM.version,offline:true,source:rawMath,ready:true,simplified:false,issues:[{code:"not_a_standalone_math_expression"}]};
  const equationSolver=EQ.analyze(String(input==null?"":input),X,SYM,NUM);
  const parametricEquationSystemSolver=PEQ.analyze(String(input==null?"":input),X);
- const nonlinearSystemSolver=NLS.analyze(String(input==null?"":input),X,NUM);\n const polynomialResultant=PR.analyze(String(input==null?"":input),X);
+ const nonlinearSystemSolver=NLS.analyze(String(input==null?"":input),X,NUM);
+ const polynomialResultant=PR.analyze(String(input==null?"":input),X);
  const inequalitySolver=INQ.analyze(String(input==null?"":input),X,SYM);
  const inequalitySystemSolver=INQS.analyze(String(input==null?"":input),INQ,X,SYM);
  const rationalInequalitySolver=RATI.analyze(String(input==null?"":input),X);
