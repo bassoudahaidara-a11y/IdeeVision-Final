@@ -12,7 +12,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.1 | Fondations de compréhension du français | Module local chargé dans l'application et raccordé au pipeline ; couverture linguistique à élargir |
 | 1.2 | Analyse grammaticale et sémantique initiale | Module local chargé dans l'application et raccordé au pipeline ; analyse encore heuristique |
 | 1.3 | Compréhension des intentions | Version locale v0.3 chargée dans l'application et raccordée au pipeline ; 40 tests ciblés ; couverture et ambiguïtés à approfondir |
-| 1.4 | Reconnaissance et représentation des objets | Module v1 créé et raccordé au pipeline ; 25 tests ciblés ajoutés ; validation globale en cours |
+| 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
 | 1.5 | Reconnaissance des actions | À approfondir |
 
 ## Dernière vérification
@@ -61,4 +61,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Le pipeline expose désormais les objets descriptifs dans `representation.objectModels` et le contexte JSON transmis à la suite du flux.
 - Les informations conservées comprennent catégorie candidate, occurrences, couleurs, formes, matériaux explicitement marqués, dimensions, autres quantités, états, relations et preuves textuelles.
 - Limites : association heuristique des propriétés, identité interphrases non résolue, vocabulaire incomplet. Aucune géométrie 3D ni physique n'est déduite.
+- Vérification : [workflow 45965959735](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45965959735) — 493 tests réussis, 0 échec.
 - APK non compilé.
