@@ -72,21 +72,21 @@ function analyze(input,base,M,S){
  const inequalities=parsed.clauses.map(x=>base.solveOne(x,M,S));
  const vars=[...new Set(inequalities.flatMap(x=>x.variables||[]))].sort();
  const fail=inequalities.find(x=>!["solution_set","empty_set","all_real_numbers"].includes(x.status));
- if(fail)return result("unsupported_system",[],inequalities,vars,[{code:"component_inequality_unsupported",componentStatus:fail.status}]);
- if(vars.length>1)return result("multiple_variables_unsupported",[],inequalities,vars,[{code:"same_variable_required"}]);
- if(parsed.connectors.length&&parsed.connectors.length!==inequalities.length-1)return result("unsupported_system",[],inequalities,vars,[{code:"ambiguous_connectors"}]);
+ if(fail)return result("unsupported_system",[],inequalities,vars,[{code:"component_inequality_unsupported",componentStatus:fail.status}],source);
+ if(vars.length>1)return result("multiple_variables_unsupported",[],inequalities,vars,[{code:"same_variable_required"}],source);
+ if(parsed.connectors.length&&parsed.connectors.length!==inequalities.length-1)return result("unsupported_system",[],inequalities,vars,[{code:"ambiguous_connectors"}],source);
  const ops=parsed.connectors.map(x=>/^ou$/i.test(x)?"OR":"AND");
- if(ops.some(x=>x!==ops[0]))return result("unsupported_system",[],inequalities,vars,[{code:"mixed_and_or_requires_parentheses"}]);
+ if(ops.some(x=>x!==ops[0]))return result("unsupported_system",[],inequalities,vars,[{code:"mixed_and_or_requires_parentheses"}],source);
  let intervals=inequalities[0].intervals||[];
  for(let i=1;i<inequalities.length;i++){
   const next=inequalities[i].intervals||[];
   intervals=ops[0]==="OR"?normalize(intervals.concat(clone(next))):intersection(intervals,next);
  }
  const status=!intervals.length?"empty_set":intervals.length===1&&intervals[0].lower===null&&intervals[0].upper===null?"all_real_numbers":"solution_set";
- return result(status,intervals,inequalities,vars,[]);
+ return result(status,intervals,inequalities,vars,[],source);
 }
-function result(status,intervals,inequalities,variables,issues){
- return {engine:"IdeeVisionInequalitySystemSolver",version:VERSION,ready:true,offline:true,status,variables,inequalities,intervals,combination:inequalities.length>1?"intersection_or_union":"single",policy:{externalAIUsed:false,evalUsed:false,strictEndpointsPreserved:true,sourceOrderPreserved:true,onlyExplicitConstraintsCombined:true},issues};
+function result(status,intervals,inequalities,variables,issues,source){
+ return {engine:"IdeeVisionInequalitySystemSolver",version:VERSION,ready:true,offline:true,source,status,variables,inequalities,intervals,combination:inequalities.length>1?"intersection_or_union":"single",policy:{externalAIUsed:false,evalUsed:false,strictEndpointsPreserved:true,sourceOrderPreserved:true,onlyExplicitConstraintsCombined:true},issues};
 }
 function diagnostics(){return {name:"Résolveur de systèmes d'inéquations",version:VERSION,offline:true,capabilities:["séparation de plusieurs inéquations par lignes","séparation par point-virgule","conjonction et","conjonction et aussi","conjonction simultanément","disjonction ou","résolution réutilisant le résolveur individuel","intersection d'intervalles","union d'intervalles","bornes inférieures maximales","bornes supérieures minimales","conservation des bornes strictes","conservation des bornes inclusives","intersection réduite à un point","détection de l'ensemble vide","détection de l'ensemble des réels","systèmes linéaires et quadratiques mélangés","conservation de l'ordre des contraintes","conservation des sources","variables uniques vérifiées","détection de connecteurs ambigus","aucun eval","aucune IA externe"],limitations:["une seule variable commune par système","polynômes de degré maximal deux","racines réelles uniquement","connecteurs et/ou mélangés non pris en charge","parenthèses logiques de regroupement non prises en charge","dénominateurs polynomiaux refusés","symboles d'unités ambigus refusés"]};}
 const api=Object.freeze({version:VERSION,analyze,intersection,normalize,diagnostics});root.IdeeVisionInequalitySystemSolver=api;if(typeof module!=="undefined"&&module.exports)module.exports=api;
