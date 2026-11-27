@@ -26,6 +26,7 @@ const InequalitySolver=require("../app/src/main/assets/understanding/inequality-
 const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequality-system-solver-v1.js");
 const RationalInequalitySolver=require("../app/src/main/assets/understanding/rational-inequality-solver-v1.js");
 const ParametricInequalitySolver=require("../app/src/main/assets/understanding/parametric-inequality-solver-v1.js");
+const ParametricEquationSystemSolver=require("../app/src/main/assets/understanding/parametric-equation-system-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -192,3 +193,10 @@ test("142 étape paramétrique comptabilisée",()=>assert.equal(P.analyze("param
 test("143 contexte JSON contient les cas paramétriques",()=>assert.equal(JSON.parse(P.analyze("paramètre a : a*x+2>0").promptContext).parametricInequalitySolver.cases.length,3));
 test("144 phrase ordinaire non interprétée comme inéquation paramétrique",()=>assert.equal(P.analyze("La balle tombe.").representation.parametricInequalitySolver.status,"no_parameterized_inequality_detected"));
 test("145 paramètre non déclaré explicitement reste ambigu",()=>assert.equal(P.analyze("a*x+2>0").representation.parametricInequalitySolver.status,"parameter_declaration_required"));
+
+test("146 pipeline intègre les systèmes d'équations paramétriques",()=>assert.equal(P.analyze("paramètre a : a*x+y=2\\nx+a*y=2").representation.parametricEquationSystemSolver.status,"parameter_cases"));
+test("147 pipeline expose les valeurs critiques du déterminant",()=>assert.deepEqual(P.analyze("paramètre a : a*x+y=2\\nx+a*y=2").representation.parametricEquationSystemSolver.criticalParameterValues,[-1,1]));
+test("148 étape du système paramétrique comptabilisée",()=>assert.equal(P.analyze("paramètre a : a*x+y=2\\nx+a*y=2").stages.parametricEquationSystemSolver.caseCount,5));
+test("149 contexte JSON contient les formules de Cramer",()=>assert.equal(JSON.parse(P.analyze("paramètre a : a*x+y=2\\nx+a*y=2").promptContext).parametricEquationSystemSolver.cramer.x.denominator,"a^2 - 1"));
+test("150 pipeline conserve les systèmes singuliers permanents",()=>assert.equal(P.analyze("paramètre a : a*x+y=2\\n2*a*x+2*y=5").representation.parametricEquationSystemSolver.status,"singular_for_all_parameters"));
+test("151 phrase ordinaire non interprétée comme système paramétrique",()=>assert.equal(P.analyze("La balle tombe.").representation.parametricEquationSystemSolver.status,"no_system_detected"));
