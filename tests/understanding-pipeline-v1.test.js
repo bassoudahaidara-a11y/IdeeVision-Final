@@ -25,6 +25,7 @@ const EquationSolver=require("../app/src/main/assets/understanding/equation-solv
 const InequalitySolver=require("../app/src/main/assets/understanding/inequality-solver-v1.js");
 const InequalitySystemSolver=require("../app/src/main/assets/understanding/inequality-system-solver-v1.js");
 const RationalInequalitySolver=require("../app/src/main/assets/understanding/rational-inequality-solver-v1.js");
+const ParametricInequalitySolver=require("../app/src/main/assets/understanding/parametric-inequality-solver-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 
@@ -184,3 +185,10 @@ test("136 contexte JSON contient les solutions rationnelles",()=>assert.equal(JS
 test("137 pipeline conserve les racines interdites",()=>assert.deepEqual(P.analyze("(x-1)/(x-1)>0").representation.rationalInequalitySolver.inequalities[0].excludedValues,[1]));
 test("138 pipeline distingue les inéquations ordinaires sans dénominateur",()=>assert.equal(P.analyze("x>2").representation.rationalInequalitySolver.inequalities[0].status,"solution_set"));
 test("139 phrase ordinaire non interprétée comme inéquation rationnelle",()=>assert.equal(P.analyze("La balle tombe.").representation.rationalInequalitySolver.status,"no_inequality_detected"));
+
+test("140 pipeline intègre l'étude paramétrique déclarée",()=>assert.equal(P.analyze("paramètre a : a*x+2>0").representation.parametricInequalitySolver.status,"parameter_cases"));
+test("141 pipeline expose les trois cas du coefficient",()=>assert.equal(P.analyze("paramètre a : a*x+2>0").representation.parametricInequalitySolver.cases.length,3));
+test("142 étape paramétrique comptabilisée",()=>assert.equal(P.analyze("paramètre a : a*x+2>0").stages.parametricInequalitySolver.caseCount,3));
+test("143 contexte JSON contient les cas paramétriques",()=>assert.equal(JSON.parse(P.analyze("paramètre a : a*x+2>0").promptContext).parametricInequalitySolver.cases.length,3));
+test("144 phrase ordinaire non interprétée comme inéquation paramétrique",()=>assert.equal(P.analyze("La balle tombe.").representation.parametricInequalitySolver.status,"no_parameterized_inequality_detected"));
+test("145 paramètre non déclaré explicitement reste ambigu",()=>assert.equal(P.analyze("a*x+2>0").representation.parametricInequalitySolver.status,"parameter_declaration_required"));
