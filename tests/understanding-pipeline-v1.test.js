@@ -4,6 +4,7 @@ const F=require("../app/src/main/assets/understanding/french-language-foundation
 const G=require("../app/src/main/assets/understanding/french-grammar-semantics-v1.js");
 const I=require("../app/src/main/assets/understanding/intent-understanding-v1.js");
 const O=require("../app/src/main/assets/understanding/object-model-v1.js");
+const A=require("../app/src/main/assets/understanding/action-model-v1.js");
 const P=require("../app/src/main/assets/understanding/understanding-pipeline-v1.js");
 test("1 pipeline disponible sans réseau",()=>assert.equal(P.diagnostics().offline,true));
 test("2 pipeline renvoie une structure stable",()=>assert.equal(P.analyze("La balle tombe.").ready,true));
