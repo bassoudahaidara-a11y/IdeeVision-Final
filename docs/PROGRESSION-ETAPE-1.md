@@ -286,11 +286,11 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 
 ## Groupe 1.26 — inéquations paramétriques et étude par cas
 - Module : `app/src/main/assets/understanding/parametric-inequality-solver-v1.js`.
-- Tests ciblés : `tests/parametric-inequality-solver-v1.test.js` (60 tests).
+- Tests ciblés : `tests/parametric-inequality-solver-v1.test.js` (64 tests).
 - Étude d'inéquations affines en une variable avec coefficients affines en un paramètre.
 - Découpage en cas selon les valeurs critiques, notamment coefficient positif, nul ou négatif.
 - Bornes symboliques dépendant du paramètre et substitution facultative d'une valeur numérique.
 - Intégration dans `representation.parametricInequalitySolver`, `stages.parametricInequalitySolver` et le contexte JSON ; module chargé dans l'application.
 - Six tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46008384703](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46008384703) — 1 687 tests réussis, 0 échec. Tests ciblés : 64 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
