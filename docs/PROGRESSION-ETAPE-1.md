@@ -184,3 +184,12 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Le moteur conserve les preuves textuelles et les symboles inconnus ; il ne calcule ni ne résout les expressions.
 - Validation globale réussie : [workflow 45997332746](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45997332746) — 922 tests réussis, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.17 — structures algébriques et systèmes
+- Module : \`app/src/main/assets/understanding/algebraic-structures-v1.js\`.
+- Tests ciblés : 45 tests.
+- Intégration au pipeline : repérage des équations, inégalités, systèmes candidats, variables communes, formes polynomiales simples et degré syntaxique candidat.
+- Le moteur ne résout ni les équations ni les systèmes et n'effectue aucun calcul numérique.
+- Validation globale en attente de GitHub Actions.
+- APK non compilé.
