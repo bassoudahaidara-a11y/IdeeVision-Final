@@ -128,5 +128,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Intégration : `representation.reasoningChains`, `stages.reasoningChains` et contexte JSON.
 - Capacités : chaînes de règles, liens textuels exacts, dépendances orientées, conclusions candidates, règles isolées et ponts possibles à confirmer.
 - Limites : les paraphrases et pronoms ne sont pas encore résolus ; aucun fait ou lien causal n'est inventé.
-- Vérification : en cours.
+- Vérification : [workflow 45977512671](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45977512671) — 707 tests réussis, 0 échec.
 - APK non compilé.
