@@ -14,6 +14,7 @@ La compilation APK sera réactivée uniquement après validation complète de l'
 | 1.3 | Compréhension des intentions | Version locale v0.3 chargée dans l'application et raccordée au pipeline ; 40 tests ciblés ; couverture et ambiguïtés à approfondir |
 | 1.4 | Reconnaissance et représentation des objets | Version v1 intégrée au pipeline ; 25 tests ciblés ; validation globale réussie (493 tests, 0 échec) ; enrichissements possibles ultérieurement |
 | 1.5 | Reconnaissance des actions | Version v1 intégrée au pipeline ; 30 tests ciblés ; validation globale réussie (529 tests, 0 échec) ; couverture linguistique à approfondir |
+| 1.6 | Relations entre objets et actions | Graphe descriptif v1 intégré au pipeline ; 25 tests ciblés ; validation globale réussie (559 tests, 0 échec) ; couverture des relations à approfondir |
 
 ## Dernière vérification
 - Branche : `idee-vision-etape-1-intelligence`
@@ -73,4 +74,14 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Capacités : classification prudente, polarité, rôles grammaticaux candidats, compléments, conditions, ordre textuel et connecteurs temporels.
 - Limites : lexique incomplet, rôles heuristiques, aucune causalité ou physique calculée.
 - Vérification : [workflow 45966384650](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45966384650) — 529 tests réussis, 0 échec.
+- APK non compilé.
+
+
+## Groupe 1.6 — première implémentation
+- Module : `app/src/main/assets/understanding/relation-graph-v1.js`.
+- Tests ciblés : `tests/relation-graph-v1.test.js` (25 tests).
+- Documentation : `docs/GROUPE-1.6-RELATIONS.md`.
+- Intégration : `representation.relationGraph`, avec nœuds objets/actions, arêtes spatiales, liens acteur/action/objet candidats et marqueurs temporels.
+- Limites : relations spatiales héritées de règles lexicales, rôles candidats, résolution interphrases incomplète ; aucune causalité ni physique.
+- Vérification de l'intégration : [workflow 45970892940](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45970892940) — 559 tests réussis, 0 échec. Une dernière vérification sera effectuée après nettoyage des tests de diagnostic.
 - APK non compilé.
