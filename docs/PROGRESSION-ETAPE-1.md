@@ -175,3 +175,12 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Aucune conversion d'unité ni validation physique ; les unités manquantes restent inconnues.
 - Validation CI réussie : [workflow 45980383674](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/45980383674) — 873 tests, 0 échec.
 - APK non compilé.
+
+
+## Groupe 1.16 — analyse symbolique des mathématiques
+- Module : \`app/src/main/assets/understanding/math-expression-model-v1.js\`.
+- Tests ciblés : 45 tests.
+- Intégration au pipeline et au chargement de l'application : AST, variables, constantes, fonctions, opérateurs, priorités, groupes, fractions, puissances, racines, équations et inégalités.
+- Le moteur conserve les preuves textuelles et les symboles inconnus ; il ne calcule ni ne résout les expressions.
+- Validation globale en attente de GitHub Actions.
+- APK non compilé.
