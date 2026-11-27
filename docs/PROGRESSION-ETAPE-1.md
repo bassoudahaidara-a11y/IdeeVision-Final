@@ -305,5 +305,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Substitution facultative d'une valeur numérique du paramètre.
 - Intégration dans `representation.parametricEquationSystemSolver`, `stages.parametricEquationSystemSolver` et le contexte JSON ; script chargé dans l'application.
 - Six tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46009375449](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46009375449) — 1 753 tests réussis, 0 échec. Tests ciblés : 60 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
