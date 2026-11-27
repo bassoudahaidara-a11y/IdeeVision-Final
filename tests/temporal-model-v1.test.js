@@ -33,7 +33,7 @@ test("29 durée raccordée à la phrase événement",()=>assert.ok(a("Le moteur 
 test("30 achèvement non inventé",()=>assert.ok(a("Le moteur tourne.").events.every(e=>e.completion==="not_determined")));
 test("31 date non validée automatiquement",()=>assert.equal(a("Le test aura lieu le 27/11/2026.").expressions.find(x=>x.type==="numeric_date").calendarValidated,false));
 test("32 temps relatif exige référence",()=>assert.equal(a("Demain le robot avance.").expressions.find(x=>x.type==="relative_time").requiresReferenceTime,true));
-test("33 événement sans temps reste non résolu",()=>assert.ok(a("Le moteur tourne.").events.some(e=>e.timeClass==="unresolved")));
+test("33 événement sans date ni heure garde ses bornes non déterminées",()=>assert.ok(a("Le moteur tourne.").events.every(e=>e.startTime===null&&e.endTime===null)));
 test("34 conserve indices de phrase",()=>assert.ok(a("Hier le moteur tourne. Demain la roue avance.").expressions.every(x=>Number.isInteger(x.sentenceIndex))));
 test("35 relations temporelles candidates",()=>assert.equal(a("Le moteur tourne puis la roue avance.").policy.temporalOrderIsTextualOnly,true));
 test("36 timeline basée sur position textuelle",()=>assert.ok(a("D'abord le moteur tourne puis la roue avance.").timeline.every(x=>x.orderBasis==="text_position_only")));
