@@ -6,7 +6,7 @@ test("discriminant nul",()=>a.equal(f("x^2+2x+1=0").equations[0].discriminant,0)
 test("discriminant négatif",()=>a.equal(f("x^2+1=0").equations[0].discriminant,-4));
 test("racines vérifiées",()=>a.ok(f("x^2-5x+6=0").equations[0].verification.every(x=>x.verified)));
 test("fraction numérique",()=>a.equal(f("x/3=2").solutions[0],6));
-test("dénominateur variable exclut racine",()=>a.equal(f("1/(x-1)=0").status,"no_valid_solution"));
+test("dénominateur polynomial non pris en charge",()=>a.equal(f("1/(x-1)=0").status,"unsupported_expression"));
 test("fonction non polynomiale refusée",()=>a.equal(f("sin(x)=0").status,"unsupported_expression"));
 test("deux variables refusées",()=>a.equal(f("x+y=3").status,"unsupported_variable_count_or_ambiguity"));
 test("unité ambiguë refusée",()=>a.equal(f("m+1=2").status,"unsupported_variable_count_or_ambiguity"));
