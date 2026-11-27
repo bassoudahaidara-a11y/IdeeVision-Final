@@ -318,5 +318,5 @@ Les rôles grammaticaux sujet/complément sont encore des hypothèses heuristiqu
 - Détection des solutions uniques, doubles, doubles intersections, absence de racine réelle, incompatibilité et identité donnant une infinité de solutions.
 - Intégration dans `representation.nonlinearSystemSolver`, `stages.nonlinearSystemSolver` et le contexte JSON ; module chargé après le moteur numérique.
 - Six tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46010749455](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46010749455) — 1 819 tests réussis, 0 échec. Tests ciblés : 60 ; intégration pipeline : 6 tests supplémentaires.
 - APK non compilé.
