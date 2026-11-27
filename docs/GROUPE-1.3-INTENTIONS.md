@@ -19,3 +19,13 @@ Règles lexicales initiales, couverture française limitée, intentions implicit
 
 ## Vérification
 30 tests ciblés dans tests/intent-understanding-v1.test.js. Le workflow vérifie la syntaxe et les tests sans compiler l'APK.
+
+
+## Renforcement v0.3
+- Détection de plusieurs occurrences d'une même intention dans une phrase.
+- Polarité négative : une action explicitement niée n'est pas sélectionnée comme intention principale active.
+- Extraction de marqueurs d'ordre explicites : d'abord, ensuite, puis, finalement, etc. Cela conserve des indices, sans prétendre reconstruire tout le plan.
+- Correction des positions exactes des phrases dans le texte source.
+- Fonction `analyzeWithContext` pour relier les résultats des groupes linguistiques 1.1 et 1.2 lorsque leurs sources sont identiques ; les données incompatibles sont signalées.
+- Toujours aucun raisonnement physique, aucun accès réseau et aucune dépendance externe.
+- Suite de tests globale validée : workflow 45965139627, toutes les étapes réussies.
