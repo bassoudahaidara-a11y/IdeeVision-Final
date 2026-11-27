@@ -5,7 +5,7 @@ const VERSION="1.0.0";
 function analyze(input){
  const source=String(input==null?"":input).normalize("NFKC").replace(/[’‘]/g,"'").replace(/\s+/g," ").trim();
  if(!source)return {engine:"IdeeVisionUnderstandingPipeline",version:VERSION,offline:true,source,ready:false,stages:{},issues:[{code:"empty_request"}],policy:{physicsApplied:false,externalAIUsed:false}};
- const T=root.IdeeVisionTemporalModel,E=root.IdeeVisionEvidenceTrace,K=root.IdeeVisionKnowledgeRegistry,F=root.IdeeVisionFrenchUnderstanding,G=root.IdeeVisionFrenchGrammarSemantics,I=root.IdeeVisionIntentUnderstanding,O=root.IdeeVisionObjectModel,A=root.IdeeVisionActionModel,R=root.IdeeVisionRelationGraph,Q=root.IdeeVisionReferenceResolver,C=root.IdeeVisionComplexClauseAnalyzer,L=root.IdeeVisionLogicalReasoner,M=root.IdeeVisionReasoningChains;
+ const T=root.IdeeVisionTimeModel,E=root.IdeeVisionEvidenceTrace,K=root.IdeeVisionKnowledgeRegistry,F=root.IdeeVisionFrenchUnderstanding,G=root.IdeeVisionFrenchGrammarSemantics,I=root.IdeeVisionIntentUnderstanding,O=root.IdeeVisionObjectModel,A=root.IdeeVisionActionModel,R=root.IdeeVisionRelationGraph,Q=root.IdeeVisionReferenceResolver,C=root.IdeeVisionComplexClauseAnalyzer,L=root.IdeeVisionLogicalReasoner,M=root.IdeeVisionReasoningChains;
  const missing=[];
  if(!F)missing.push("french_foundation");
  if(!G)missing.push("french_grammar");
@@ -33,7 +33,7 @@ function analyze(input){
  const reasoningChains=M.analyze(source,logicalReasoning);
  const knowledgeRegistry=K.analyze(source,grammar,logicalReasoning,reasoningChains);
  const evidenceTrace=E.analyze(source,knowledgeRegistry,grammar);
- const temporalModel=T.analyze(source,grammar,actionModel);
+ const timeModel=T.analyze(source,grammar,actionModel);
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
  const relations=language.structure.relations.map(x=>({type:x.type,evidence:x.evidence||x.text||"",status:x.status||"candidate",start:x.start,end:x.end}));
