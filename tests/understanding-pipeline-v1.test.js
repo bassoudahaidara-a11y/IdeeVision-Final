@@ -108,7 +108,7 @@ test("76 aucune conversion automatique",()=>assert.equal(P.analyze("La longueur 
 
 
 const MathModel=require("../app/src/main/assets/understanding/math-expression-model-v1.js");
-test("85 pipeline intègre le modèle mathématique symbolique",()=>assert.ok(P.analyze("F = m × a").representation.mathExpressions.length));
+test("85 pipeline intègre le modèle mathématique symbolique",()=>assert.equal(P.analyze("F = m × a").representation.mathExpressions.kind,"equation"));
 test("86 modèle mathématique exposé comme étape",()=>assert.ok(P.analyze("x + 2 = 5").stages.mathExpressions.expressionCount>0));
-test("87 le contexte JSON contient les AST mathématiques",()=>assert.ok(JSON.parse(P.analyze("v = d/t").promptContext).mathExpressions.length>0));
-test("88 aucune équation n'est résolue automatiquement",()=>assert.equal(P.analyze("x + 2 = 5").representation.mathExpressions[0].policy.solved,false));
+test("87 le contexte JSON contient les AST mathématiques",()=>assert.equal(JSON.parse(P.analyze("v = d/t").promptContext).mathExpressions.kind,"equation"));
+test("88 aucune équation n'est résolue automatiquement",()=>assert.equal(P.analyze("x + 2 = 5").representation.mathExpressions.policy.solved,false));
