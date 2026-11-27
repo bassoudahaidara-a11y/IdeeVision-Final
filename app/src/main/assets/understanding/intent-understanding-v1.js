@@ -48,7 +48,7 @@ const issues=[];
 if(!intents.length)issues.push({code:"intent_not_recognized",severity:"warning"});
 if(sentences.some(s=>s.ambiguity.some(a=>a.code==="multiple_intents_in_same_sentence")))issues.push({code:"multiple_intents_need_ordering",severity:"information"});
 if(sentences.some(s=>s.ambiguity.some(a=>a.code==="intent_not_recognized")))issues.push({code:"some_sentences_have_no_detected_intent",severity:"information"});
-return {engine:"IdeeVisionIntentUnderstanding",version:VERSION,offline:true,source,sentences,intents,constraints,outputs,primaryIntent:intents.length===1?intents[0].type:null,targetCandidates:sentences.map((s,i)=>({sentenceIndex:i,value:s.targetCandidate})).filter(x=>x.value),issues,policy:{intentIsCandidate:true,unstatedGoalInvented:false,explicitConstraintsPreserved:true,physicsApplied:false}};
+return {engine:"IdeeVisionIntentUnderstanding",version:VERSION,offline:true,source,sentences,intents,constraints,outputs,primaryIntent:intents.length===1&&intents[0].polarity==="positive"?intents[0].type:null,targetCandidates:sentences.map((s,i)=>({sentenceIndex:i,value:s.targetCandidate})).filter(x=>x.value),issues,policy:{intentIsCandidate:true,unstatedGoalInvented:false,explicitConstraintsPreserved:true,physicsApplied:false}};
 }
 function analyzeWithContext(input,languageAnalysis,grammarAnalysis){
 const base=analyze(input), source=base.source;
