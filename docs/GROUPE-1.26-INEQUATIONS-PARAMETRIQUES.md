@@ -38,5 +38,5 @@ Pour les appels directs, le moteur accepte également des options indiquant expl
 ## Tests
 - 60 tests ciblés couvrant les signes, les cas nuls, les bornes, les valeurs critiques, les substitutions, les limites et la sérialisation.
 - 6 tests d'intégration pipeline.
-- Validation CI en attente.
+- Validation CI réussie : [workflow 46008384703](https://github.com/bassoudahaidara-a11y/IdeeVision-Final/actions/runs/46008384703) — 1 687 tests globaux réussis, 0 échec ; 64 tests ciblés et 6 tests d'intégration pipeline.
 - APK non compilé.
