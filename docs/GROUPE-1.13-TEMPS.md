@@ -26,10 +26,10 @@ Représenter les événements et les expressions temporelles explicitement prés
 20. Ambiguïtés et références temporelles manquantes signalées.
 
 ## Fichiers
-- Module : `app/src/main/assets/understanding/temporal-model-v1.js`
-- Tests ciblés : `tests/temporal-model-v1.test.js` (40 tests)
-- Intégration : `representation.temporalModel`, `stages.temporalModel`, contexte JSON.
+- Module : `app/src/main/assets/understanding/time-model-v1.js`
+- Tests ciblés : `tests/time-model-v1.test.js` (28 tests)
+- Intégration : `representation.timeModel`, `stages.timeModel`, contexte JSON.
 - Chargement : `index.html`.
 
 ## Limites
-Le module est lexical et heuristique. Les dates ne sont pas validées dans le calendrier. « Demain » exige une date de référence. L'ordre des mots n'est pas une preuve de chronologie réelle. Les temps verbaux peuvent rester non résolus et l'association des expressions aux actions est limitée à la phrase.
+Le module est lexical et heuristique. Les dates numériques font l’objet d’un contrôle calendaire simple ; les dates relatives ne sont pas calculées sans référence. « Demain » exige une date de référence. L'ordre des mots n'est pas une preuve de chronologie réelle. Les temps verbaux peuvent rester non résolus et l'association des expressions aux actions est limitée à la phrase.
