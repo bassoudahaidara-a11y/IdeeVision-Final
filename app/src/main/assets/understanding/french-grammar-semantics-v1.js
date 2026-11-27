@@ -51,7 +51,7 @@
   function tokenizeSentence(text, offset) {
     const base = baseApi();
     if (!base) throw new Error("Le moteur de fondation française doit être chargé avant l'analyse grammaticale.");
-    return base.tokenize(text).map(t => ({...t, absoluteStart:t.start+(offset||0), absoluteEnd:t.end+(offset||0)}));
+    return base.tokenize(text).map(t => ({...t, role:base.classifyToken(t), absoluteStart:t.start+(offset||0), absoluteEnd:t.end+(offset||0)}));
   }
   function analyzeSentence(sentence) {
     const base = baseApi();
