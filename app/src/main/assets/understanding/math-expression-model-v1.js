@@ -19,7 +19,9 @@ function tokenize(input){
    tokens.push({type:"number",value:Number(raw),raw,start,end:i});continue;
   }
   if(/[\p{L}_πφ]/u.test(c)){
-   let raw="";while(i<s.length&&/[\p{L}\p{N}_πφ]/u.test(s[i]))raw+=s[i++];
+   let raw="";
+   if(c==="π"||c==="φ"){raw=c;i++;}
+   else{while(i<s.length&&/[\p{L}\p{N}_]/u.test(s[i])&&s[i]!=="π"&&s[i]!=="φ")raw+=s[i++];}
    tokens.push({type:"identifier",value:raw,raw,start,end:i});continue;
   }
   const two=s.slice(i,i+2);
