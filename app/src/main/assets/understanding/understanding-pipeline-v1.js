@@ -19,6 +19,7 @@ function analyze(input){
  if(!M)missing.push("reasoning_chain_engine");
  if(!K)missing.push("knowledge_registry");
  if(!E)missing.push("evidence_trace");
+ if(!T)missing.push("time_model");
  if(!T)missing.push("temporal_model");
  if(missing.length)return {engine:"IdeeVisionUnderstandingPipeline",version:VERSION,offline:true,source,ready:false,stages:{},issues:missing.map(code=>({code})),policy:{physicsApplied:false,externalAIUsed:false}};
  const language=F.analyze(source);
@@ -33,6 +34,7 @@ function analyze(input){
  const reasoningChains=M.analyze(source,logicalReasoning);
  const knowledgeRegistry=K.analyze(source,grammar,logicalReasoning,reasoningChains);
  const evidenceTrace=E.analyze(source,knowledgeRegistry,grammar);
+ const timeModel=T.analyze(source,grammar,actionModel,complexClauses);
  const temporalModel=T.analyze(source,grammar,actionModel);
  const objects=language.structure.objects.map(x=>({text:x.text,lemma:x.lemma,status:x.status,properties:x.properties||[],start:x.start,end:x.end}));
  const actions=language.structure.actions.map(x=>({text:x.text,lemma:x.lemma,polarity:x.polarity,status:x.status,start:x.start,end:x.end}));
@@ -47,7 +49,7 @@ function analyze(input){
   policy:{physicsApplied:false,externalAIUsed:false,unstatedFactsInvented:false,uncertainInterpretationsRemainCandidates:true,objectIdentityAcrossSentencesResolved:false}
  };
 }
-function diagnostics(){return {name:"Pipeline local de compréhension Idée Vision",version:VERSION,offline:true,externalDependencies:[],stages:["fondations françaises","analyse grammaticale et sémantique","compréhension des intentions","modélisation descriptive des objets","représentation descriptive des actions","graphe descriptif des relations","résolution prudente des références","analyse des propositions complexes","représentation du raisonnement logique","chaînage de raisonnements en plusieurs étapes","registre des affirmations, hypothèses et inconnues","traçabilité de la provenance et du statut des preuves","représentation descriptive des événements et relations temporels"],limitations:["vocabulaire et grammaire encore incomplets","analyse heuristique","aucune déduction physique","ne constitue pas encore une intelligence générale","les affirmations ne sont pas vérifiées comme vraies","la traçabilité ne constitue pas une vérification externe","les relations temporelles ne prouvent pas la chronologie réelle"]};}
+function diagnostics(){return {name:"Pipeline local de compréhension Idée Vision",version:VERSION,offline:true,externalDependencies:[],stages:["fondations françaises","analyse grammaticale et sémantique","compréhension des intentions","modélisation descriptive des objets","représentation descriptive des actions","graphe descriptif des relations","résolution prudente des références","analyse des propositions complexes","représentation du raisonnement logique","chaînage de raisonnements en plusieurs étapes","registre des affirmations, hypothèses et inconnues","traçabilité de la provenance et du statut des preuves","compréhension et représentation descriptive du temps","représentation descriptive des événements et relations temporels"],limitations:["vocabulaire et grammaire encore incomplets","analyse heuristique","aucune déduction physique","ne constitue pas encore une intelligence générale","les affirmations ne sont pas vérifiées comme vraies","la traçabilité ne constitue pas une vérification externe","les dates relatives ne sont pas résolues sans date de référence","les relations temporelles ne prouvent pas la chronologie réelle"]};}
 const api=Object.freeze({version:VERSION,analyze,diagnostics});
 root.IdeeVisionUnderstandingPipeline=api;
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
